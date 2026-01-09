@@ -25,6 +25,7 @@
     "WebFetch ": "网页获取 ",
     "Exa Web Search": "网络搜索",
     "Exa Code Search": "代码搜索",
-    "Access external directory ": "访问外部目录 "
+    "Access external directory ": "访问外部目录 ",
+    "确认: \"Confirm\", 取消: \"Cancel\"": "确认: \"确认\", 取消: \"取消\""
   }
 }
