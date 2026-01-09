@@ -864,15 +864,24 @@ function Show-VersionInfo {
                 $success = $pullResult.Success
             }
 
-            # 恢复汉化补丁
-            if ($hasLocalChanges -and $stashSuccess) {
+            # 恢复汉化补丁（pop 失败则重新应用汉化）
+            if ($hasLocalChanges -and $stashSuccess -and $success) {
                 Write-Host "   → 恢复汉化补丁..." -ForegroundColor Yellow
                 $stashList = git stash list 2>&1
                 $stashName = $stashList | Select-String "opencode-i18n-auto-stash" | Select-Object -First 1
                 if ($stashName) {
                     $stashIndex = ($stashName.ToString() -split ":")[0].Trim()
-                    git stash pop "$stashIndex" --index 2>&1 | Out-Null
+                    $popOutput = git stash pop "$stashIndex" 2>&1
+                    if ($LASTEXITCODE -ne 0) {
+                        # pop 失败（有冲突），放弃 stash 并重新应用汉化
+                        Write-Host "   → 检测到冲突，重新应用汉化..." -ForegroundColor Yellow
+                        git stash drop "$stashIndex" 2>&1 | Out-Null
+                        Write-Host "   → 请运行 [2] 应用汉化 重新翻译" -ForegroundColor Cyan
+                    }
                 }
+            } elseif ($hasLocalChanges -and !$stashSuccess) {
+                # stash 失败但原修改还在，提示用户
+                Write-Host "   → 汉化保留在源码目录中" -ForegroundColor Yellow
             }
 
             if (!$success -and $detectedProxy) {
@@ -2907,15 +2916,24 @@ function Invoke-OneClickFull {
                 $success = $pullResult.Success
             }
 
-            # 恢复汉化补丁
-            if ($hasLocalChanges -and $stashSuccess) {
+            # 恢复汉化补丁（pop 失败则重新应用汉化）
+            if ($hasLocalChanges -and $stashSuccess -and $success) {
                 Write-Host "   → 恢复汉化补丁..." -ForegroundColor Yellow
                 $stashList = git stash list 2>&1
                 $stashName = $stashList | Select-String "opencode-i18n-auto-stash" | Select-Object -First 1
                 if ($stashName) {
                     $stashIndex = ($stashName.ToString() -split ":")[0].Trim()
-                    git stash pop "$stashIndex" --index 2>&1 | Out-Null
+                    $popOutput = git stash pop "$stashIndex" 2>&1
+                    if ($LASTEXITCODE -ne 0) {
+                        # pop 失败（有冲突），放弃 stash 并重新应用汉化
+                        Write-Host "   → 检测到冲突，重新应用汉化..." -ForegroundColor Yellow
+                        git stash drop "$stashIndex" 2>&1 | Out-Null
+                        Write-Host "   → 请运行 [2] 应用汉化 重新翻译" -ForegroundColor Cyan
+                    }
                 }
+            } elseif ($hasLocalChanges -and !$stashSuccess) {
+                # stash 失败但原修改还在，提示用户
+                Write-Host "   → 汉化保留在源码目录中" -ForegroundColor Yellow
             }
 
             if (!$success -and $detectedProxy) {
