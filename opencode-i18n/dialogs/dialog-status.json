@@ -2,7 +2,7 @@
   "file": "src/cli/cmd/tui/component/dialog-status.tsx",
   "description": "状态对话框",
   "replacements": {
-    "Status\n": "状态\n",
+    "Status": "状态",
     "No MCP Servers": "暂无 MCP 服务器",
     "MCP Servers": "MCP 服务器",
     "LSP Servers": "LSP 服务器",

@@ -14,7 +14,7 @@ CONFIG_FILE = I18N_DIR / "config.json"
 def load_config():
     """加载汉化配置"""
     # 模块化结构：需要合并所有模块文件
-    with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+    with open(CONFIG_FILE, "r", encoding="utf-8-sig") as f:
         config = json.load(f)
 
     patches = {}
@@ -26,7 +26,7 @@ def load_config():
             if not file_path.exists():
                 continue
 
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, "r", encoding="utf-8-sig") as f:
                 module_data = json.load(f)
 
             key = module_file.replace("/", "-").replace("\\", "-").replace(".json", "")

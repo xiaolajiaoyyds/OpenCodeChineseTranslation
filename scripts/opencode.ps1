@@ -974,6 +974,7 @@ function Test-LanguagePackCompatibility {
         $config = Get-Content $I18N_CONFIG -Raw -Encoding UTF8 | ConvertFrom-Json
         $supportedCommit = $config.supportedCommit
         $maintainer = $config.maintainer
+        $configVersion = $config.version
 
         if (!$supportedCommit) {
             return $false
@@ -983,43 +984,193 @@ function Test-LanguagePackCompatibility {
         $currentShort = $currentCommit.Substring(0, [Math]::Min(8, $currentCommit.Length))
         $supportedShort = $supportedCommit.Substring(0, [Math]::Min(8, $supportedCommit.Length))
 
-        if ($currentShort -ne $supportedShort) {
-            # 版本不匹配，显示警告
-            Write-Output ""
-            Write-ColorOutput Yellow "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-            Write-ColorOutput Yellow "⚠ 语言包版本可能不匹配"
-            Write-ColorOutput Yellow "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-            Write-Output ""
-            Write-Host "   语言包支持版本: " -NoNewline
-            Write-Host $supportedShort -ForegroundColor Cyan
-            Write-Host "   当前代码版本:   " -NoNewline
-            Write-Host $currentShort -ForegroundColor Yellow
-            Write-Output ""
-            Write-ColorOutput Yellow "   可能出现的问题："
-            Write-Output "     • 部分文本无法汉化"
-            Write-Output "     • 汉化内容显示错误"
-            Write-Output "     • 界面显示异常"
-            Write-Output ""
-
-            if ($maintainer) {
-                Write-ColorOutput Cyan "   如遇问题请联系维护者更新："
-                if ($maintainer.wechat) {
-                    Write-Output "     微信: " -NoNewline
-                    Write-Host $maintainer.wechat -ForegroundColor Green
-                }
-                if ($maintainer.github) {
-                    Write-Output "     GitHub: " -NoNewline
-                    Write-Host $maintainer.github -ForegroundColor Green
-                }
-                Write-Output ""
+        # 获取提交日期（更友好的显示）
+        Push-Location $SRC_DIR
+        $currentDateRaw = git log -1 --pretty=format:"%ci" HEAD 2>&1
+        Pop-Location
+        $currentDate = if ($currentDateRaw -isnot [System.Management.Automation.ErrorRecord] -and $currentDateRaw) {
+            try {
+                $dt = [DateTime]::Parse($currentDateRaw)
+                $dt.ToUniversalTime().AddHours(8).ToString("yyyy-MM-dd HH:mm")
+            } catch {
+                ""
             }
-
-            $continue = Read-Host "   是否继续？(Y/n)"
-            return $continue -ne "n" -and $continue -ne "N"
         }
 
+        # 版本匹配时显示简洁信息
+        if ($currentShort -eq $supportedShort) {
+            Write-Output ""
+            Write-Host ""
+            Write-Host "   ┌─────────────────────────────────────────────────────────────┐" -ForegroundColor Green
+            Write-Host "   │" -ForegroundColor Green -NoNewline
+            Write-Host "  ✓  语言包版本匹配" -ForegroundColor White -NoNewline
+            Write-Host "                                       │" -ForegroundColor Green
+            Write-Host "   └─────────────────────────────────────────────────────────────┘" -ForegroundColor Green
+            Write-Host ""
+            Write-Host "   版本: " -NoNewline
+            Write-Host "v$configVersion" -ForegroundColor Cyan -NoNewline
+            Write-Host " | " -ForegroundColor DarkGray -NoNewline
+            Write-Host "commit " -ForegroundColor DarkGray -NoNewline
+            Write-Host "$currentShort" -ForegroundColor Green
+            if ($currentDate) {
+                Write-Host "   提交: " -NoNewline
+                Write-Host "$currentDate" -ForegroundColor DarkGray
+            }
+            Write-Output ""
+            return $true
+        }
+
+        # 版本不匹配，显示警告
+        Write-Output ""
+        Write-Host ""
+        Write-Host "   ┌─────────────────────────────────────────────────────────────┐" -ForegroundColor Yellow
+        Write-Host "   │" -ForegroundColor Yellow -NoNewline
+        Write-Host "  ⚠  语言包版本与代码不匹配" -ForegroundColor Red -NoNewline
+        Write-Host "                                     │" -ForegroundColor Yellow
+        Write-Host "   └─────────────────────────────────────────────────────────────┘" -ForegroundColor Yellow
+        Write-Host ""
+        Write-Host "   ┌─────────────────────────────────────────────────────────────┐" -ForegroundColor DarkGray
+        Write-Host "   │" -ForegroundColor DarkGray -NoNewline
+        Write-Host " 版本对比" -ForegroundColor White -NoNewline
+        Write-Host "                                                │" -ForegroundColor DarkGray
+        Write-Host "   ├─────────────────────────────────────────────────────────────┤" -ForegroundColor DarkGray
+        Write-Host "   │" -ForegroundColor DarkGray -NoNewline
+        Write-Host " 语言包支持: " -ForegroundColor DarkGray -NoNewline
+        Write-Host "v$($configVersion)" -ForegroundColor Cyan -NoNewline
+        Write-Host " (commit " -ForegroundColor DarkGray -NoNewline
+        Write-Host "$supportedShort" -ForegroundColor Green -NoNewline
+        Write-Host ")" -ForegroundColor DarkGray -NoNewline
+        Write-Host "                            │" -ForegroundColor DarkGray
+        Write-Host "   │" -ForegroundColor DarkGray -NoNewline
+        Write-Host " 当前代码:   " -ForegroundColor DarkGray -NoNewline
+        Write-Host "commit " -ForegroundColor DarkGray -NoNewline
+        Write-Host "$currentShort" -ForegroundColor Yellow -NoNewline
+        Write-Host "" -ForegroundColor DarkGray -NoNewline
+        if ($currentDate) {
+            Write-Host " ($currentDate)" -ForegroundColor DarkGray -NoNewline
+        } else {
+            Write-Host "               " -NoNewline
+        }
+        Write-Host "       │" -ForegroundColor DarkGray
+        Write-Host "   └─────────────────────────────────────────────────────────────┘" -ForegroundColor DarkGray
+        Write-Host ""
+
+        # 版本差异提示
+        $commitDiff = 0
+        try {
+            Push-Location $SRC_DIR
+            $diffCount = git rev-list --count "$supportedShort..$currentShort" 2>&1
+            Pop-Location
+            if ($diffCount -match "^\d+$") {
+                $commitDiff = [int]$diffCount
+            }
+        } catch {}
+
+        if ($commitDiff -gt 0) {
+            Write-Host "   ℹ  当前代码领先语言包 " -NoNewline
+            Write-Host "$commitDiff 个提交" -ForegroundColor Yellow
+            Write-Host ""
+        }
+
+        Write-Host "   可能影响:" -ForegroundColor Yellow
+        Write-Host "     • 部分新文本无法汉化" -ForegroundColor DarkGray
+        Write-Host "     • 汉化内容显示错误" -ForegroundColor DarkGray
+        Write-Host "     • 界面显示异常" -ForegroundColor DarkGray
+        Write-Host ""
+
+        Write-Host "   💡 建议方案:" -ForegroundColor Cyan
+        Write-Host "     [1] " -NoNewline
+        Write-Host "继续执行" -ForegroundColor Green -NoNewline
+        Write-Host " - 完成后自动更新语言包版本" -ForegroundColor DarkGray
+        Write-Host "     [2] " -NoNewline
+        Write-Host "回退代码" -ForegroundColor Yellow -NoNewline
+        Write-Host " - git checkout $supportedShort" -ForegroundColor DarkGray
+        Write-Host ""
+
+        if ($maintainer) {
+            Write-Host "   ┌─────────────────────────────────────────────────────────────┐" -ForegroundColor DarkGray
+            Write-Host "   │" -ForegroundColor DarkGray -NoNewline
+            Write-Host " 联系维护者" -ForegroundColor White -NoNewline
+            Write-Host "                                               │" -ForegroundColor DarkGray
+            Write-Host "   ├─────────────────────────────────────────────────────────────┤" -ForegroundColor DarkGray
+            if ($maintainer.wechat) {
+                Write-Host "   │" -ForegroundColor DarkGray -NoNewline
+                Write-Host " 微信: " -ForegroundColor DarkGray -NoNewline
+                Write-Host $maintainer.wechat -ForegroundColor Green -NoNewline
+                Write-Host "                                        │" -ForegroundColor DarkGray
+            }
+            if ($maintainer.github) {
+                Write-Host "   │" -ForegroundColor DarkGray -NoNewline
+                Write-Host " 项目: " -ForegroundColor DarkGray -NoNewline
+                Write-Host $maintainer.github -ForegroundColor Green -NoNewline
+                Write-Host "             │" -ForegroundColor DarkGray
+            }
+            Write-Host "   └─────────────────────────────────────────────────────────────┘" -ForegroundColor DarkGray
+            Write-Host ""
+        }
+
+        Write-Host "   是否继续汉化？" -NoNewline
+        $continue = Read-Host " (Y/n)"
+        return $continue -ne "n" -and $continue -ne "N"
+    } catch {
+        return $false
+    }
+}
+
+# ==================== 更新语言包支持版本 ====================
+
+function Update-SupportedCommit {
+    <#
+    .SYNOPSIS
+        更新语言包配置中的 supportedCommit 为当前代码版本
+    .DESCRIPTION
+        当汉化验证全部通过后，将配置更新为当前 commit
+    #>
+    if (!(Test-Path $I18N_CONFIG)) {
+        Write-ColorOutput Yellow "[警告] 配置文件不存在: $I18N_CONFIG"
+        return $false
+    }
+
+    if (!(Test-Path $SRC_DIR)) {
+        Write-ColorOutput Yellow "[警告] 源码目录不存在: $SRC_DIR"
+        return $false
+    }
+
+    # 获取当前 commit
+    Push-Location $SRC_DIR
+    $currentCommit = git rev-parse HEAD 2>&1
+    Pop-Location
+
+    if ($LASTEXITCODE -ne 0 -or !$currentCommit) {
+        Write-ColorOutput Yellow "[警告] 无法获取当前 commit"
+        return $false
+    }
+
+    try {
+        # 读取配置
+        $config = Get-Content $I18N_CONFIG -Raw -Encoding UTF8 | ConvertFrom-Json
+        $oldCommit = $config.supportedCommit
+        $oldShort = if ($oldCommit) { $oldCommit.Substring(0, [Math]::Min(8, $oldCommit.Length)) } else { "无" }
+        $newShort = $currentCommit.Substring(0, [Math]::Min(8, $currentCommit.Length))
+
+        # 如果已经是当前版本，跳过
+        if ($oldCommit -eq $currentCommit) {
+            return $true
+        }
+
+        # 更新配置
+        $config.supportedCommit = $currentCommit
+        $config.lastUpdate = (Get-Date).ToString("yyyy-MM-dd")
+
+        # 写回文件（保持格式）
+        $jsonOutput = $config | ConvertTo-Json -Depth 10
+        $jsonOutput = $jsonOutput -replace '"lastUpdate":\s*"[^"]*"', "`"lastUpdate`": `"$($config.lastUpdate)`""
+        [System.IO.File]::WriteAllText($I18N_CONFIG, $jsonOutput + "`n", [System.Text.Encoding]::UTF8)
+
+        Write-ColorOutput Green "✓ 语言包版本已更新: $oldShort → $newShort"
         return $true
     } catch {
+        Write-ColorOutput Yellow "[警告] 更新配置失败: $_"
         return $false
     }
 }
@@ -2515,6 +2666,15 @@ function Test-I18NPatches {
 
     if ($failedItems.Count -eq 0) {
         Write-StepMessage "所有汉化验证通过！" "SUCCESS"
+        Write-Host ""
+
+        # 验证通过后自动更新语言包版本
+        Write-ColorOutput Cyan "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        Write-ColorOutput Cyan "更新语言包支持版本"
+        Write-ColorOutput Cyan "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        Write-Host ""
+        Update-SupportedCommit
+        Write-Host ""
     } else {
         Write-StepMessage "汉化验证发现问题" "WARNING"
         Write-Host ""
@@ -2936,6 +3096,7 @@ function Invoke-OneClickFull {
     Write-Output "  5. 复制文件到输出目录"
     Write-Output "  6. 替换全局版本 (opencode 命令)"
     Write-Output "  7. 验证汉化结果"
+    Write-Output "  8. 更新语言包版本 (验证通过时)"
     Write-Output ""
 
     Write-Output ""
@@ -2945,7 +3106,7 @@ function Invoke-OneClickFull {
     $stepNum = 1
     if ($versionInfo.NeedsUpdate) {
         Write-ColorOutput Cyan "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-        Write-ColorOutput Cyan "步骤 1/7: 拉取最新代码"
+        Write-ColorOutput Cyan "步骤 1/8: 拉取最新代码"
         Write-ColorOutput Cyan "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         Write-Output ""
 
@@ -3181,7 +3342,7 @@ function Invoke-OneClickFull {
         }
     } else {
         Write-ColorOutput Cyan "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-        Write-ColorOutput Green "步骤 1/7: 跳过拉取 (已是最新版本)"
+        Write-ColorOutput Green "步骤 1/8: 跳过拉取 (已是最新版本)"
         Write-ColorOutput Cyan "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         Write-Output ""
     }
@@ -3189,7 +3350,7 @@ function Invoke-OneClickFull {
     Write-Output ""
 
     Write-ColorOutput Cyan "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    Write-ColorOutput Cyan "步骤 2/7: 应用汉化补丁"
+    Write-ColorOutput Cyan "步骤 2/8: 应用汉化补丁"
     Write-ColorOutput Cyan "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     Write-Output ""
 
@@ -3206,7 +3367,7 @@ function Invoke-OneClickFull {
     Write-Output ""
 
     Write-ColorOutput Cyan "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    Write-ColorOutput Cyan "步骤 3/7: 关闭现有进程"
+    Write-ColorOutput Cyan "步骤 3/8: 关闭现有进程"
     Write-ColorOutput Cyan "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     Write-Output ""
 
@@ -3218,7 +3379,7 @@ function Invoke-OneClickFull {
     Write-Output ""
 
     Write-ColorOutput Cyan "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    Write-ColorOutput Cyan "步骤 4/7: 编译程序"
+    Write-ColorOutput Cyan "步骤 4/8: 编译程序"
     Write-ColorOutput Cyan "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     Write-Output ""
 
@@ -3248,7 +3409,7 @@ function Invoke-OneClickFull {
     Write-Output ""
 
     Write-ColorOutput Cyan "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    Write-ColorOutput Cyan "步骤 5/7: 复制文件到输出目录"
+    Write-ColorOutput Cyan "步骤 5/8: 复制文件到输出目录"
     Write-ColorOutput Cyan "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     Write-Output ""
 
@@ -3274,7 +3435,7 @@ function Invoke-OneClickFull {
     Write-Output ""
 
     Write-ColorOutput Cyan "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    Write-ColorOutput Cyan "步骤 6/7: 替换全局版本"
+    Write-ColorOutput Cyan "步骤 6/8: 替换全局版本"
     Write-ColorOutput Cyan "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     Write-Output ""
 
@@ -3307,7 +3468,7 @@ function Invoke-OneClickFull {
     Write-Output ""
 
     Write-ColorOutput Cyan "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    Write-ColorOutput Cyan "步骤 7/7: 验证汉化结果"
+    Write-ColorOutput Cyan "步骤 7/8: 验证汉化结果"
     Write-ColorOutput Cyan "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     Write-Output ""
 
@@ -3327,6 +3488,16 @@ function Invoke-OneClickFull {
     }
 
     Write-Output ""
+
+    # 验证通过后自动更新语言包版本
+    if ($validationPassed) {
+        Write-ColorOutput Cyan "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        Write-ColorOutput Cyan "步骤 8/8: 更新语言包版本"
+        Write-ColorOutput Cyan "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        Write-Output ""
+        Update-SupportedCommit
+        Write-Output ""
+    }
 
     $stopwatch.Stop()
 
