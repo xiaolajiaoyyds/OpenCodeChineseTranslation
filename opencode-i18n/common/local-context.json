@@ -6,6 +6,7 @@
     "message: \"Add a favorite model to use this shortcut\"": "message: \"添加收藏模型以使用此快捷方式\"",
     "message: `Model ${model.providerID}/${model.modelID} is not valid`": "message: `模型 ${model.providerID}/${model.modelID} 无效`",
     "message: `Agent ${value.name}'s configured model ${value.model.providerID}/${value.model.modelID} is not valid`": "message: `智能体 ${value.name} 配置的模型 ${value.model.providerID}/${value.model.modelID} 无效`",
-    "model: \"No provider selected\"": "model: \"未选择提供商\""
+    "model: \"No provider selected\"": "model: \"未选择提供商\"",
+    "provider: \"Connect a provider\"": "provider: \"连接提供商\""
   }
 }
