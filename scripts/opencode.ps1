@@ -1,5 +1,5 @@
 # ========================================
-# OpenCode 中文汉化版 - 管理工具 v3.0
+# OpenCode 中文汉化版 - 管理工具 v3.1
 # ========================================
 
 # 配置路径 (使用脚本所在目录，自动适配)
@@ -60,7 +60,7 @@ function Write-ColorOutput($ForegroundColor) {
 function Write-Header {
     Clear-Host
     Write-ColorOutput Cyan "╔════════════════════════════════════╗"
-    Write-ColorOutput Cyan "║  OpenCode 中文汉化管理工具 v3.0    ║"
+    Write-ColorOutput Cyan "║  OpenCode 中文汉化管理工具 v3.1    ║"
     Write-ColorOutput Cyan "╚════════════════════════════════════╝"
     Write-Output ""
 }
@@ -96,13 +96,15 @@ function Show-Menu {
     Write-ColorOutput Green "  [1]  一键汉化+部署"
     Write-ColorOutput DarkGray "      → 自动拉取代码 → 应用汉化 → 编译 → 部署"
     Write-Output ""
-    Write-ColorOutput Cyan "  [2]  验证汉化      [3]  调试工具"
-    Write-ColorOutput DarkGray "      检查汉化效果          诊断问题"
+    Write-ColorOutput Cyan "  [2]  应用汉化      [3]  验证汉化"
+    Write-ColorOutput DarkGray "      应用翻译补丁          检查汉化效果"
     Write-Output ""
-    Write-ColorOutput Cyan "  [4]  版本检测      [5]  备份版本      [L]  更新日志"
-    Write-ColorOutput DarkGray "      检查更新状态          保存当前版本          查看提交记录"
+    Write-ColorOutput Yellow "  [4]  调试工具      [5]  版本检测      [6]  备份版本"
+    Write-ColorOutput DarkGray "      诊断问题          检查更新状态          保存当前版本"
     Write-Output ""
-    Write-ColorOutput DarkGray "  [6]  高级菜单"
+    Write-ColorOutput DarkGray "               [L]  更新日志"
+    Write-Output ""
+    Write-ColorOutput DarkGray "  [7]  高级菜单"
     Write-ColorOutput DarkGray "      → 更多专业功能（拉取/编译/恢复/清理等）"
     Write-Output ""
     Write-ColorOutput Red "  [0]  退出"
@@ -117,14 +119,14 @@ function Show-AdvancedMenu {
     Write-ColorOutput Green "  [1] 拉取代码    [2] 应用汉化    [3] 编译程序"
     Write-ColorOutput DarkGray "      获取最新      只汉化不拉取   只编译不汉化"
     Write-Output ""
-    Write-ColorOutput Yellow "  [4] 版本检测    [5] 备份版本    [6] 恢复备份    [H] 更新日志"
-    Write-ColorOutput DarkGray "      检查Git状态   保存备份       选择性恢复      查看提交记录"
+    Write-ColorOutput Cyan "  [4] 验证汉化    [5] 版本检测    [6] 备份版本"
+    Write-ColorOutput DarkGray "      检查汉化效果    检查Git状态   保存备份"
     Write-Output ""
-    Write-ColorOutput Red "  [R] 源码恢复"
-    Write-ColorOutput DarkGray "      → 强制重置到原始代码（丢失所有修改）"
+    Write-ColorOutput Yellow "  [7] 恢复备份    [8] 还原文件    [9] 打开目录"
+    Write-ColorOutput DarkGray "      选择性恢复      撤销汉化      文件管理"
     Write-Output ""
-    Write-ColorOutput Cyan "  [7] 还原文件    [8] 打开目录    [9] 替换全局"
-    Write-ColorOutput DarkGray "      撤销汉化      文件管理       更新opencode命令"
+    Write-ColorOutput DarkGray "  [A] 替换全局    [R] 源码恢复    [H] 更新日志"
+    Write-ColorOutput DarkGray "      更新opencode命令  强制重置      查看提交记录"
     Write-Output ""
     Write-ColorOutput Magenta "  [C] 清理工具    [L] 启动 OpenCode"
     Write-ColorOutput DarkGray "      清理缓存/临时文件          运行汉化版"
@@ -238,6 +240,9 @@ function Get-I18NConfig {
     }
     if ($mainConfig.modules.common) {
         Load-Modules -Category "common" -ModuleList $mainConfig.modules.common
+    }
+    if ($mainConfig.modules.root) {
+        Load-Modules -Category "root" -ModuleList $mainConfig.modules.root
     }
 
     # 返回整合后的配置（兼容旧格式）
@@ -2877,7 +2882,7 @@ function Show-ProjectInfo {
 
 ## 基本信息
 - 项目名称: OpenCode 中文汉化管理工具
-- 版本: v3.0
+- 版本: v3.1
 - 脚本路径: $PSCommandPath
 - 配置文件: $I18N_CONFIG
 - 源码目录: $SRC_DIR
@@ -3037,13 +3042,14 @@ do {
                 }
             }
         }
-        "2" { Test-I18NPatches }
-        "3" { Debug-I18NFailure }
-        "4" { Show-VersionInfo }
-        "5" { Backup-All }
+        "2" { Apply-Patches }
+        "3" { Test-I18NPatches }
+        "4" { Debug-I18NFailure }
+        "5" { Show-VersionInfo }
+        "6" { Backup-All }
         "L" { Show-Changelog }
         "l" { Show-Changelog }
-        "6" {
+        "7" {
             # 高级菜单
             do {
                 Show-AdvancedMenu
@@ -3053,14 +3059,16 @@ do {
                     "1" { Update-Source }
                     "2" { Apply-Patches }
                     "3" { Build-Project }
-                    "4" { Show-VersionInfo }
-                    "5" { Backup-All }
-                    "6" { Restore-Backup }
+                    "4" { Test-I18NPatches }
+                    "5" { Show-VersionInfo }
+                    "6" { Backup-All }
                     "H" { Show-Changelog }
                     "h" { Show-Changelog }
-                    "7" { Restore-OriginalFiles }
-                    "8" { Open-OutputDirectory }
-                    "9" { Install-Global }
+                    "7" { Restore-Backup }
+                    "8" { Restore-OriginalFiles }
+                    "9" { Open-OutputDirectory }
+                    "A" { Install-Global }
+                    "a" { Install-Global }
                     "R" { Restore-Source }
                     "r" { Restore-Source }
                     "C" {
