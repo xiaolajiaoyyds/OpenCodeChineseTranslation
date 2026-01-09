@@ -13,6 +13,7 @@
     "title: \"Favorite cycle\"": "title: \"收藏循环\"",
     "title: \"Model cycle reverse\"": "title: \"模型反向循环\"",
     "title: \"Variant cycle\"": "title: \"变体循环\"",
-    "title: \"Agent cycle\"": "title: \"智能体循环\""
+    "title: \"Agent cycle\"": "title: \"智能体循环\"",
+    "console.error(`Failed to copy console selection to clipboard: ${error}`)": "console.error(`复制控制台选择到剪贴板失败: ${error}`)"
   }
 }
