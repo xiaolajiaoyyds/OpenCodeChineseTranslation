@@ -1238,6 +1238,18 @@ function Update-Source {
         return
     }
 
+    # 清除 assume-unchanged 标记，以便 git pull 能正常更新文件
+    Write-ColorOutput Yellow "准备拉取..."
+    $beforePull = git ls-files -v | Where-Object { $_ -match "^h" }
+    if ($beforePull) {
+        $markedFiles = @($beforePull)
+        Write-ColorOutput DarkGray "临时解除 $($markedFiles.Count) 个文件的忽略标记..."
+        foreach ($file in $markedFiles) {
+            $filePath = $file.Substring(2)
+            git update-index --no-assume-unchanged $filePath 2>&1 | Out-Null
+        }
+    }
+
     Write-ColorOutput Yellow "正在拉取最新代码..."
 
     # 尝试 git pull
@@ -2053,6 +2065,17 @@ function Invoke-OneClickFull {
 
         $pullConfirm = Read-Host "检测到新版本，是否拉取？(Y/n)"
         if ($pullConfirm -ne "n" -and $pullConfirm -ne "N") {
+            # 清除 assume-unchanged 标记，以便 git pull 能正常更新文件
+            $beforePull = git ls-files -v | Where-Object { $_ -match "^h" }
+            if ($beforePull) {
+                $markedFiles = @($beforePull)
+                Write-ColorOutput DarkGray "临时解除 $($markedFiles.Count) 个文件的忽略标记..."
+                foreach ($file in $markedFiles) {
+                    $filePath = $file.Substring(2)
+                    git update-index --no-assume-unchanged $filePath 2>&1 | Out-Null
+                }
+            }
+
             Write-ColorOutput Yellow "执行 git pull..."
 
             # 智能拉取（处理代理问题）
