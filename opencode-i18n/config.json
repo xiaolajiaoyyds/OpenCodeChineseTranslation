@@ -52,6 +52,9 @@
       "common/fatal-error.json",
       "common/local-context.json",
       "common/share-error.json"
+    ],
+    "root": [
+      "app.json"
     ]
   }
 }
