@@ -1,23 +1,61 @@
+# ====================
 # Dependencies
+# ====================
 node_modules/
 
+# ====================
 # Build outputs
+# ====================
 dist/
 opencode.exe
+*.exe
 *.log
+api_doc_mcp.log
 
+# ====================
 # Temporary files
+# ====================
 backup/
 opencode-fresh/
 opencode-latest/
 opencode-test/
 script_backup/
+tmp/
+temp/
 
+# ====================
 # OS files
+# ====================
 .DS_Store
 Thumbs.db
 *.swp
 *.swo
+*~
+Desktop.ini
 
+# ====================
 # Backup files
+# ====================
 opencode-i18n.json.backup
+*.bak
+*.backup
+
+# ====================
+# IDE / Editor
+# ====================
+.vscode/
+.idea/
+*.sublime-*
+*.suo
+*.user
+
+# ====================
+# PowerShell
+# ====================
+*.ps1xml
+
+# ====================
+# Submodule specific
+# ====================
+# opencode-zh-CN/ 是 Git 子模块，不需要额外忽略
+# 但子模块内的构建产物会被其自身的 .gitignore 处理

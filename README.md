@@ -1,74 +1,96 @@
-# OpenCode 中文汉化管理工具
+# OpenCode Chinese Localization / OpenCode 中文汉化
 
-> 🎉 让 OpenCode AI 编码助手更友好！
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![PowerShell](https://img.shields.io/badge/PowerShell-5.1%2B-blue.svg)](https://microsoft.com/PowerShell)
+[![OpenCode](https://img.shields.io/badge/OpenCode-dev-green.svg)](https://github.com/anomalyco/opencode)
+
+> 🎉 让 OpenCode AI 编程助手更友好！/ Make OpenCode AI coding assistant more user-friendly!
+
+[中文](#中文文档) | [English](#english-documentation)
 
 ---
 
-## 📖 简介
+## 中文文档
 
-OpenCode 中文汉化工具是一套完整的 PowerShell 脚本集合，用于将 OpenCode 项目汉化为中文版本。
+<div id="中文文档">
+
+### 📖 简介
+
+OpenCode 中文汉化工具是一套完整的 PowerShell 管理脚本，用于将 OpenCode 项目汉化为中文版本。支持自动化拉取、汉化、编译、部署全流程。
 
 ---
 
-## ✨ 核心功能
-
-### 核心功能
+### ✨ 核心功能
 
 | 功能 | 描述 |
 |------|------|
 | **一键汉化** | 自动拉取、汉化、编译 OpenCode |
-| **模块化汉化** | 支持 30+ 个汉化模块的独立管理 |
-| **版本管理** | 检测更新、拉取最新代码 |
+| **模块化配置** | 支持 36 个独立汉化模块，易于维护 |
+| **版本管理** | 检测更新、查看更新日志、拉取最新代码 |
 | **备份恢复** | 完整备份和选择性恢复 |
-| **版本验证** | 验证汉化结果覆盖率 |
+| **汉化验证** | 验证汉化结果覆盖率，调试工具 |
 
 ### 汉化范围
 
-- 🎯 命令面板（会话、模型、智能体切换等）
-- 💬 对话框（智能体选择、会话列表）
-- 📊 侧边栏（上下文、MCP 状态）
+- 🎯 命令面板（会话、模型、智能体切换）
+- 💬 对话框（智能体选择、会话列表、消息处理）
+- 📊 侧边栏（上下文管理、MCP 状态）
 - 🔝 顶部栏（子智能体导航）
 - 🛠️ 权限系统（文件操作权限请求）
-- 💡 提示和帮助（70+ 条操作提示）
+- 🔔 通知和提示（70+ 条操作提示）
 
 ---
 
-## 📁 目录结构
+### 📁 目录结构
 
 ```
 OpenCodeChineseTranslation/
-├── .gitignore           # Git 忽略文件
-├── README.md           # 项目说明
-├── LICENSE             # MIT 许可证
-├── scripts/            # 所有 PowerShell 脚本
-│   ├── opencode.ps1    # 主管理脚本
-│   ├── backup.ps1       # 备份脚本
-│   └── restore.ps1      # 恢复脚本
-├── i18n/              # 汉化配置
-│   ├── config.json      # 主配置（多文件版）
-│   ├── legacy/         # 旧的单文件版（备份）
-│   ├── dialogs/        # 对话框汉化（16个）
-│   ├── routes/          # 路由汉化（3个）
-│   ├── components/      # 组件汉化（6个）
-│   └── common/         # 通用汉化（5个）
-├── dist/               # 编译产物（Git 忽略）
-└── docs/               # 文档（可选）
+├── .gitignore               # Git 忽略配置
+├── README.md                # 项目说明（本文档）
+├── README_EN.md             # 英文版说明
+├── CONTRIBUTING.md          # 贡献指南
+├── LICENSE                  # MIT 许可证
+├── scripts/                 # 管理脚本
+│   └── opencode.ps1         # 主管理脚本（2300+ 行）
+├── opencode-i18n/           # 模块化汉化配置
+│   ├── config.json          # 主配置文件
+│   ├── dialogs/             # 对话框汉化（21个模块）
+│   ├── routes/              # 路由汉化（3个模块）
+│   ├── components/          # 组件汉化（6个模块）
+│   └── common/              # 通用汉化（6个模块）
+├── opencode-zh-CN/          # OpenCode 源码（Git 子模块）
+├── dist/                    # 编译产物（.gitignore）
+└── docs/                    # 项目文档
 ```
 
 ---
 
-## 🚀 快速开始
+### 🚀 快速开始
 
-### 克隆仓库
+#### 系统要求
+
+| 工具 | 版本要求 | 安装方式 |
+|------|----------|----------|
+| PowerShell | 5.1+ | Windows 自带 |
+| Git | 2.25+ | [git-scm.com](https://git-scm.com/) |
+| Bun | 1.3+ | `npm install -g bun` |
+
+#### 克隆仓库
 
 ```bash
 git clone https://github.com/1186258278/OpenCodeChineseTranslation.git
 cd OpenCodeChineseTranslation
 ```
 
-### 一键汉化+部署
+#### 初始化子模块
 
 ```bash
+git submodule update --init --recursive
+```
+
+#### 一键汉化+部署
+
+```powershell
 .\scripts\opencode.ps1
 ```
 
@@ -76,158 +98,197 @@ cd OpenCodeChineseTranslation
 
 ---
 
-## 📋 主菜单功能
+### 📋 功能菜单
 
-运行 `.\scripts\opencode.ps1` 后显示主菜单：
-
-| 选项 | 功能 |
-|------|------|
-| **[1]** | 一键汉化+部署（推荐） |
-| **[2]** | 验证汉化结果 |
-| **[3]** | 汉化调试工具 |
-| **[4]** | 检测版本更新 |
-| **[5]** | 备份当前版本 |
-| **[9]** | 高级菜单 |
-
-### 高级菜单功能
+#### 主菜单
 
 | 选项 | 功能 |
 |------|------|
-| **[1]** | 拉取最新代码 |
-| **[2]** | 应用汉化补丁 |
-| **[3]** | 编译程序 |
-| **[4]** | 检测版本更新 |
-| **[5]** | 备份源码和编译产物（支持自定义名称） |
-| **[6]** | 从备份恢复 |
-| **[R]** | 源码恢复（强制重置到最新版） |
-| **[7]** | 恢复原始文件 |
-| **[8]** | 打开输出目录 |
-| **[9]** | 替换全局版本 |
+| `[1]` | 一键汉化+部署（推荐新手） |
+| `[2]` | 验证汉化效果 |
+| `[3]` | 汉化调试工具 |
+| `[4]` | 版本检测 |
+| `[5]` | 备份当前版本 |
+| `[L]` | 查看更新日志 |
+| `[6]` | 高级菜单 |
+
+#### 高级菜单
+
+| 选项 | 功能 |
+|------|------|
+| `[1]` | 拉取最新代码 |
+| `[2]` | 应用汉化补丁 |
+| `[3]` | 编译程序 |
+| `[4]` | 版本检测 |
+| `[5]` | 备份源码和编译产物 |
+| `[6]` | 从备份恢复 |
+| `[H]` | 查看更新日志 |
+| `[7]` | 恢复原始文件 |
+| `[8]` | 打开输出目录 |
+| `[9]` | 替换全局版本 |
+| `[C]` | 清理工具 |
+| `[L]` | 启动 OpenCode |
+| `[R]` | 源码恢复（强制重置） |
+| `[S]` | 恢复脚本 |
 
 ---
 
-## 💻 系统要求
-
-| 工具 | 版本 | 安装 |
-|------|------|------|
-| **PowerShell** | 5.1+ | Windows 自带 |
-| **Git** | 2.25+ | [下载](https://git-scm.com/) |
-| **Bun** | 1.0+ | `npm install -g bun` |
-| **Node.js** | 18+ | Bun 自带 |
-
----
-
-## 📖 使用说明
-
-### 主脚本功能
-
-运行 `.\scripts\opencode.ps1` 后显示主菜单：
-
-| 选项 | 功能 |
-|------|------|
-| **[1]** | 一键汉化+部署（推荐） |
-| **[2]** | 验证汉化结果 |
-| **[3]** | 汉化调试工具 |
-| **[4]** | 检测版本更新 |
-| **[5]** | 备份当前版本 |
-| **[9]** | 高级菜单 |
-
-### 高级菜单功能
-
-| 选项 | 功能 |
-|------|------|
-| **[1]** | 拉取最新代码 |
-| **[2]** | 应用汉化补丁 |
-| **[3]** | 编译程序 |
-| **[4]** | 检测版本更新 |
-| **[5]** | 备份源码和编译产物（支持自定义名称） |
-| **[6]** | 从备份恢复 |
-| **[R]** | 源码恢复（强制重置到最新版） |
-| **[7]** | 恢复原始文件 |
-| **[8]** | 打开输出目录 |
-| **[9]** | 替换全局版本 |
-
----
-
-## 🛠️ 常见问题
-
-### 常见问题
+### 🛠️ 常见问题
 
 | 问题 | 解决方法 |
 |------|----------|
 | 执行策略错误 | `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` |
 | 编译失败 | 检查 Bun 版本，运行 `[3] 汉化调试工具` |
 | 汉化未生效 | 运行 `[2] 验证汉化结果` 查看详情 |
-| 源码损坏 | 运行 `[R] 源码恢复` |
+| 源码损坏 | 运行高级菜单 `[R] 源码恢复` |
 
 ---
 
-## 🌟 汉化配置说明
+### 🌟 贡献指南
 
-### 模块化结构（推荐）
+欢迎提交 Issue 和 Pull Request！
 
-新版本使用模块化的多文件结构：
+1. **发现 Bug** → 提交 Issue
+2. **新功能建议** → 提交 Issue
+3. **汉化改进** → 提交 Pull Request
+4. **脚本优化** → 提交 Pull Request
 
-```
-i18n/
-├── config.json       # 主配置（模块索引）
-├── dialogs/         # 16 个对话框汉化文件
-├── routes/          # 3 个路由汉化文件
-├── components/      # 6 个组件汉化文件
-└── common/          # 5 个通用汉化文件
-```
-
-### 添加/修改汉化
-
-1. **添加新模块**：在对应目录创建 JSON 文件
-2. **修改现有模块**：编辑对应的 JSON 文件
-3. **更新索引**：在 `config.json` 中添加模块路径到对应分类
-
-示例：
-```json
-{
-  "modules": {
-    "dialogs": [
-      "dialogs/dialog-new-feature.json"
-    ]
-  }
-}
-```
+详细贡献指南请参考 [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ---
 
-## 📄 许可证
+### 📄 许可证
 
 MIT License - 详见 [LICENSE](LICENSE) 文件
 
 ---
 
-## 🤝 贡献
-
-欢迎提交 Issue 和 Pull Request！
-
-1. 发现 Bug → 提交 Issue
-2. 新功能建议 → 提交 Issue
-3. 汉化改进 → 提交 Pull Request
-4. 脚本优化 → 提交 Pull Request
-
----
-
-## 📜 版本历史
-
-- **v4.0** - 模块化汉化结构，支持30+独立模块
-- **v3.1** - 补充遗漏的汉化点
-- **v3.0** - 优化脚本性能和错误处理
-- **v2.0** - 添加高级菜单和备份功能
-- **v1.0** - 初始版本
-
----
-
-## 🔗 相关链接
+### 🔗 相关链接
 
 - [OpenCode 官方仓库](https://github.com/anomalyco/opencode)
-- [OpenCode 中文文档](https://opencode.ai/docs)
+- [OpenCode 官方文档](https://opencode.ai/docs)
 
 ---
 
-## ⭐ Star 如果这个项目对您有帮助，请给一个 Star！
+</div>
+
+## English Documentation
+
+<div id="english-documentation">
+
+### 📖 Overview
+
+OpenCode Chinese Localization Tool is a complete PowerShell management script set for localizing the OpenCode project to Chinese. It supports automated pull, patch, build, and deployment workflows.
+
+---
+
+### ✨ Key Features
+
+| Feature | Description |
+|---------|-------------|
+| **One-Click Localization** | Automated pull, patch, and build OpenCode |
+| **Modular Configuration** | 36 independent i18n modules for easy maintenance |
+| **Version Management** | Check updates, view changelog, pull latest code |
+| **Backup & Restore** | Full backup and selective restore |
+| **Verification** | Validate translation coverage, debug tools |
+
+### Translation Scope
+
+- 🎯 Command Panel (sessions, models, agent switching)
+- 💬 Dialogs (agent selection, session list, message handling)
+- 📊 Sidebar (context management, MCP status)
+- 🔝 Top Bar (sub-agent navigation)
+- 🛠️ Permission System (file access requests)
+- 🔔 Notifications & Tips (70+ action prompts)
+
+---
+
+### 🚀 Quick Start
+
+#### Prerequisites
+
+| Tool | Version | Install |
+|------|---------|---------|
+| PowerShell | 5.1+ | Built-in with Windows |
+| Git | 2.25+ | [git-scm.com](https://git-scm.com/) |
+| Bun | 1.3+ | `npm install -g bun` |
+
+#### Clone Repository
+
+```bash
+git clone https://github.com/1186258278/OpenCodeChineseTranslation.git
+cd OpenCodeChineseTranslation
+```
+
+#### Initialize Submodule
+
+```bash
+git submodule update --init --recursive
+```
+
+#### Run Localization Script
+
+```powershell
+.\scripts\opencode.ps1
+```
+
+Select `[1] One-Click Localization+Deploy` and wait for completion.
+
+---
+
+### 📋 Menu Options
+
+#### Main Menu
+
+| Option | Function |
+|--------|----------|
+| `[1]` | One-Click Localization+Deploy (Recommended) |
+| `[2]` | Verify Translation |
+| `[3]` | Debug Tools |
+| `[4]` | Check Version |
+| `[5]` | Backup Current Version |
+| `[L]` | View Changelog |
+| `[6]` | Advanced Menu |
+
+---
+
+### 🛠️ Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| Execution Policy Error | `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` |
+| Build Failed | Check Bun version, run `[3] Debug Tools` |
+| Translation Not Applied | Run `[2] Verify Translation` for details |
+| Source Code Corrupted | Run Advanced Menu `[R] Restore Source` |
+
+---
+
+### 🤝 Contributing
+
+Issues and Pull Requests are welcome!
+
+1. **Found a Bug** → Submit an Issue
+2. **Feature Request** → Submit an Issue
+3. **Translation Improvement** → Submit a Pull Request
+4. **Script Optimization** → Submit a Pull Request
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+
+---
+
+### 📄 License
+
+MIT License - See [LICENSE](LICENSE) file
+
+---
+
+### 🔗 Related Links
+
+- [OpenCode Official Repository](https://github.com/anomalyco/opencode)
+- [OpenCode Documentation](https://opencode.ai/docs)
+
+---
+
+</div>
+
+## ⭐ Star this project if you find it helpful!
