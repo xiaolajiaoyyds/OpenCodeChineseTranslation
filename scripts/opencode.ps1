@@ -207,7 +207,8 @@ function Get-I18NConfig {
     function Load-Modules {
         param(
             [string]$Category,
-            [array]$ModuleList
+            [array]$ModuleList,
+            [hashtable]$ModuleHash
         )
         foreach ($module in $ModuleList) {
             $modulePath = "$I18N_DIR\$module"
@@ -218,7 +219,7 @@ function Get-I18NConfig {
                     $moduleName = [System.IO.Path]::GetFileNameWithoutExtension($module)
                     # 添加分类前缀以避免同名冲突
                     $moduleKey = "$Category-$moduleName"
-                    $allModules[$moduleKey] = $moduleContent
+                    $ModuleHash[$moduleKey] = $moduleContent
                 } catch {
                     Write-ColorOutput Yellow "[警告] 模块加载失败: $module"
                 }
@@ -230,19 +231,19 @@ function Get-I18NConfig {
 
     # 加载各类模块
     if ($mainConfig.modules.dialogs) {
-        Load-Modules -Category "dialogs" -ModuleList $mainConfig.modules.dialogs
+        Load-Modules -Category "dialogs" -ModuleList $mainConfig.modules.dialogs -ModuleHash $allModules
     }
     if ($mainConfig.modules.routes) {
-        Load-Modules -Category "routes" -ModuleList $mainConfig.modules.routes
+        Load-Modules -Category "routes" -ModuleList $mainConfig.modules.routes -ModuleHash $allModules
     }
     if ($mainConfig.modules.components) {
-        Load-Modules -Category "components" -ModuleList $mainConfig.modules.components
+        Load-Modules -Category "components" -ModuleList $mainConfig.modules.components -ModuleHash $allModules
     }
     if ($mainConfig.modules.common) {
-        Load-Modules -Category "common" -ModuleList $mainConfig.modules.common
+        Load-Modules -Category "common" -ModuleList $mainConfig.modules.common -ModuleHash $allModules
     }
     if ($mainConfig.modules.root) {
-        Load-Modules -Category "root" -ModuleList $mainConfig.modules.root
+        Load-Modules -Category "root" -ModuleList $mainConfig.modules.root -ModuleHash $allModules
     }
 
     # 返回整合后的配置（兼容旧格式）
@@ -1497,6 +1498,11 @@ function Test-I18NPatches {
 
     $config = Get-I18NConfig
     if (!$config) {
+        Write-ColorOutput Red "[错误] 无法加载汉化配置"
+        Write-Output "配置路径: $I18N_CONFIG"
+        if (!(Test-Path $I18N_CONFIG)) {
+            Write-ColorOutput Red "配置文件不存在: $I18N_CONFIG"
+        }
         Read-Host "按回车键继续"
         return
     }
