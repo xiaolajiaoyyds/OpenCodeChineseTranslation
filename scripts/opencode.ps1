@@ -121,44 +121,46 @@ function Invoke-GitCommandWithProgress {
 
     Write-Host "$Message... " -NoNewline
 
-    $psi = New-Object System.Diagnostics.ProcessStartInfo
-    $psi.FileName = "git.exe"
-    $psi.Arguments = $Command
-    $psi.UseShellExecute = $false
-    $psi.RedirectStandardOutput = $true
-    $psi.RedirectStandardError = $true
-    $psi.CreateNoWindow = $true
-    $psi.WorkingDirectory = $WorkingDirectory
+    # 使用 PowerShell 的 git 直接调用，确保输出被捕获
+    $oldLocation = Get-Location
+    try {
+        Set-Location $WorkingDirectory
+        $output = git $Command 2>&1
+        $exitCode = $LASTEXITCODE
+    } finally {
+        Set-Location $oldLocation
+    }
 
-    $process = New-Object System.Diagnostics.Process
-    $process.StartInfo = $psi
-    $process.Start() | Out-Null
+    # 分离 stdout 和 stderr
+    $stdOutput = @($output | Where-Object { $_ -isnot [System.Management.Automation.ErrorRecord] })
+    $errOutput = @($output | Where-Object { $_ -is [System.Management.Automation.ErrorRecord] })
 
-    # 读取输出
-    $output = $process.StandardOutput.ReadToEnd()
-    $error = $process.StandardError.ReadToEnd()
-    $process.WaitForExit()
-
-    $exitCode = $process.ExitCode
+    $outputText = $stdOutput -join "`n"
+    $errorText = $errOutput -join "`n"
 
     if ($exitCode -eq 0) {
         Write-Host "✓" -ForegroundColor Green
         # 如果有输出，显示关键信息
-        if ($output -match "Already up to date") {
+        if ($outputText -match "Already up to date") {
             Write-Host "  已是最新" -ForegroundColor DarkGray
-        } elseif ($output -match "Updating\s+\S+") {
+        } elseif ($outputText -match "Updating\s+\S+") {
             Write-Host "  $($matches[0])" -ForegroundColor Cyan
-        } elseif ($output -match "\d+\s+file\s+changed") {
+        } elseif ($outputText -match "\d+\s+file\s+changed") {
             Write-Host "  $($matches[0])" -ForegroundColor Cyan
         }
     } else {
         Write-Host "✗" -ForegroundColor Red
+        # 显示错误摘要
+        $firstLine = ($outputText -split "`n")[0]
+        if ($firstLine -and $firstLine.Length -lt 80) {
+            Write-Host "  $firstLine" -ForegroundColor DarkGray
+        }
     }
 
     return @{
         Success = ($exitCode -eq 0)
-        Output = $output
-        Error = $error
+        Output = $outputText
+        Error = $errorText
         ExitCode = $exitCode
     }
 }
@@ -2657,7 +2659,24 @@ function Invoke-OneClickFull {
             if ($success) {
                 Write-StepMessage "代码已更新！" "SUCCESS"
             } else {
-                Write-StepMessage "拉取失败（可能网络问题），继续使用本地版本" "WARNING"
+                Write-StepMessage "拉取失败" "ERROR"
+                Write-Host ""
+                Write-Host "   错误详情:" -ForegroundColor Red
+                if ($pullResult.Output) {
+                    Write-Host "   $($pullResult.Output.Trim())" -ForegroundColor DarkGray
+                }
+                if ($pullResult.Error) {
+                    Write-Host "   $($pullResult.Error.Trim())" -ForegroundColor DarkGray
+                }
+                Write-Host ""
+
+                $continueChoice = Read-Host "   是否继续使用本地版本汉化？(Y/n)"
+                if ($continueChoice -eq "n" -or $continueChoice -eq "N") {
+                    Write-StepMessage "用户取消操作" "INFO"
+                    Read-Host "按回车键继续"
+                    return
+                }
+                Write-StepMessage "继续使用本地版本..." "INFO"
             }
         } else {
             Write-StepMessage "跳过拉取，使用本地版本" "INFO"
