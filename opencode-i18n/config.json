@@ -1,5 +1,5 @@
 {
-  "version": "4.1",
+  "version": "4.2",
   "description": "OpenCode 中文汉化配置文件（模块化结构）",
   "lastUpdate": "2026-01-09",
   "testPassRate": "100%",
@@ -28,17 +28,22 @@
       "dialogs/dialog-toast.json"
     ],
     "routes": [
+      "routes/route-footer.json",
+      "routes/route-header.json",
       "routes/route-home.json",
       "routes/route-permission.json",
-      "routes/route-session.json"
+      "routes/route-session.json",
+      "routes/route-sidebar.json"
     ],
     "components": [
+      "components/autocomplete.json",
       "components/command-panel.json",
       "components/component-prompt.json",
       "components/component-question.json",
       "components/component-sidebar.json",
       "components/did-you-know.json",
-      "components/inline-tools.json"
+      "components/inline-tools.json",
+      "components/tips.json"
     ],
     "common": [
       "common/app-messages.json",

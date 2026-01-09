@@ -5,6 +5,7 @@
     "title=\"Sessions\"": "title=\"会话列表\"",
     "title: \"delete\"": "title: \"删除\"",
     "title: \"rename\"": "title: \"重命名\"",
-    "category = \"Today\"": "category = \"今天\""
+    "category = \"Today\"": "category = \"今天\"",
+    "Press ${deleteKeybind} again to confirm": "再次按 ${deleteKeybind} 确认"
   }
 }

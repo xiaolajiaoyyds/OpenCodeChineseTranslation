@@ -1,0 +1,18 @@
+{
+  "file": "src/cli/cmd/tui/routes/session/sidebar.tsx",
+  "description": "会话侧边栏",
+  "replacements": {
+    "Connected": "已连接",
+    "Disabled": "已禁用",
+    "Needs auth": "需要认证",
+    "Needs client ID": "需要客户端 ID",
+    "active": "个活动",
+    "错误": "错误",
+    "错误s": "错误",
+    "LSPs have been disabled in settings": "LSP 已在设置中禁用",
+    "LSPs will activate as files are read": "LSP 将在读取文件时激活",
+    "OpenCode includes free models so you can start immediately.": "OpenCode 包含免费模型，您可以立即开始使用。",
+    "Connect from 75+ providers to use other models, including Claude, GPT, Gemini etc": "从 75+ 提供商连接以使用其他模型，包括 Claude、GPT、Gemini 等",
+    "Connect provider": "连接提供商"
+  }
+}

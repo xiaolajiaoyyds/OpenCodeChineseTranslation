@@ -8,6 +8,7 @@
     "title: connected() ? \"Connect provider\" : \"View all providers\"": "title: connected() ? \"连接提供商\" : \"查看所有提供商\"",
     "\"Free\"": "\"免费\"",
     "(Favorite)": "(收藏)",
-    "category: \"Recent\"": "category: \"最近\""
+    "category: \"Recent\"": "category: \"最近\"",
+    "title: \"Favorite\"": "title: \"收藏\""
   }
 }

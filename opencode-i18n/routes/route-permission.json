@@ -19,6 +19,12 @@
     "Edit {normalizePath": "编辑 {normalizePath",
     "Call tool": "调用工具",
     "confirm": "确认",
-    "cancel": "取消"
+    "cancel": "取消",
+    "This will allow the following patterns until OpenCode is restarted": "这将允许以下模式，直到 OpenCode 重启",
+    "} Task": "} 任务",
+    "WebFetch ": "网页获取 ",
+    "Exa Web Search": "网络搜索",
+    "Exa Code Search": "代码搜索",
+    "Access external directory ": "访问外部目录 "
   }
 }
