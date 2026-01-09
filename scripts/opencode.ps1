@@ -30,8 +30,8 @@ if (Test-Path $SRC_DIR) {
 $SCRIPT_SELF = $PSCommandPath
 if ($SCRIPT_SELF -and (Test-Path $SCRIPT_SELF)) {
     $SCRIPT_BACKUP_DIR = "$OUT_DIR\script_backup"
-    $SCRIPT_BACKUP = "$SCRIPT_BACKUP_DIR\opencode-v3.ps1"
-    $SCRIPT_BACKUP_OLD = "$SCRIPT_BACKUP_DIR\opencode-v3.ps1.old"
+    $SCRIPT_BACKUP = "$SCRIPT_BACKUP_DIR\opencode.ps1"
+    $SCRIPT_BACKUP_OLD = "$SCRIPT_BACKUP_DIR\opencode.ps1.old"
 
     # 创建备份目录
     if (!(Test-Path $SCRIPT_BACKUP_DIR)) {
@@ -808,12 +808,24 @@ function Show-VersionInfo {
                 $currentBranch = $branchOutput
             }
 
+            # 使用 fetch + merge 策略，避免多分支 FETCH_HEAD 冲突
+            $success = $false
             if ($currentBranch) {
-                $pullResult = Invoke-GitCommandWithProgress -Command "pull origin $currentBranch --no-edit" -Message "   → 拉取代码"
+                # 先 fetch 只获取当前分支（不获取其他分支）
+                Write-Host "   → 获取 origin/$currentBranch" -ForegroundColor DarkGray
+                $fetchOutput = git fetch origin "refs/heads/$currentBranch:refs/remotes/origin/$currentBranch" 2>&1
+                $fetchSuccess = ($LASTEXITCODE -eq 0)
+
+                if ($fetchSuccess) {
+                    # 然后 merge --ff-only 只快进合并
+                    Write-Host "   → 合并更新" -ForegroundColor DarkGray
+                    $mergeOutput = git merge --ff-only "origin/$currentBranch" 2>&1
+                    $success = ($LASTEXITCODE -eq 0)
+                }
             } else {
                 $pullResult = Invoke-GitCommandWithProgress -Command "pull --no-edit" -Message "   → 拉取代码"
+                $success = $pullResult.Success
             }
-            $success = $pullResult.Success
 
             if (!$success -and $detectedProxy) {
                 # 如果检测到代理但拉取失败，尝试直连
@@ -821,11 +833,16 @@ function Show-VersionInfo {
                 git config --unset http.proxy
                 git config --unset https.proxy
                 if ($currentBranch) {
-                    $pullResult = Invoke-GitCommandWithProgress -Command "pull origin $currentBranch --no-edit" -Message "   → 直连拉取"
+                    $fetchOutput = git fetch origin "refs/heads/$currentBranch:refs/remotes/origin/$currentBranch" 2>&1
+                    $fetchSuccess = ($LASTEXITCODE -eq 0)
+                    if ($fetchSuccess) {
+                        $mergeOutput = git merge --ff-only "origin/$currentBranch" 2>&1
+                        $success = ($LASTEXITCODE -eq 0)
+                    }
                 } else {
                     $pullResult = Invoke-GitCommandWithProgress -Command "pull --no-edit" -Message "   → 直连拉取"
+                    $success = $pullResult.Success
                 }
-                $success = $pullResult.Success
             }
 
             Pop-Location
@@ -2735,12 +2752,24 @@ function Invoke-OneClickFull {
                 $currentBranch = $branchOutput
             }
 
+            # 使用 fetch + merge 策略，避免多分支 FETCH_HEAD 冲突
+            $success = $false
             if ($currentBranch) {
-                $pullResult = Invoke-GitCommandWithProgress -Command "pull origin $currentBranch --no-edit" -Message "   → 拉取代码"
+                # 先 fetch 只获取当前分支（不获取其他分支）
+                Write-Host "   → 获取 origin/$currentBranch" -ForegroundColor DarkGray
+                $fetchOutput = git fetch origin "refs/heads/$currentBranch:refs/remotes/origin/$currentBranch" 2>&1
+                $fetchSuccess = ($LASTEXITCODE -eq 0)
+
+                if ($fetchSuccess) {
+                    # 然后 merge --ff-only 只快进合并
+                    Write-Host "   → 合并更新" -ForegroundColor DarkGray
+                    $mergeOutput = git merge --ff-only "origin/$currentBranch" 2>&1
+                    $success = ($LASTEXITCODE -eq 0)
+                }
             } else {
                 $pullResult = Invoke-GitCommandWithProgress -Command "pull --no-edit" -Message "   → 拉取代码"
+                $success = $pullResult.Success
             }
-            $success = $pullResult.Success
 
             if (!$success -and $detectedProxy) {
                 # 如果检测到代理但拉取失败，尝试直连
@@ -2748,11 +2777,16 @@ function Invoke-OneClickFull {
                 git config --unset http.proxy
                 git config --unset https.proxy
                 if ($currentBranch) {
-                    $pullResult = Invoke-GitCommandWithProgress -Command "pull origin $currentBranch --no-edit" -Message "   → 直连拉取"
+                    $fetchOutput = git fetch origin "refs/heads/$currentBranch:refs/remotes/origin/$currentBranch" 2>&1
+                    $fetchSuccess = ($LASTEXITCODE -eq 0)
+                    if ($fetchSuccess) {
+                        $mergeOutput = git merge --ff-only "origin/$currentBranch" 2>&1
+                        $success = ($LASTEXITCODE -eq 0)
+                    }
                 } else {
                     $pullResult = Invoke-GitCommandWithProgress -Command "pull --no-edit" -Message "   → 直连拉取"
+                    $success = $pullResult.Success
                 }
-                $success = $pullResult.Success
             }
 
             Pop-Location
@@ -3328,8 +3362,8 @@ function Restore-Script {
     Write-ColorOutput Cyan "可用备份:"
     Write-Output ""
 
-    $mainBackup = "$scriptBackupDir\opencode-v3.ps1"
-    $oldBackup = "$scriptBackupDir\opencode-v3.ps1.old"
+    $mainBackup = "$scriptBackupDir\opencode.ps1"
+    $oldBackup = "$scriptBackupDir\opencode.ps1.old"
 
     $hasMain = Test-Path $mainBackup
     $hasOld = Test-Path $oldBackup
@@ -3631,7 +3665,7 @@ function Show-ProjectInfo {
 ## 目录结构
 ```
 $SCRIPT_DIR\
-├── opencode-v3.ps1          # 主管理脚本
+├── opencode.ps1          # 主管理脚本
 ├── opencode-i18n.json       # 汉化配置文件
 ├── opencode.exe             # 编译输出
 └── opencode-zh-CN\          # OpenCode 源码
