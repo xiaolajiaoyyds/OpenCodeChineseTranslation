@@ -812,11 +812,12 @@ function Show-VersionInfo {
 
             Write-StepMessage "从远程仓库拉取最新代码..." "INFO"
             # 获取当前分支名，使用精确拉取避免合并冲突
-            $currentBranch = $null
+            $currentBranch = "dev"  # 默认分支
             $branchOutput = git rev-parse --abbrev-ref HEAD 2>&1
             if ($LASTEXITCODE -eq 0 -and $branchOutput) {
-                $currentBranch = $branchOutput
+                $currentBranch = $branchOutput.Trim()
             }
+            Write-Host "   → 当前分支: $currentBranch" -ForegroundColor DarkGray
 
             # 使用 fetch + merge 策略，避免多分支 FETCH_HEAD 冲突
             $success = $false
@@ -1844,11 +1845,12 @@ function Update-Source {
 
     Write-StepMessage "从远程仓库拉取最新代码..." "INFO"
     # 获取当前分支名，使用精确拉取避免合并冲突
-    $currentBranch = $null
+    $currentBranch = "dev"  # 默认分支
     $branchOutput = git rev-parse --abbrev-ref HEAD 2>&1
     if ($LASTEXITCODE -eq 0 -and $branchOutput) {
-        $currentBranch = $branchOutput
+        $currentBranch = $branchOutput.Trim()
     }
+    Write-Host "   → 当前分支: $currentBranch" -ForegroundColor DarkGray
 
     # 使用 fetch + merge 策略
     $success = $false
@@ -2853,11 +2855,12 @@ function Invoke-OneClickFull {
 
             Write-StepMessage "从远程仓库拉取最新代码..." "INFO"
             # 获取当前分支名，使用精确拉取避免合并冲突
-            $currentBranch = $null
+            $currentBranch = "dev"  # 默认分支
             $branchOutput = git rev-parse --abbrev-ref HEAD 2>&1
             if ($LASTEXITCODE -eq 0 -and $branchOutput) {
-                $currentBranch = $branchOutput
+                $currentBranch = $branchOutput.Trim()
             }
+            Write-Host "   → 当前分支: $currentBranch" -ForegroundColor DarkGray
 
             # 使用 fetch + merge 策略，避免多分支 FETCH_HEAD 冲突
             $success = $false
