@@ -1527,8 +1527,8 @@ function Test-I18NPatches {
                 $replacement.Value
             }
 
-            # 检查文件中是否包含翻译后的文本
-            if ($content -like "*$expected*") {
+            # 检查文件中是否包含翻译后的文本（使用 IndexOf 避免通配符问题）
+            if ($content.IndexOf($expected) -ge 0) {
                 $passedTests++
             } else {
                 $patchPassed = $false
