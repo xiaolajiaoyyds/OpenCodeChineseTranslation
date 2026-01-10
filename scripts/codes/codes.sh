@@ -45,6 +45,12 @@ find_resource() {
 NPM_REGISTRY="https://registry.npmmirror.com"
 NVM_INSTALL_SCRIPT="https://ghp.ci/https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh"
 
+# 更新检查配置
+UPDATE_CHECK_FILE="$HOME/.codes/update_check"
+UPDATE_CHECK_INTERVAL=7  # 天数
+REPO_URL="https://raw.githubusercontent.com/1186258278/OpenCodeChineseTranslation/main"
+REPO_URL_GITEE="https://gitee.com/QtCodeCreators/OpenCodeChineseTranslation/raw/main"
+
 # ==================== 工具函数 ====================
 print_color() {
     local color=$1
@@ -166,6 +172,205 @@ refresh_env() {
     load_nvm
     load_bun
     load_npm
+}
+
+# ==================== 版本检测与更新 ====================
+# 检查是否需要检查更新
+should_check_update() {
+    local current_time=$(date +%s)
+    local interval_seconds=$((UPDATE_CHECK_INTERVAL * 24 * 60 * 60))
+
+    if [ ! -f "$UPDATE_CHECK_FILE" ]; then
+        return 0  # 首次运行，需要检查
+    fi
+
+    local last_check=$(cat "$UPDATE_CHECK_FILE" 2>/dev/null || echo "0")
+    local elapsed=$((current_time - last_check))
+
+    [ $elapsed -ge $interval_seconds ]
+}
+
+# 记录检查时间
+record_check_time() {
+    local current_time=$(date +%s)
+    mkdir -p "$(dirname "$UPDATE_CHECK_FILE")"
+    echo "$current_time" > "$UPDATE_CHECK_FILE"
+}
+
+# 获取远程最新版本
+get_remote_version() {
+    # 先尝试 GitHub
+    local remote_version=$(curl -fsSL --max-time 5 "$REPO_URL/scripts/codes/codes.sh" 2>/dev/null | grep '^VERSION="' | head -1 | cut -d'"' -f2)
+
+    # 失败则尝试 Gitee
+    if [ -z "$remote_version" ]; then
+        remote_version=$(curl -fsSL --max-time 5 "$REPO_URL_GITEE/scripts/codes/codes.sh" 2>/dev/null | grep '^VERSION="' | head -1 | cut -d'"' -f2)
+    fi
+
+    echo "$remote_version"
+}
+
+# 版本比较
+version_compare() {
+    local current=$1
+    local remote=$2
+
+    # 移除 'v' 前缀
+    current="${current#v}"
+    remote="${remote#v}"
+
+    [ "$current" != "$remote" ]
+}
+
+# 检查更新
+check_update() {
+    local silent=${1:-false}
+
+    if ! should_check_update && [ "$silent" = "true" ]; then
+        return 0
+    fi
+
+    local remote_version=$(get_remote_version)
+
+    if [ -z "$remote_version" ]; then
+        [ "$silent" = "false" ] && print_color "${YELLOW}" "  ⚠ 无法获取远程版本信息"
+        return 1
+    fi
+
+    if version_compare "$VERSION" "$remote_version"; then
+        print_color "${CYAN}" "  ═══════════════════════════════════════"
+        print_color "${YELLOW}" "  🎉 发现新版本: v${remote_version}"
+        print_color "${DARK_GRAY}" "     当前版本: v${VERSION}"
+        print_color "${CYAN}" "  ═══════════════════════════════════════"
+        echo ""
+        print_color "${CYAN}" "  更新方法:"
+        print_color "${WHITE}" "    codes update       # 自动更新"
+        print_color "${WHITE}" "    codes check-update  # 手动检查更新"
+        echo ""
+        record_check_time
+        return 0
+    fi
+
+    [ "$silent" = "false" ] && print_color "${GREEN}" "  ✓ 已是最新版本 v${VERSION}"
+    record_check_time
+    return 1
+}
+
+# 自更新
+cmd_update() {
+    print_header
+    print_color "${YELLOW}" "       更新 Codes"
+    print_separator
+    echo ""
+
+    local remote_version=$(get_remote_version)
+
+    if [ -z "$remote_version" ]; then
+        print_color "${RED}" "  ✗ 无法获取远程版本信息"
+        print_color "${DARK_GRAY}" "  请检查网络连接"
+        return 1
+    fi
+
+    print_color "${CYAN}" "  当前版本: ${WHITE}v${VERSION}${NC}"
+    print_color "${CYAN}" "  远程版本: ${WHITE}v${remote_version}${NC}"
+    echo ""
+
+    if ! version_compare "$VERSION" "$remote_version"; then
+        print_color "${GREEN}" "  ✓ 已是最新版本"
+        return 0
+    fi
+
+    print_color "${YELLOW}" "  → 开始更新..."
+    echo ""
+
+    local install_dir="/usr/local/lib/codes"
+    local backup_dir="/tmp/codes_backup_$(date +%s)"
+
+    # 备份当前版本
+    print_color "${DARK_GRAY}" "  备份当前版本..."
+    $SUDO_CMD mkdir -p "$backup_dir"
+    $SUDO_CMD cp -a "$install_dir"/* "$backup_dir/" 2>/dev/null
+
+    # 下载新版本
+    print_color "${DARK_GRAY}" "  下载新版本..."
+    local new_script="/tmp/codes_new.sh"
+
+    if curl -fsSL --max-time 30 "$REPO_URL/scripts/codes/codes.sh" -o "$new_script" 2>/dev/null; then
+        : # 成功
+    elif curl -fsSL --max-time 30 "$REPO_URL_GITEE/scripts/codes/codes.sh" -o "$new_script" 2>/dev/null; then
+        : # 成功（Gitee）
+    else
+        print_color "${RED}" "  ✗ 下载失败"
+        return 1
+    fi
+
+    # 验证下载的版本
+    local downloaded_version=$(grep '^VERSION="' "$new_script" 2>/dev/null | head -1 | cut -d'"' -f2)
+    if [ "$downloaded_version" != "$remote_version" ]; then
+        print_color "${RED}" "  ✗ 版本验证失败"
+        rm -f "$new_script"
+        return 1
+    fi
+
+    # 安装新版本
+    print_color "${DARK_GRAY}" "  安装新版本..."
+    $SUDO_CMD mkdir -p "$install_dir"
+    $SUDO_CMD cp "$new_script" "$install_dir/codes.sh"
+    $SUDO_CMD chmod +x "$install_dir/codes.sh"
+
+    # 创建 wrapper
+    $SUDO_CMD tee /usr/local/bin/codes > /dev/null << 'EOF'
+#!/bin/bash
+SCRIPT_DIR="/usr/local/lib/codes"
+bash "$SCRIPT_DIR/codes.sh" "$@"
+EOF
+    $SUDO_CMD chmod +x /usr/local/bin/codes
+
+    rm -f "$new_script"
+
+    print_color "${GREEN}" "  ✓ 更新成功! v${VERSION} → v${remote_version}"
+    echo ""
+    print_color "${YELLOW}" "  请运行以下命令使更新生效:"
+    print_color "${WHITE}" "    hash -r && codes --version"
+    echo ""
+
+    # 清理备份
+    rm -rf "$backup_dir"
+    record_check_time
+
+    return 0
+}
+
+# 手动检查更新命令
+cmd_check_update() {
+    print_header
+    print_color "${YELLOW}" "       检查更新"
+    print_separator
+    echo ""
+
+    print_color "${CYAN}" "  当前版本: ${WHITE}v${VERSION}${NC}"
+    echo ""
+
+    local remote_version=$(get_remote_version)
+
+    if [ -z "$remote_version" ]; then
+        print_color "${RED}" "  ✗ 无法获取远程版本信息"
+        return 1
+    fi
+
+    print_color "${CYAN}" "  远程版本: ${WHITE}v${remote_version}${NC}"
+    echo ""
+
+    if version_compare "$VERSION" "$remote_version"; then
+        print_color "${YELLOW}" "  ✓ 有新版本可用!"
+        echo ""
+        print_color "${WHITE}" "  运行 ${CYAN}codes update${WHITE} 来更新"
+    else
+        print_color "${GREEN}" "  ✓ 已是最新版本"
+    fi
+
+    echo ""
+    record_check_time
 }
 
 # ==================== 环境诊断 ====================
@@ -1033,6 +1238,9 @@ show_menu() {
     echo -e "${CYAN}   ║${NC}  ${CYAN}[7]${NC} 汉化脚本       ${DARK_GRAY}- 安装汉化管理工具${NC}           ${CYAN}║${NC}"
     echo -e "${CYAN}   ║${NC}  ${CYAN}[8]${NC} coding-helper  ${DARK_GRAY}- 启动智谱编码助手${NC}            ${CYAN}║${NC}"
     echo -e "${CYAN}   ╠═══════════════════════════════════════════════╣${NC}"
+    echo -e "${CYAN}   ║${NC}  ${MAGENTA}[u]${NC} 检查更新      ${DARK_GRAY}- 检查 Codes 新版本${NC}             ${CYAN}║${NC}"
+    echo -e "${CYAN}   ║${NC}  ${GREEN}[U]${NC} 更新 Codes     ${DARK_GRAY}- 自动更新到最新版${NC}             ${CYAN}║${NC}"
+    echo -e "${CYAN}   ╠═══════════════════════════════════════════════╣${NC}"
     echo -e "${CYAN}   ║${NC}  ${CYAN}[9]${NC} 环境变量       ${DARK_GRAY}- 显示/导出环境变量${NC}            ${CYAN}║${NC}"
     echo -e "${CYAN}   ║${NC}  ${RED}[0]${NC} 退出                                             ${CYAN}║${NC}"
     echo -e "${CYAN}   ╚═══════════════════════════════════════════════╝${NC}"
@@ -1040,6 +1248,7 @@ show_menu() {
 
     echo -e "${DARK_GRAY}提示: 也可以直接运行 'codes <命令>'，如: codes doctor${NC}"
     echo -e "${DARK_GRAY}      'codes install [编号]' 可指定安装组件${NC}"
+    echo -e "${DARK_GRAY}      'codes update' 检查并更新 Codes${NC}"
     echo ""
 }
 
@@ -1062,6 +1271,8 @@ show_help() {
     echo -e "  ${GREEN}i18n${NC}            汉化脚本 - 安装汉化管理工具"
     echo -e "  ${GREEN}helper${NC} [...]   coding-helper - 启动智谱编码助手"
     echo -e "  ${GREEN}env${NC}             环境变量 - 显示/导出环境变量"
+    echo -e "  ${GREEN}update${NC}          检查并更新 Codes 到最新版本"
+    echo -e "  ${GREEN}check-update${NC}    检查 Codes 新版本"
     echo -e "  ${GREEN}menu${NC}            显示交互菜单"
     echo -e "  ${GREEN}--version${NC}       显示版本信息"
     echo -e "  ${GREEN}--help${NC}          显示此帮助信息"
@@ -1074,6 +1285,8 @@ show_help() {
     echo "  codes claude              # 安装 Claude Code"
     echo "  codes opencode            # 安装 OpenCode"
     echo "  codes i18n                 # 安装汉化脚本"
+    echo "  codes update              # 更新 Codes"
+    echo "  codes check-update        # 检查更新"
     echo ""
     echo -e "${CYAN}组件编号:${NC}"
     echo "  [1] Node.js    [2] Bun    [3] Git    [4] Python"
@@ -1139,6 +1352,9 @@ main() {
     # 每次启动时自动刷新环境变量
     refresh_env
 
+    # 静默检查更新（每周检查一次）
+    check_update true
+
     local command=${1:-menu}
 
     case $command in
@@ -1148,7 +1364,7 @@ main() {
         install|add)
             cmd_install "$2"
             ;;
-        upgrade|update)
+        upgrade|update-components)
             cmd_upgrade
             ;;
         node)
@@ -1169,6 +1385,12 @@ main() {
             ;;
         i18n|chinese|localization)
             install_opencode_i18n
+            ;;
+        update|self-update)
+            cmd_update
+            ;;
+        check-update)
+            cmd_check_update
             ;;
         menu|interactive)
             # 交互式菜单
@@ -1192,6 +1414,7 @@ main() {
                     7) install_opencode_i18n ;;
                     8) cmd_helper ;;
                     9) cmd_env ;;
+                    u|U) [ "$choice" = "u" ] && cmd_check_update || cmd_update ;;
                     0)
                         print_color "${DARK_GRAY}" "再见！"
                         exit 0

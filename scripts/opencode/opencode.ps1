@@ -1,6 +1,12 @@
 # ========================================
-# OpenCode 中文汉化版 - 管理工具 v5.4
+# OpenCode 中文汉化版 - 管理工具 v5.5
 # ========================================
+
+# 版本配置
+$SCRIPT_VERSION = "5.5"
+$UPDATE_CHECK_FILE = "$env:USERPROFILE\.opencode\update_check"
+$UPDATE_CHECK_INTERVAL = 7  # 天数
+$REPO_BASE_URL = "https://raw.githubusercontent.com/1186258278/OpenCodeChineseTranslation/main/scripts/opencode"
 
 # 配置路径 (使用脚本所在目录，自动适配)
 $SCRIPT_DIR = if ($PSScriptRoot) { $PSScriptRoot } else { "." }
@@ -311,6 +317,152 @@ function Show-SystemStatus {
     Write-Host ""
 }
 
+# ==================== 版本检测与更新 ====================
+function Test-ShouldCheckUpdate {
+    $currentTime = [int](Get-Date -UFormat %s)
+    $intervalSeconds = $UPDATE_CHECK_INTERVAL * 24 * 60 * 60
+
+    if (!(Test-Path $UPDATE_CHECK_FILE)) {
+        return $true  # 首次运行，需要检查
+    }
+
+    $lastCheck = [int](Get-Content $UPDATE_CHECK_FILE -ErrorAction SilentlyContinue)
+    if (!$lastCheck) { return $true }
+
+    $elapsed = $currentTime - $lastCheck
+    return $elapsed -ge $intervalSeconds
+}
+
+function Set-UpdateCheckTime {
+    $currentTime = [int](Get-Date -UFormat %s)
+    $checkDir = Split-Path $UPDATE_CHECK_FILE -Parent
+    if (!(Test-Path $checkDir)) {
+        New-Item -ItemType Directory -Path $checkDir -Force | Out-Null
+    }
+    $currentTime | Out-File -FilePath $UPDATE_CHECK_FILE -Force
+}
+
+function Get-RemoteScriptVersion {
+    try {
+        $content = Invoke-RestMethod -Uri "$REPO_BASE_URL/opencode.ps1" -TimeoutSec 10 -ErrorAction Stop
+        if ($content -match 'OpenCode 中文汉化版 - 管理工具 v([\d.]+)') {
+            return $matches[1]
+        }
+    } catch {
+        return $null
+    }
+    return $null
+}
+
+function Test-ScriptUpdate {
+    param([switch]$Silent)
+
+    if (!(Test-ShouldCheckUpdate) -and $Silent) {
+        return $false
+    }
+
+    $remoteVersion = Get-RemoteScriptVersion
+    if (!$remoteVersion) {
+        if (!$Silent) {
+            Write-ColorOutput Yellow "  ⚠ 无法获取远程版本信息"
+        }
+        return $false
+    }
+
+    if ($remoteVersion -ne $SCRIPT_VERSION) {
+        Write-Host ""
+        Write-Host "   ╔════════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
+        Write-Host "   ║" -ForegroundColor Cyan -NoNewline
+        Write-Host " 🎉 发现新版本: v$remoteVersion " -ForegroundColor Yellow -NoNewline
+        Write-Host "                                   ║" -ForegroundColor Cyan
+        Write-Host "   ║" -ForegroundColor Cyan -NoNewline
+        Write-Host "    当前版本: v$SCRIPT_VERSION" -ForegroundColor DarkGray -NoNewline
+        Write-Host "                                           ║" -ForegroundColor Cyan
+        Write-Host "   ╚════════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
+        Write-Host ""
+        Write-Host "   更新方法: 运行 " -NoNewline
+        Write-Host "Update-OpenCodeScript" -ForegroundColor Green
+        Write-Host ""
+        Set-UpdateCheckTime
+        return $true
+    }
+
+    Set-UpdateCheckTime
+    return $false
+}
+
+function Update-OpenCodeScript {
+    Write-Header
+    Show-Separator
+    Write-Output "   更新 OpenCode 汉化脚本"
+    Show-Separator
+    Write-Output ""
+
+    $remoteVersion = Get-RemoteScriptVersion
+    if (!$remoteVersion) {
+        Write-ColorOutput Red "  ✗ 无法获取远程版本信息"
+        Write-ColorOutput DarkGray "  请检查网络连接"
+        Read-Host "按回车键继续"
+        return
+    }
+
+    Write-ColorOutput Cyan "  当前版本: " -NoNewline
+    Write-Host "v$SCRIPT_VERSION"
+    Write-ColorOutput Cyan "  远程版本: " -NoNewline
+    Write-Host "v$remoteVersion"
+    Write-Host ""
+
+    if ($remoteVersion -eq $SCRIPT_VERSION) {
+        Write-ColorOutput Green "  ✓ 已是最新版本"
+        Read-Host "按回车键继续"
+        return
+    }
+
+    Write-ColorOutput Yellow "  → 开始更新..."
+    Write-Host ""
+
+    try {
+        # 下载新版本到临时文件
+        $tempFile = "$env:TEMP\opencode_new.ps1"
+        Invoke-RestMethod -Uri "$REPO_BASE_URL/opencode.ps1" -OutFile $tempFile -TimeoutSec 30
+
+        # 验证下载的版本
+        $tempContent = Get-Content $tempFile -Raw
+        if ($tempContent -match 'OpenCode 中文汉化版 - 管理工具 v([\d.]+)') {
+            $downloadedVersion = $matches[1]
+            if ($downloadedVersion -ne $remoteVersion) {
+                Write-ColorOutput Red "  ✗ 版本验证失败"
+                Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                Read-Host "按回车键继续"
+                return
+            }
+        }
+
+        # 备份当前脚本
+        $currentScript = $PSCommandPath
+        if ($currentScript -and (Test-Path $currentScript)) {
+            $backupPath = "$currentScript.backup"
+            Copy-Item $currentScript $backupPath -Force
+        }
+
+        # 替换脚本
+        Copy-Item $tempFile $currentScript -Force
+        Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+
+        Write-ColorOutput Green "  ✓ 更新成功! v$SCRIPT_VERSION → v$remoteVersion"
+        Write-Host ""
+        Write-ColorOutput Yellow "  请重新运行脚本使更新生效"
+        Write-Host ""
+
+        Set-UpdateCheckTime
+    } catch {
+        Write-ColorOutput Red "  ✗ 更新失败: $_"
+        Write-Host ""
+    }
+
+    Read-Host "按回车键继续"
+}
+
 function Show-Menu {
     Write-Header
     Show-SystemStatus
@@ -366,6 +518,11 @@ function Show-Menu {
     Write-Host "            " -NoNewline
     Write-Host "查看提交记录" -ForegroundColor DarkGray -NoNewline
     Write-Host "        │" -ForegroundColor Cyan
+    Write-Host "   │" -ForegroundColor Cyan -NoNewline
+    Write-Host "   [U]" -ForegroundColor Green -NoNewline
+    Write-Host " 更新脚本    " -ForegroundColor White -NoNewline
+    Write-Host "→ 检查并更新汉化脚本" -ForegroundColor DarkGray -NoNewline
+    Write-Host "│" -ForegroundColor Cyan
     Write-Host "   └───────────────────────────────────────────────────────┘" -ForegroundColor Cyan
     Write-Host ""
 
@@ -4839,6 +4996,9 @@ if (!(Test-Path $SRC_DIR) -or !(Test-Path "$SRC_DIR\.git")) {
     }
 }
 
+# 静默检查更新（每周一次）
+Test-ScriptUpdate -Silent
+
 do {
     Show-Menu
     $choice = Read-Host "请选择"
@@ -4951,6 +5111,8 @@ do {
                 }
             } while ($advChoice -ne "0" -and $advChoice -ne "q" -and $advChoice -ne "Q")
         }
+        "U" { Update-OpenCodeScript }
+        "u" { Update-OpenCodeScript }
         "0" { break }
         "q" { break }
         "Q" { break }
