@@ -77,13 +77,17 @@ class I18n {
     }
 
     let content = fs.readFileSync(targetPath, 'utf-8');
+    // 规范化换行符：统一使用 LF
+    content = content.replace(/\r\n/g, '\n');
     let replaceCount = 0;
     const originalContent = content;
 
     // replacements 是键值对对象
     for (const [find, replace] of Object.entries(config.replacements)) {
-      if (content.includes(find)) {
-        content = content.replaceAll(find, replace);
+      // 也规范化查找字符串中的换行符
+      const normalizedFind = find.replace(/\r\n/g, '\n');
+      if (content.includes(normalizedFind)) {
+        content = content.replaceAll(normalizedFind, replace);
         replaceCount++;
       }
     }

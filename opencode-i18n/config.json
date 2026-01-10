@@ -1,9 +1,9 @@
 ﻿{
     "version":  "5.3",
     "description":  "OpenCode 中文汉化配置文件（模块化结构）",
-    "lastUpdate": "2026-01-10",
+    "lastUpdate": "2026-01-11",
     "testPassRate":  "100%",
-    "supportedCommit":  "7cba1ff79e43e2ad07f2fc28e0b00e6c2d3e0c22",
+    "supportedCommit":  "b41fbda68fe8abfd42be93cf63c78251c677d43c",
     "maintainer":  {
                        "name":  "CodeCreator",
                        "wechat":  "CodeCreator",

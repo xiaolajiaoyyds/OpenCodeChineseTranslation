@@ -5,7 +5,7 @@
     "placeholder=\"Type your own answer\"": "placeholder=\"输入你自己的答案\"",
     ">Confirm</": ">确认</",
     ">Review</": ">审查</",
-    "submit": "提交",
-    "dismiss": "关闭"
+    "function submit()": "function 提交()",
+    "function dismiss()": "function 关闭()"
   }
 }
