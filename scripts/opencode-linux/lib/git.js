@@ -9,7 +9,9 @@ const fs = require('fs');
 const path = require('path');
 const Version = require('./version.js');
 
-const REPO_URL = 'https://gitee.com/QtCodeCreators/OpenCodeChineseTranslation.git';
+// OpenCode 原始仓库（不是翻译仓库）
+const REPO_URL_GITEE = 'https://gitee.com/mirrors/opencode.git';
+const REPO_URL_GITHUB = 'https://github.com/anomalyco/opencode.git';
 
 class Git {
   constructor() {
@@ -32,14 +34,22 @@ class Git {
       throw new Error('源码目录已存在');
     }
 
-    try {
-      execSync(`git clone --depth 1 ${REPO_URL} "${this.opencodeDir}"`, {
-        stdio: 'inherit'
-      });
-      return true;
-    } catch (error) {
-      throw new Error(`克隆失败: ${error.message}`);
+    const urls = [REPO_URL_GITEE, REPO_URL_GITHUB];
+    let lastError = null;
+
+    for (const url of urls) {
+      try {
+        execSync(`git clone --depth 1 ${url} "${this.opencodeDir}"`, {
+          stdio: 'inherit'
+        });
+        return true;
+      } catch (error) {
+        lastError = error;
+        // 继续尝试下一个 URL
+      }
     }
+
+    throw new Error(`克隆失败: ${lastError?.message || '未知错误'}`);
   }
 
   /**
