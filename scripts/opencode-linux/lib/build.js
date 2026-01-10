@@ -16,6 +16,32 @@ class Build {
   }
 
   /**
+   * 检查并安装 Bun
+   */
+  async ensureBun() {
+    if (hasCommand('bun')) {
+      return true;
+    }
+
+    console.log('正在安装 Bun...');
+    try {
+      execSync('curl -fsSL https://bun.sh/install | bash', {
+        stdio: 'inherit',
+        shell: '/bin/bash'
+      });
+
+      // 添加 bun 到 PATH
+      const bunPath = process.env.HOME + '/.bun/bin';
+      process.env.PATH = bunPath + ':' + process.env.PATH;
+
+      console.log('✓ Bun 已安装');
+      return true;
+    } catch (error) {
+      throw new Error('Bun 安装失败，请手动安装: curl -fsSL https://bun.sh/install | bash');
+    }
+  }
+
+  /**
    * 检查构建工具
    */
   checkTools() {
@@ -29,17 +55,11 @@ class Build {
    * 安装依赖
    */
   async install() {
-    const tools = this.checkTools();
-
-    if (!tools.bun && !tools.npm) {
-      throw new Error('未找到构建工具（bun 或 npm）');
-    }
-
-    const cmd = tools.bun ? 'bun' : 'npm';
-    const installCmd = tools.bun ? 'bun install' : 'npm install';
+    // 确保有 Bun
+    await this.ensureBun();
 
     try {
-      execSync(installCmd, {
+      execSync('bun install', {
         cwd: this.opencodeDir,
         stdio: 'inherit'
       });
@@ -53,11 +73,8 @@ class Build {
    * 执行编译
    */
   async run() {
-    const tools = this.checkTools();
-
-    if (!tools.bun && !tools.npm) {
-      throw new Error('未找到构建工具（bun 或 npm）');
-    }
+    // 确保有 Bun
+    await this.ensureBun();
 
     // 检查是否需要安装依赖
     const nodeModules = path.join(this.opencodeDir, 'node_modules');
@@ -66,10 +83,8 @@ class Build {
       await this.install();
     }
 
-    const cmd = tools.bun ? 'bun run build' : 'npm run build';
-
     try {
-      execSync(cmd, {
+      execSync('bun run build', {
         cwd: this.opencodeDir,
         stdio: 'inherit'
       });
