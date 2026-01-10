@@ -30,7 +30,7 @@ function Write-ColorOutput {
 function Write-Header {
     Clear-Host
     Write-Host "╔════════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
-    Write-Host "║     开发环境一键初始化脚本 v1.3                             ║" -ForegroundColor Cyan
+    Write-Host "║     开发环境一键初始化脚本 v1.4                             ║" -ForegroundColor Cyan
     Write-Host "║     智能检测 + 多备用方案 + 全自动                           ║" -ForegroundColor Cyan
     Write-Host "╚════════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
     Write-Host ""
