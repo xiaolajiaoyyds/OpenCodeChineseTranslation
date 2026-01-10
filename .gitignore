@@ -58,5 +58,6 @@ opencode-i18n.json.backup
 # ====================
 # Submodule specific
 # ====================
-# opencode-zh-CN/ 是 Git 子模块，不需要额外忽略
-# 但子模块内的构建产物会被其自身的 .gitignore 处理
+# opencode-zh-CN 是上游官方源码，作为子模块引用
+# 所有修改和状态变化应被忽略
+opencode-zh-CN/

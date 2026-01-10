@@ -161,13 +161,22 @@ Press `[L]` to view changelog with recent 15 commits:
 
 ---
 
-## 待添加截图 / Screenshots to Add
+## 界面截图 / Screenshots
 
-如果您有使用截图，欢迎提交 PR 添加到这里！
+### 主菜单 / Main Menu
 
-If you have screenshots, feel free to submit a PR to add them here!
+![主菜单](0.png)
 
-- [ ] 主菜单截图 / Main menu screenshot
-- [ ] 更新日志界面 / Changelog interface
-- [ ] 高级菜单界面 / Advanced menu interface
-- [ ] 汉化后的 OpenCode 界面 / Localized OpenCode interface
+运行 `.\scripts\opencode.ps1` 后的主界面，提供完整的功能导航。
+
+### 版本不匹配警告 / Version Mismatch Warning
+
+![版本警告](1.png)
+
+当语言包版本与代码不匹配时，会自动显示提示和建议方案。
+
+### 汉化验证结果 / Verification Results
+
+![验证结果](2.png)
+
+验证功能会检查所有汉化模块，显示通过/失败状态和详细问题。
