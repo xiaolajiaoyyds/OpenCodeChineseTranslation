@@ -129,8 +129,11 @@ codes install
 ### 📦 OpenCode 安装部署
 
 > **重要**：本项目使用**相对路径**设计，可放置在任意目录运行。
+> **平台支持**：Windows (PowerShell) | Linux/macOS (Node.js)
 
 #### 方式一：使用 Codes 安装（推荐）
+
+Codes 会自动检测您的操作系统并安装对应版本的汉化脚本。
 
 ```bash
 # 1. 安装 Codes (如果还没安装)
@@ -140,13 +143,25 @@ curl -fsSL https://gitee.com/QtCodeCreators/OpenCodeChineseTranslation/raw/main/
 git clone https://gitee.com/QtCodeCreators/OpenCodeChineseTranslation.git
 cd OpenCodeChineseTranslation
 
-# 3. 使用 Codes 一键初始化
-codes opencode
+# 3. 使用 Codes 一键初始化（自动检测平台）
 codes i18n
 ```
 
-#### 方式二：手动克隆
+#### 方式二：手动安装
 
+**Linux/macOS：**
+```bash
+# 克隆本仓库
+git clone https://gitee.com/QtCodeCreators/OpenCodeChineseTranslation.git
+cd OpenCodeChineseTranslation
+
+# 安装依赖并运行
+cd scripts/opencode-linux
+npm install
+./opencode.js full    # 一键全流程
+```
+
+**Windows：**
 ```powershell
 # 克隆本仓库
 git clone https://gitee.com/QtCodeCreators/OpenCodeChineseTranslation.git
@@ -160,14 +175,31 @@ cd OpenCodeChineseTranslation
 
 ### 🎯 OpenCode 使用方法
 
-#### 一键汉化+部署
+#### Linux/macOS 版本
+
+```bash
+cd scripts/opencode-linux
+
+# 交互式菜单
+./opencode.js
+
+# 命令行模式
+./opencode.js update    # 拉取最新源码
+./opencode.js apply     # 应用汉化
+./opencode.js build     # 编译构建
+./opencode.js verify    # 验证汉化覆盖率
+./opencode.js full      # 一键全流程
+```
+
+#### Windows 版本
 
 ```powershell
 .\scripts\opencode\opencode.ps1
+
 # 选择 [1] 一键汉化+部署
 ```
 
-#### 主菜单
+#### 主菜单 (Windows)
 
 | 选项 | 功能 | 适用场景 |
 |------|------|----------|
@@ -188,13 +220,24 @@ cd OpenCodeChineseTranslation
 OpenCodeChineseTranslation/
 ├── scripts/                 # 管理脚本目录
 │   ├── install.sh           # Codes 一键安装脚本
-│   └── codes/               # Codes 核心脚本
-│       ├── codes.sh         # Linux/macOS 版本
-│       └── README.md        # Codes 详细文档
-├── scripts/opencode/        # OpenCode 汉化脚本
-│   ├── opencode.ps1         # 主脚本 (4700+ 行)
-│   └── init.ps1             # 自动初始化脚本
-├── opencode-i18n/           # 汉化配置目录
+│   ├── codes/               # Codes 核心脚本
+│   │   ├── codes.sh         # Linux/macOS 版本
+│   │   └── README.md        # Codes 详细文档
+│   ├── opencode/            # OpenCode 汉化脚本 (Windows)
+│   │   ├── opencode.ps1     # PowerShell 主脚本
+│   │   └── init.ps1         # 自动初始化脚本
+│   └── opencode-linux/      # OpenCode 汉化脚本 (Linux/macOS)
+│       ├── opencode.js      # Node.js 主脚本
+│       ├── package.json     # 依赖配置
+│       ├── README.md        # 使用文档
+│       └── lib/             # 核心模块
+│           ├── env.js       # 环境检查
+│           ├── git.js       # Git 操作
+│           ├── i18n.js      # 汉化应用
+│           ├── build.js     # 编译构建
+│           ├── verify.js    # 验证功能
+│           └── version.js   # 版本检测
+├── opencode-i18n/           # 汉化配置目录 (两版本共享)
 │   ├── config.json          # 主配置文件
 │   ├── dialogs/             # 对话框汉化
 │   ├── routes/              # 路由汉化
