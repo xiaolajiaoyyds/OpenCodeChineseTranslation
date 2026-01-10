@@ -1,0 +1,14 @@
+# 强制 shell 脚本使用 LF 换行符
+*.sh text eol=lf
+*.bash text eol=lf
+*.zsh text eol=lf
+
+# PowerShell 脚本使用 CRLF (Windows 标准)
+*.ps1 text eol=crlf
+*.psm1 text eol=crlj
+
+# 其他文本文件
+*.md text eol=lf
+*.json text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
