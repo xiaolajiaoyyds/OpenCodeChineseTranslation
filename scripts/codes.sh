@@ -1,11 +1,11 @@
 #!/bin/bash
 # ========================================
-# Codes - 开发环境管理工具 v1.0
+# Codes - 开发环境管理工具 v1.1
 # 全局命令: codes
 # 功能: 环境诊断 / 组件管理 / 快捷启动
 # ========================================
 
-VERSION="1.0.0"
+VERSION="1.1.0"
 
 # 颜色定义
 RED='\033[0;31m'
@@ -19,9 +19,31 @@ WHITE='\033[1;37m'
 BOLD='\033[1m'
 NC='\033[0m'
 
-# 获取脚本目录
+# 获取脚本目录和资源路径
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-INIT_SCRIPT="$SCRIPT_DIR/init-dev-env.sh"
+
+# 多路径查找资源文件
+find_resource() {
+    local name=$1
+    local paths=(
+        "$SCRIPT_DIR/$name"           # 同目录
+        "/usr/local/lib/codes/$name"  # 全局安装目录
+        "$HOME/.codes/$name"          # 用户目录
+        "/tmp/codes/$name"            # 临时目录
+    )
+
+    for path in "${paths[@]}"; do
+        if [ -f "$path" ]; then
+            echo "$path"
+            return 0
+        fi
+    done
+    return 1
+}
+
+# 国内镜像
+NPM_REGISTRY="https://registry.npmmirror.com"
+NVM_INSTALL_SCRIPT="https://ghp.ci/https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh"
 
 # ==================== 工具函数 ====================
 print_color() {
@@ -43,26 +65,15 @@ print_separator() {
     echo -e "${DARK_GRAY}────────────────────────────────────────────────────────${NC}"
 }
 
-# 加载 init 脚本中的函数
-load_init_functions() {
-    if [ -f "$INIT_SCRIPT" ]; then
-        # 加载所有函数
-        source "$INIT_SCRIPT"
-
-        # 重新定义颜色变量（因为加载可能覆盖）
-        RED='\033[0;31m'
-        GREEN='\033[0;32m'
-        YELLOW='\033[1;33m'
-        CYAN='\033[0;36m'
-        DARK_GRAY='\033[0;90m'
-        WHITE='\033[1;37m'
-        NC='\033[0m'
-        return 0
-    else
-        echo "错误: 找不到 init-dev-env.sh" >&2
-        return 1
-    fi
-}
+# 智能 sudo
+SUDO_CMD=""
+if [ "$(id -u)" = "0" ]; then
+    SUDO_CMD=""
+elif command -v sudo &> /dev/null; then
+    SUDO_CMD="sudo"
+else
+    SUDO_CMD=""
+fi
 
 # 命令检测
 has_cmd() {
@@ -86,6 +97,25 @@ has_cmd() {
     done
 
     return 1
+}
+
+# 获取版本
+get_ver() {
+    if has_cmd "$1"; then
+        "$1" --version 2>&1 | head -n 1 | awk '{print $NF}' || echo "unknown"
+    else
+        echo "not installed"
+    fi
+}
+
+# 获取包管理器
+get_pm() {
+    if has_cmd dnf; then echo "dnf"
+    elif has_cmd yum; then echo "yum"
+    elif has_cmd apt-get; then echo "apt"
+    elif has_cmd brew; then echo "brew"
+    elif has_cmd pacman; then echo "pacman"
+    else echo ""; fi
 }
 
 # 加载 nvm
@@ -114,45 +144,6 @@ load_bun() {
     fi
     return 1
 }
-
-# 获取版本
-get_ver() {
-    if has_cmd "$1"; then
-        "$1" --version 2>&1 | head -n 1 | awk '{print $NF}' || echo "unknown"
-    else
-        echo "not installed"
-    fi
-}
-
-# 获取包管理器
-get_pm() {
-    if has_cmd dnf; then echo "dnf"
-    elif has_cmd yum; then echo "yum"
-    elif has_cmd apt-get; then echo "apt"
-    elif has_cmd brew; then echo "brew"
-    elif has_cmd pacman; then echo "pacman"
-    else echo ""; fi
-}
-
-# 获取架构
-get_arch() {
-    local arch=$(uname -m)
-    case $arch in
-        x86_64) echo "x64" ;;
-        aarch64|arm64) echo "arm64" ;;
-        *) echo "$arch" ;;
-    esac
-}
-
-# 智能 sudo
-SUDO_CMD=""
-if [ "$(id -u)" = "0" ]; then
-    SUDO_CMD=""
-elif has_cmd sudo; then
-    SUDO_CMD="sudo"
-else
-    SUDO_CMD=""
-fi
 
 # ==================== 环境诊断 ====================
 show_status() {
@@ -198,38 +189,315 @@ cmd_doctor() {
     [ -n "$BUN_INSTALL" ] && echo -e "  ${GREEN}[✓]${NC} BUN_INSTALL=$BUN_INSTALL" || echo -e "  ${DARK_GRAY}[⊙]${NC} BUN_INSTALL 未设置"
     echo ""
 
-    # 检查 PATH
-    if has_cmd node && ! echo "$PATH" | grep -q "$(npm bin -g 2>/dev/null)"; then
-        print_color "${YELLOW}" "  [!] npm 全局 bin 目录可能不在 PATH 中"
-    fi
-    echo ""
-
     print_separator
     print_color "${CYAN}" "快捷命令:"
-    echo -e "  ${DARK_GRAY}codes install${NC}     - 安装缺失的组件"
-    echo -e "  ${DARK_GRAY}codes upgrade${NC}     - 升级已安装的组件"
-    echo -e "  ${DARK_GRAY}codes node <ver>${NC}  - 切换 Node.js 版本"
-    echo -e "  ${DARK_GRAY}codes helper${NC}      - 启动 coding-helper"
+    echo -e "  ${DARK_GRAY}codes install [编号]${NC} - 安装组件（可指定编号）"
+    echo -e "  ${DARK_GRAY}codes upgrade${NC}       - 升级已安装的工具"
+    echo -e "  ${DARK_GRAY}codes node <ver>${NC}    - 切换 Node.js 版本"
+    echo -e "  ${DARK_GRAY}codes helper${NC}        - 启动 coding-helper"
     echo ""
+}
+
+# ==================== 安装函数 ====================
+
+# 安装 nvm
+install_nvm() {
+    print_color "${CYAN}" "[1/5] 安装 nvm..."
+
+    if [ -d "$HOME/.nvm" ]; then
+        print_color "${YELLOW}" "  ⊙ nvm 已安装"
+        return 0
+    fi
+
+    print_color "${DARK_GRAY}" "  下载安装脚本..."
+    if command -v curl &> /dev/null; then
+        curl -o- "$NVM_INSTALL_SCRIPT" | bash 2>/dev/null
+    elif command -v wget &> /dev/null; then
+        wget -qO- "$NVM_INSTALL_SCRIPT" | bash 2>/dev/null
+    else
+        print_color "${RED}" "  ✗ 需要 curl 或 wget"
+        return 1
+    fi
+
+    # 加载 nvm
+    export NVM_DIR="$HOME/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+    if [ -d "$NVM_DIR" ]; then
+        print_color "${GREEN}" "  ✓ nvm 安装成功"
+        return 0
+    else
+        print_color "${RED}" "  ✗ nvm 安装失败"
+        return 1
+    fi
+}
+
+# 安装 Node.js
+install_nodejs() {
+    print_color "${CYAN}" "[2/5] 安装 Node.js..."
+
+    if has_cmd node; then
+        local version=$(get_ver node)
+        print_color "${YELLOW}" "  ⊙ Node.js 已安装: $version"
+        return 0
+    fi
+
+    # 先安装 nvm
+    if ! [ -d "$HOME/.nvm" ]; then
+        install_nvm || return 1
+    fi
+
+    load_nvm
+
+    # 使用 nvm 安装 LTS
+    print_color "${DARK_GRAY}" "  安装 Node.js LTS..."
+    nvm install --lts 2>/dev/null
+    nvm alias default lts/* 2>/dev/null
+
+    load_nvm
+
+    if has_cmd node; then
+        local version=$(node -v)
+        print_color "${GREEN}" "  ✓ Node.js 安装成功: $version"
+
+        # 配置 npm 镜像
+        npm config set registry $NPM_REGISTRY 2>/dev/null
+        print_color "${DARK_GRAY}" "  ✓ npm 已配置国内镜像"
+        return 0
+    else
+        print_color "${RED}" "  ✗ Node.js 安装失败"
+        return 1
+    fi
+}
+
+# 安装 Bun
+install_bun() {
+    print_color "${CYAN}" "[3/5] 安装 Bun..."
+
+    if has_cmd bun; then
+        local version=$(get_ver bun)
+        print_color "${YELLOW}" "  ⊙ Bun 已安装: $version"
+        return 0
+    fi
+
+    print_color "${DARK_GRAY}" "  使用官方安装脚本..."
+    if command -v curl &> /dev/null; then
+        curl -fsSL https://bun.sh/install | bash 2>/dev/null
+    elif command -v wget &> /dev/null; then
+        wget -qO- https://bun.sh/install | bash 2>/dev/null
+    fi
+
+    load_bun
+
+    if has_cmd bun; then
+        local version=$(bun --version)
+        print_color "${GREEN}" "  ✓ Bun 安装成功: $version"
+        return 0
+    else
+        print_color "${YELLOW}" "  ⊙ Bun 安装跳过（网络问题）"
+        return 1
+    fi
+}
+
+# 安装 Git
+install_git() {
+    print_color "${CYAN}" "[4/5] 安装 Git..."
+
+    if has_cmd git; then
+        local version=$(get_ver git)
+        print_color "${YELLOW}" "  ⊙ Git 已安装: $version"
+        return 0
+    fi
+
+    local pm=$(get_pm)
+    if [ -n "$pm" ]; then
+        print_color "${DARK_GRAY}" "  使用 $pm 安装..."
+        case $pm in
+            apt)
+                $SUDO_CMD apt-get update -qq 2>/dev/null
+                $SUDO_CMD apt-get install -y git 2>/dev/null
+                ;;
+            yum|dnf)
+                $SUDO_CMD $pm install -y git 2>/dev/null
+                ;;
+            brew)
+                brew install git 2>/dev/null
+                ;;
+            pacman)
+                $SUDO_CMD pacman -S --noconfirm git 2>/dev/null
+                ;;
+        esac
+    fi
+
+    if has_cmd git; then
+        print_color "${GREEN}" "  ✓ Git 安装成功"
+        return 0
+    else
+        print_color "${RED}" "  ✗ Git 安装失败"
+        return 1
+    fi
+}
+
+# 安装 Python
+install_python() {
+    print_color "${CYAN}" "[5/5] 安装 Python..."
+
+    if has_cmd python3 || has_cmd python; then
+        local version=$(get_ver python3)
+        print_color "${YELLOW}" "  ⊙ Python 已安装: $version"
+        return 0
+    fi
+
+    local pm=$(get_pm)
+    if [ -n "$pm" ]; then
+        print_color "${DARK_GRAY}" "  使用 $pm 安装..."
+        case $pm in
+            apt)
+                $SUDO_CMD apt-get update -qq 2>/dev/null
+                $SUDO_CMD apt-get install -y python3 python3-pip 2>/dev/null
+                ;;
+            yum|dnf)
+                $SUDO_CMD $pm install -y python3 python3-pip 2>/dev/null
+                ;;
+            brew)
+                brew install python3 2>/dev/null
+                ;;
+            pacman)
+                $SUDO_CMD pacman -S --noconfirm python python-pip 2>/dev/null
+                ;;
+        esac
+    fi
+
+    if has_cmd python3; then
+        print_color "${GREEN}" "  ✓ Python 安装成功"
+        return 0
+    else
+        print_color "${YELLOW}" "  ⊙ Python 安装跳过"
+        return 1
+    fi
+}
+
+# 安装 coding-helper
+install_coding_helper() {
+    print_color "${CYAN}" "安装 @z_ai/coding-helper..."
+
+    if ! has_cmd npm; then
+        print_color "${YELLOW}" "  npm 未找到，尝试先安装 Node.js..."
+        install_nodejs
+    fi
+
+    if ! has_cmd npm; then
+        print_color "${RED}" "  ✗ 需要先安装 npm"
+        return 1
+    fi
+
+    # 确保 npm bin 在 PATH 中
+    local npm_bin="$(npm bin -g 2>/dev/null)"
+    if [ -n "$npm_bin" ]; then
+        export PATH="$npm_bin:$PATH"
+    fi
+
+    if has_cmd chelper || has_cmd coding-helper; then
+        print_color "${YELLOW}" "  ⊙ coding-helper 已安装"
+        return 0
+    fi
+
+    print_color "${DARK_GRAY}" "  使用国内镜像安装..."
+    npm install -g @z_ai/coding-helper --registry=$NPM_REGISTRY 2>/dev/null
+
+    if has_cmd chelper || has_cmd coding-helper; then
+        print_color "${GREEN}" "  ✓ coding-helper 安装成功"
+        return 0
+    fi
+
+    # 备用：官方源
+    print_color "${YELLOW}" "  尝试官方源..."
+    npm install -g @z_ai/coding-helper 2>/dev/null
+
+    if has_cmd chelper || has_cmd coding-helper; then
+        print_color "${GREEN}" "  ✓ coding-helper 安装成功"
+        return 0
+    fi
+
+    print_color "${YELLOW}" "  ⊙ coding-helper 安装跳过（包不存在或网络问题）"
+    return 1
+}
+
+# 组件列表
+declare -a COMPONENTS=(
+    "1:Node.js:install_nodejs:node"
+    "2:Bun:install_bun:bun"
+    "3:Git:install_git:git"
+    "4:Python:install_python:python3"
+    "5:nvm:install_nvm:nvm"
+    "6:coding-helper:install_coding_helper:chelper"
+)
+
+# 解析组件
+parse_component() {
+    local num=$1
+    for comp in "${COMPONENTS[@]}"; do
+        local id="${comp%%:*}"
+        if [ "$id" = "$num" ]; then
+            local rest="${comp#*:}"
+            local name="${rest%%:*}"
+            rest="${rest#*:}"
+            local func="${rest%%:*}"
+            echo "$func|$name"
+            return 0
+        fi
+    done
+    return 1
 }
 
 # ==================== 组件管理 ====================
 cmd_install() {
+    local target_num=$1
+
     print_header
     print_color "${YELLOW}" "       安装组件"
     print_separator
     echo ""
 
-    # 加载安装函数
-    load_init_functions || return 1
+    # 加载环境
+    load_nvm
+    load_bun
+
+    if [ -n "$target_num" ]; then
+        # 指定编号安装
+        local result
+        if result=$(parse_component "$target_num"); then
+            local func="${result%%|*}"
+            local name="${result##*|}"
+            print_color "${CYAN}" "安装 $name..."
+            echo ""
+            $func
+            echo ""
+        else
+            print_color "${RED}" "  ✗ 无效编号: $target_num"
+            echo ""
+            print_color "${CYAN}" "可用编号:"
+            for comp in "${COMPONENTS[@]}"; do
+                local id="${comp%%:*}"
+                local rest="${comp#*:}"
+                local name="${rest%%:*}"
+                echo -e "  ${GREEN}[$id]${NC} $name"
+            done
+            echo ""
+            print_color "${YELLOW}" "用法: codes install [编号]"
+            echo "示例: codes install 1  # 安装 Node.js"
+            echo ""
+        fi
+        return 0
+    fi
 
     # 检查需要安装的组件
     local need_install=()
 
-    ! has_cmd node && need_install+=("Node.js")
-    ! has_cmd bun && need_install+=("Bun")
-    ! has_cmd git && need_install+=("Git")
-    ! has_cmd python3 && need_install+=("Python")
+    ! has_cmd node && need_install+=("1")
+    ! has_cmd bun && need_install+=("2")
+    ! has_cmd git && need_install+=("3")
+    ! has_cmd python3 && need_install+=("4")
 
     if [ ${#need_install[@]} -eq 0 ]; then
         print_color "${GREEN}" "  ✓ 所有核心组件已安装"
@@ -242,8 +510,10 @@ cmd_install() {
     fi
 
     print_color "${YELLOW}" "  需要安装的组件:"
-    for item in "${need_install[@]}"; do
-        echo -e "    - $item"
+    for num in "${need_install[@]}"; do
+        local result=$(parse_component "$num")
+        local name="${result##*|}"
+        echo -e "    [$num] $name"
     done
     echo ""
 
@@ -253,12 +523,17 @@ cmd_install() {
     fi
 
     echo ""
+    print_color "${CYAN}" "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    print_color "${CYAN}" "  基础工具"
+    print_color "${CYAN}" "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
 
-    # 安装缺失的组件
-    ! has_cmd node && { install_nodejs; echo ""; }
-    ! has_cmd bun && { install_bun; echo ""; }
-    ! has_cmd git && { install_git; echo ""; }
-    ! has_cmd python3 && { install_python; echo ""; }
+    for num in "${need_install[@]}"; do
+        local result=$(parse_component "$num")
+        local func="${result%%|*}"
+        $func
+        echo ""
+    done
 
     print_color "${CYAN}" "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     print_color "${CYAN}" "  AI 工具"
@@ -267,11 +542,6 @@ cmd_install() {
 
     install_coding_helper
     echo ""
-
-    # 显示汇总
-    if declare -f print_summary > /dev/null; then
-        print_summary
-    fi
 }
 
 cmd_upgrade() {
@@ -332,6 +602,8 @@ cmd_node() {
 
     if ! has_cmd nvm; then
         print_color "${RED}" "  ✗ nvm 未安装"
+        echo ""
+        print_color "${YELLOW}" "  运行 'codes install 5' 安装 nvm"
         return 1
     fi
 
@@ -411,7 +683,7 @@ cmd_helper() {
     else
         print_color "${RED}" "  ✗ coding-helper 未安装"
         echo ""
-        echo -e "  运行 ${DARK_GRAY}codes install${NC} 来安装"
+        echo -e "  运行 ${DARK_GRAY}codes install 6${NC} 来安装"
         return 1
     fi
 }
@@ -474,15 +746,6 @@ cmd_env() {
     echo -e "${NC}"
 }
 
-cmd_init() {
-    if [ -f "$INIT_SCRIPT" ]; then
-        bash "$INIT_SCRIPT"
-    else
-        print_color "${RED}" "  ✗ 找不到 init-dev-env.sh"
-        return 1
-    fi
-}
-
 # ==================== 主菜单 ====================
 show_menu() {
     print_header
@@ -505,7 +768,6 @@ show_menu() {
     echo -e "${MAGENTA}   │  [4]  Node 管理    - 切换 Node.js 版本${NC}"
     echo -e "${CYAN}   │  [5]  coding-helper - 启动智谱编码助手${NC}"
     echo -e "${CYAN}   │  [6]  环境变量      - 显示/导出环境变量${NC}"
-    echo -e "${CYAN}   │  [7]  初始化安装    - 运行完整安装脚本${NC}"
     echo -e "${CYAN}   │${NC}"
     echo -e "${RED}   │  [0]  退出${NC}"
     echo -e "${CYAN}   │${NC}"
@@ -513,41 +775,41 @@ show_menu() {
     echo ""
 
     echo -e "${DARK_GRAY}提示: 也可以直接运行 'codes <命令>'，如: codes doctor${NC}"
+    echo -e "${DARK_GRAY}      'codes install [编号]' 可指定安装组件${NC}"
     echo ""
 }
 
 # ==================== 帮助 ====================
 show_help() {
-    cat << EOF
-${BOLD}Codes${NC} - 开发环境管理工具 v${VERSION}
-
-${CYAN}用法:${NC}
-  codes [命令] [参数]
-
-${CYAN}命令:${NC}
-  ${GREEN}doctor${NC}       环境诊断 - 检查所有工具状态
-  ${GREEN}install${NC}      安装组件 - 安装缺失的工具
-  ${GREEN}upgrade${NC}      升级组件 - 升级已安装的工具
-  ${GREEN}node${NC} [ver]   Node 管理 - 切换 Node.js 版本
-                  可用: lts, latest, 或具体版本号 (如 20, 22)
-  ${GREEN}helper${NC} [...]  coding-helper - 启动智谱编码助手
-  ${GREEN}env${NC}          环境变量 - 显示/导出环境变量
-  ${GREEN}init${NC}         初始化安装 - 运行完整安装脚本
-  ${GREEN}menu${NC}         显示交互菜单
-  ${GREEN}--version${NC}    显示版本信息
-  ${GREEN}--help${NC}       显示此帮助信息
-
-${CYAN}示例:${NC}
-  codes doctor              # 诊断环境
-  codes node lts            # 切换到 LTS 版本
-  codes node 22             # 切换到 v22
-  codes helper auth         # 运行 coding-helper auth
-  codes install             # 安装缺失组件
-
-${CYAN}全局安装:${NC}
-  codes --install-self      # 安装 codes 为全局命令
-
-EOF
+    echo -e "${BOLD}Codes${NC} - 开发环境管理工具 v${VERSION}"
+    echo ""
+    echo -e "${CYAN}用法:${NC}"
+    echo "  codes [命令] [参数]"
+    echo ""
+    echo -e "${CYAN}命令:${NC}"
+    echo -e "  ${GREEN}doctor${NC}       环境诊断 - 检查所有工具状态"
+    echo -e "  ${GREEN}install${NC} [编号] 安装组件 - 安装缺失的工具（可指定编号）"
+    echo "                  编号: 1=Node.js 2=Bun 3=Git 4=Python 5=nvm 6=coding-helper"
+    echo -e "  ${GREEN}upgrade${NC}      升级组件 - 升级已安装的工具"
+    echo -e "  ${GREEN}node${NC} [ver]   Node 管理 - 切换 Node.js 版本"
+    echo "                  可用: lts, latest, 或具体版本号 (如 20, 22)"
+    echo -e "  ${GREEN}helper${NC} [...]  coding-helper - 启动智谱编码助手"
+    echo -e "  ${GREEN}env${NC}          环境变量 - 显示/导出环境变量"
+    echo -e "  ${GREEN}menu${NC}         显示交互菜单"
+    echo -e "  ${GREEN}--version${NC}    显示版本信息"
+    echo -e "  ${GREEN}--help${NC}       显示此帮助信息"
+    echo ""
+    echo -e "${CYAN}示例:${NC}"
+    echo "  codes doctor              # 诊断环境"
+    echo "  codes install             # 安装缺失组件"
+    echo "  codes install 1           # 只安装 Node.js"
+    echo "  codes node lts            # 切换到 LTS 版本"
+    echo "  codes node 22             # 切换到 v22"
+    echo "  codes helper auth         # 运行 coding-helper auth"
+    echo ""
+    echo -e "${CYAN}安装编号:${NC}"
+    echo "  [1] Node.js    [2] Bun    [3] Git    [4] Python"
+    echo "  [5] nvm        [6] coding-helper"
 }
 
 # ==================== 全局安装 ====================
@@ -558,6 +820,7 @@ cmd_install_self() {
     echo ""
 
     local install_dir="/usr/local/bin"
+    local lib_dir="/usr/local/lib/codes"
     local script_source="$SCRIPT_DIR/codes.sh"
 
     # 检查权限
@@ -568,12 +831,26 @@ cmd_install_self() {
         return 1
     fi
 
-    # 复制脚本
-    print_color "${CYAN}" "  复制脚本到 $install_dir..."
-    $SUDO_CMD cp "$script_source" "$install_dir/codes" 2>/dev/null
+    # 创建库目录
+    $SUDO_CMD mkdir -p "$lib_dir" 2>/dev/null
+
+    # 复制脚本到库目录
+    print_color "${CYAN}" "  复制资源到 $lib_dir..."
+    $SUDO_CMD cp "$script_source" "$lib_dir/codes.sh" 2>/dev/null
+
+    # 创建主脚本
+    print_color "${CYAN}" "  创建命令到 $install_dir..."
+    cat > /tmp/codes_wrapper.sh << 'WRAPPER_EOF'
+#!/bin/bash
+SCRIPT_DIR="/usr/local/lib/codes"
+bash "$SCRIPT_DIR/codes.sh" "$@"
+WRAPPER_EOF
+
+    $SUDO_CMD cp /tmp/codes_wrapper.sh "$install_dir/codes" 2>/dev/null
+    $SUDO_CMD chmod +x "$install_dir/codes" 2>/dev/null
+    rm -f /tmp/codes_wrapper.sh
 
     if [ $? -eq 0 ]; then
-        $SUDO_CMD chmod +x "$install_dir/codes" 2>/dev/null
         print_color "${GREEN}" "  ✓ 安装成功!"
         echo ""
         echo "  现在可以在任何位置运行 ${GREEN}codes${NC} 命令"
@@ -586,9 +863,6 @@ cmd_install_self() {
 
 # ==================== 主入口 ====================
 main() {
-    # 加载 init 脚本函数
-    load_init_functions
-
     local command=${1:-menu}
 
     case $command in
@@ -596,7 +870,7 @@ main() {
             cmd_doctor
             ;;
         install|add)
-            cmd_install
+            cmd_install "$2"
             ;;
         upgrade|update)
             cmd_upgrade
@@ -610,9 +884,6 @@ main() {
             ;;
         env|environment)
             cmd_env
-            ;;
-        init|setup)
-            cmd_init
             ;;
         menu|interactive)
             # 交互式菜单
@@ -633,7 +904,6 @@ main() {
                     4) cmd_node ;;
                     5) cmd_helper ;;
                     6) cmd_env ;;
-                    7) cmd_init ;;
                     0)
                         print_color "${DARK_GRAY}" "再见！"
                         exit 0
