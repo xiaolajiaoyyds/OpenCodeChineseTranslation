@@ -50,6 +50,53 @@
 
 ---
 
+### 🛠️ 开发环境初始化（新服务器必用）
+
+> **适用于**：新服务器、全新开发环境、一键安装所有依赖
+
+#### Windows 一键安装
+
+```powershell
+irm https://github.com/1186258278/OpenCodeChineseTranslation/releases/latest/download/init-dev-env.ps1 | iex
+```
+
+#### Linux/macOS 一键安装
+
+```bash
+curl -fsSL https://github.com/1186258278/OpenCodeChineseTranslation/releases/latest/download/init-dev-env.sh | bash
+```
+
+#### 支持的组件
+
+| 基础工具 | AI 工具 |
+|----------|---------|
+| Node.js + npm | @z_ai/coding-helper (智谱助手) |
+| Bun | OpenCode 中文汉化版 |
+| Git | Claude Code |
+| Docker | |
+| Python | |
+
+#### 交互模式
+
+安装后会显示菜单：
+- `[1]` 一键安装全部（推荐）
+- `[2]` 仅安装基础工具
+- `[3]` 仅安装 AI 工具
+- `[4]` 自定义选择
+- `[5]` 检查更新
+
+#### 静默模式（自动安装所有）
+
+```powershell
+# Windows
+irm https://github.com/1186258278/OpenCodeChineseTranslation/releases/latest/download/init-dev-env.ps1 | iex; init-dev-env.ps1 -Quiet
+
+# Linux/macOS
+curl -fsSL https://github.com/1186258278/OpenCodeChineseTranslation/releases/latest/download/init-dev-env.sh | bash; ./init-dev-env.sh --quiet
+```
+
+---
+
 ### 安装部署
 
 > **重要**：本项目使用**相对路径**设计，可放置在任意目录运行。首次运行会自动初始化上游源码。
