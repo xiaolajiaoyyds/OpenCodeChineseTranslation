@@ -2906,9 +2906,18 @@ function Test-I18NPatches {
         $patchKey = $patchKeys[$i]
         $currentIndex = $i + 1
 
-        # 显示进度
+        # 显示进度条（带动画效果）
         $percent = [math]::Floor(($currentIndex / $totalKeys) * 100)
-        Write-Host "`r   验证进度: [$percent%] $currentIndex/$totalKeys - $patchKey" -NoNewline
+        $barLength = 20
+        $filled = [math]::Floor(($percent / 100) * $barLength)
+        $empty = $barLength - $filled
+        $bar = "=" * $filled + " " * $empty
+        Write-Host "`r   [$bar] $percent% ($currentIndex/$totalKeys) " -NoNewline
+
+        # 添加微小延迟让进度可见
+        if ($totalKeys -le 50) {
+            Start-Sleep -Milliseconds 30
+        }
 
         $patch = Get-PatchConfig -Config $config -PatchKey $patchKey
         if (!$patch -or !$patch.file) { continue }
@@ -2943,9 +2952,9 @@ function Test-I18NPatches {
         }
 
         if ($patchPassed) {
-            Write-Host "`r   [$patchKey] ✓" -ForegroundColor Green
+            Write-Host "`r   [$bar] $percent% ($currentIndex/$totalKeys) " -NoNewline
         } else {
-            Write-Host "`r   [$patchKey] ✗ ($($patchFailed.Count) 项失败)" -ForegroundColor Red
+            Write-Host "`r   [$bar] $percent% ($currentIndex/$totalKeys) " -NoNewline
             $failedItems += @{
                 Module = $patchKey
                 File = $patch.file
@@ -2953,6 +2962,10 @@ function Test-I18NPatches {
             }
         }
     }
+
+    # 完成进度条
+    Write-Host "`r   [====================] 100% ($totalKeys/$totalKeys) " -NoNewline
+    Write-Host ""
 
     Write-Host ""
 
