@@ -1,8 +1,8 @@
 # ========================================
-# Codes - 开发环境管理工具 v1.1
+# Codes - 开发环境管理工具 v2.0
 # 全局命令: codes
 # 平台: Windows PowerShell
-# 功能: 环境诊断 / 组件管理 / 快捷启动
+# 功能: 环境诊断 / 组件管理 / 工具安装 / 汉化配置
 # ========================================
 
 param(
@@ -13,7 +13,7 @@ param(
     [string[]]$Args
 )
 
-$VERSION = "1.1.0"
+$VERSION = "2.0.0"
 $SCRIPT_DIR = Split-Path -Parent $MyInvocation.MyCommand.Path
 
 # 国内镜像
@@ -627,13 +627,19 @@ function Show-Menu {
     # 快速状态
     $nodeVer = if (Test-Command "node") { Get-InstalledVersion "node" } else { "未安装" }
     $bunVer = if (Test-Command "bun") { Get-InstalledVersion "bun" } else { "未安装" }
+    $claudeVer = if (Test-Command "claude") { "已安装" } else { "未安装" }
+    $opencodeVer = if (Test-Path "$env:USERPROFILE\opencode-zh-CN") { "已安装" } else { "未安装" }
 
     Write-Host "   ┌─── 状态 ─────────────────────────────────────────┐" -ForegroundColor Cyan
     Write-Host "   │" -ForegroundColor Cyan
-    Write-Host "   │   Node: " -NoNewline -ForegroundColor Cyan
+    Write-Host "   │   Node:     " -NoNewline -ForegroundColor Cyan
     Write-Host "$nodeVer" -ForegroundColor White
-    Write-Host "   │   Bun:  " -NoNewline -ForegroundColor Cyan
+    Write-Host "   │   Bun:      " -NoNewline -ForegroundColor Cyan
     Write-Host "$bunVer" -ForegroundColor White
+    Write-Host "   │   Claude:   " -NoNewline -ForegroundColor Cyan
+    Write-Host "$claudeVer" -ForegroundColor $(if ($claudeVer -eq "已安装") { "Green" } else { "DarkGray" })
+    Write-Host "   │   OpenCode: " -NoNewline -ForegroundColor Cyan
+    Write-Host "$opencodeVer" -ForegroundColor $(if ($opencodeVer -eq "已安装") { "Green" } else { "DarkGray" })
     Write-Host "   │" -ForegroundColor Cyan
     Write-Host "   └───────────────────────────────────────────────────┘" -ForegroundColor Cyan
     Write-Host ""
@@ -644,8 +650,12 @@ function Show-Menu {
     Write-Host "   │  [2]  安装组件      - 安装缺失的工具" -ForegroundColor Yellow
     Write-Host "   │  [3]  升级组件      - 升级已安装的工具" -ForegroundColor Blue
     Write-Host "   │  [4]  Node 管理    - 切换 Node.js 版本" -ForegroundColor Magenta
-    Write-Host "   │  [5]  coding-helper - 启动智谱编码助手" -ForegroundColor Cyan
-    Write-Host "   │  [6]  环境变量      - 显示/导出环境变量" -ForegroundColor Cyan
+    Write-Host "   │" -ForegroundColor Cyan
+    Write-Host "   │  [5]  Claude Code  - 安装 Claude Code CLI" -ForegroundColor Cyan
+    Write-Host "   │  [6]  OpenCode     - 安装 OpenCode 汉化版" -ForegroundColor Cyan
+    Write-Host "   │  [7]  汉化脚本     - 安装汉化管理工具" -ForegroundColor Cyan
+    Write-Host "   │  [8]  编码助手     - 启动智谱编码助手" -ForegroundColor Cyan
+    Write-Host "   │  [9]  环境变量     - 显示/导出环境变量" -ForegroundColor Cyan
     Write-Host "   │" -ForegroundColor Cyan
     Write-Host "   │  [0]  退出" -ForegroundColor Red
     Write-Host "   │" -ForegroundColor Cyan
@@ -671,6 +681,9 @@ Codes - 开发环境管理工具 v$VERSION
   upgrade          升级组件 - 升级已安装的工具
   node [ver]       Node 管理 - 切换 Node.js 版本
                    可用: lts, latest, 或具体版本号 (如 20, 22)
+  claude           Claude Code - 安装 Claude Code CLI
+  opencode         OpenCode - 安装 OpenCode 汉化版源码
+  i18n             汉化脚本 - 安装 OpenCode 汉化管理工具
   helper [...]     coding-helper - 启动智谱编码助手
   env              环境变量 - 显示/导出环境变量
   menu             显示交互菜单
@@ -683,6 +696,9 @@ Codes - 开发环境管理工具 v$VERSION
   codes install 1           # 只安装 Node.js
   codes node lts            # 切换到 LTS 版本
   codes node 22             # 切换到 v22
+  codes claude              # 安装 Claude Code CLI
+  codes opencode            # 安装 OpenCode 汉化版
+  codes i18n                # 安装汉化管理工具
   codes helper auth         # 运行 coding-helper auth
 
 安装编号:
@@ -809,6 +825,156 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "$binDir\codes.ps1" %*
     Write-Host ""
 }
 
+# ==================== Claude Code 安装 ====================
+function Install-ClaudeCode {
+    Write-Header
+    Write-ColorOutput "       安装 Claude Code CLI" "Yellow"
+    Write-Separator
+    Write-Host ""
+
+    # 检查 npm
+    if (-not (Test-Command "npm")) {
+        Write-ColorOutput "  ✗ npm 未安装，请先安装 Node.js" "Red"
+        Write-Host ""
+        Write-ColorOutput "  运行 'codes install 1' 安装 Node.js" "Yellow"
+        return $false
+    }
+
+    Write-ColorOutput "  → 使用 npm 安装 @anthropic-ai/claude-code..." "Cyan"
+    Write-Host ""
+
+    try {
+        npm install -g @anthropic-ai/claude-code --registry=$NPM_REGISTRY
+        Write-Host ""
+
+        if (Test-Command "claude") {
+            $version = claude --version 2>$null
+            Write-ColorOutput "  ✓ Claude Code CLI 安装成功!" "Green"
+            Write-Host ""
+            Write-ColorOutput "  版本: $version" "Cyan"
+        } else {
+            Write-ColorOutput "  ⚠ 安装完成，但可能需要重启终端" "Yellow"
+        }
+    } catch {
+        Write-ColorOutput "  ✗ 安装失败: $_" "Red"
+        return $false
+    }
+
+    Write-Host ""
+}
+
+# ==================== OpenCode 安装 ====================
+function Install-OpenCode {
+    Write-Header
+    Write-ColorOutput "       安装 OpenCode 汉化版" "Yellow"
+    Write-Separator
+    Write-Host ""
+
+    # 检查 git
+    if (-not (Test-Command "git")) {
+        Write-ColorOutput "  ✗ git 未安装" "Red"
+        Write-Host ""
+        Write-ColorOutput "  运行 'codes install 3' 安装 Git" "Yellow"
+        return $false
+    }
+
+    $opencodeDir = "$env:USERPROFILE\opencode-zh-CN"
+
+    # 检查是否已安装
+    if (Test-Path $opencodeDir) {
+        Write-ColorOutput "  ⚠ OpenCode 已存在于: $opencodeDir" "Yellow"
+        $confirm = Read-Host "  是否重新安装? (y/N)"
+        if ($confirm -ne "y" -and $confirm -ne "Y") {
+            return $false
+        }
+        Remove-Item -Recurse -Force $opencodeDir
+    }
+
+    Write-ColorOutput "  → 克隆 OpenCode 源码..." "Cyan"
+    Write-Host ""
+
+    try {
+        git clone https://github.com/anomalyco/opencode.git $opencodeDir
+        Write-Host ""
+
+        if (Test-Path $opencodeDir) {
+            Write-ColorOutput "  ✓ OpenCode 安装成功!" "Green"
+            Write-Host ""
+            Write-ColorOutput "  目录: $opencodeDir" "Cyan"
+            Write-Host ""
+            Write-ColorOutput "  下一步: 运行 'codes i18n' 安装汉化脚本" "Yellow"
+        }
+    } catch {
+        Write-ColorOutput "  ✗ 克隆失败: $_" "Red"
+        return $false
+    }
+
+    Write-Host ""
+}
+
+# ==================== 汉化脚本安装 ====================
+function Install-OpenCodeI18n {
+    Write-Header
+    Write-ColorOutput "       安装 OpenCode 汉化管理工具" "Yellow"
+    Write-Separator
+    Write-Host ""
+
+    $opencodeDir = "$env:USERPROFILE\opencode-zh-CN"
+
+    # 检查 OpenCode 是否存在
+    if (-not (Test-Path $opencodeDir)) {
+        Write-ColorOutput "  ✗ OpenCode 未安装" "Red"
+        Write-Host ""
+        Write-ColorOutput "  请先运行 'codes opencode' 安装 OpenCode" "Yellow"
+        return $false
+    }
+
+    $baseUrl = "https://raw.githubusercontent.com/1186258278/OpenCodeChineseTranslation/main/scripts/opencode"
+
+    Write-ColorOutput "  → 下载汉化脚本..." "Cyan"
+    Write-Host ""
+
+    # 创建 scripts 目录
+    $scriptsDir = "$opencodeDir\scripts\opencode"
+    if (-not (Test-Path $scriptsDir)) {
+        New-Item -ItemType Directory -Path $scriptsDir -Force | Out-Null
+    }
+
+    $files = @(
+        "opencode.ps1",
+        "init.ps1",
+        "uninstall.ps1"
+    )
+
+    $success = 0
+    foreach ($file in $files) {
+        $url = "$baseUrl/$file"
+        $outputPath = "$scriptsDir\$file"
+
+        try {
+            Invoke-RestMethod -Uri $url -OutFile $outputPath -TimeoutSec 30
+            Write-ColorOutput "  ✓ $file" "Green"
+            $success++
+        } catch {
+            Write-ColorOutput "  ✗ $file 下载失败" "Red"
+        }
+    }
+
+    Write-Host ""
+
+    if ($success -eq $files.Count) {
+        Write-ColorOutput "  ✓ 汉化脚本安装成功!" "Green"
+        Write-Host ""
+        Write-ColorOutput "  使用方法:" "Yellow"
+        Write-Host "    cd $opencodeDir"
+        Write-Host "    .\scripts\opencode\opencode.ps1 init"
+    } else {
+        Write-ColorOutput "  ⚠ 部分文件下载失败 ($success/$($files.Count))" "Yellow"
+    }
+
+    Write-Host ""
+}
+
 # ==================== 主入口 ====================
 switch ($Command) {
     "doctor" { Command-Doctor }
@@ -817,6 +983,9 @@ switch ($Command) {
     "node" { Command-Node -TargetVersion $Args[0] }
     "helper" { Command-Helper $Args }
     "env" { Command-Env }
+    "claude" { Install-ClaudeCode }
+    "opencode" { Install-OpenCode }
+    "i18n" { Install-OpenCodeI18n }
     "menu" {
         Show-Menu
         $choice = Read-Host "请选择"
@@ -826,8 +995,11 @@ switch ($Command) {
             "2" { Command-Install }
             "3" { Command-Upgrade }
             "4" { Command-Node }
-            "5" { Command-Helper }
-            "6" { Command-Env }
+            "5" { Install-ClaudeCode }
+            "6" { Install-OpenCode }
+            "7" { Install-OpenCodeI18n }
+            "8" { Command-Helper }
+            "9" { Command-Env }
             "0" {
                 Write-ColorOutput "再见！" "DarkGray"
                 exit

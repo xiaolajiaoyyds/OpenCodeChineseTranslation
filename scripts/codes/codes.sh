@@ -1,11 +1,11 @@
 #!/bin/bash
 # ========================================
-# Codes - 开发环境管理工具 v1.1
+# Codes - 开发环境智能管理工具 v2.0
 # 全局命令: codes
-# 功能: 环境诊断 / 组件管理 / 快捷启动
+# 功能: 环境诊断 / 组件管理 / 工具安装 / 汉化配置
 # ========================================
 
-VERSION="1.1.0"
+VERSION="2.0.0"
 
 # 颜色定义
 RED='\033[0;31m'
@@ -467,6 +467,230 @@ parse_component() {
     return 1
 }
 
+# ==================== UI 工具函数 ====================
+show_progress() {
+    local current=$1
+    local total=$2
+    local width=40
+    local percent=$((current * 100 / total))
+    local filled=$((width * current / total))
+    local empty=$((width - filled))
+
+    printf "\r${CYAN}[${NC}"
+    printf "${GREEN}%${filled}s${NC}" "" | tr ' ' '='
+    printf "${DARK_GRAY}%${empty}s${NC}" "" | tr ' ' ' '
+    printf "${CYAN}]${NC} ${YELLOW}%d%%${NC}" "$percent"
+}
+
+confirm_action() {
+    local prompt=$1
+    local default=${2:-"n"}
+
+    print_color "${YELLOW}" "  $prompt"
+    echo -e " ${DARK_GRAY}[y/N]${NC} " | tr -d '\n'
+    read -r response
+
+    if [[ -z "$response" ]]; then
+        [[ "$default" =~ ^[Yy] ]]
+    else
+        [[ "$response" =~ ^[Yy] ]]
+    fi
+}
+
+show_spinner() {
+    local pid=$1
+    local message=$2
+    local delay=0.1
+    local spinstr='|/-\'
+    local temp
+
+    while kill -0 $pid 2>/dev/null; do
+        temp=${spinstr#?}
+        printf " ${CYAN}%c${NC} %s" "$spinstr" "$message"
+        spinstr=$temp${spinstr%"$temp"}
+        sleep $delay
+        printf "\r"
+    done
+    printf "\r"
+}
+
+# ==================== ClaudeCode 安装 ====================
+install_claudecode() {
+    print_header
+    print_color "${CYAN}" "       安装 Claude Code"
+    print_separator
+    echo ""
+
+    # 检查是否已安装
+    if has_cmd claude; then
+        local version=$(claude --version 2>/dev/null || echo "未知")
+        print_color "${GREEN}" "  ✓ Claude Code 已安装: v$version"
+        echo ""
+        if confirm_action "是否重新安装？"; then
+            print_color "${YELLOW}" "  正在卸载旧版本..."
+            npm uninstall -g @anthropic-ai/claude-code 2>/dev/null
+        else
+            return 0
+        fi
+    fi
+
+    # 确保 npm 可用
+    if ! has_cmd npm; then
+        print_color "${RED}" "  ✗ 需要先安装 Node.js"
+        echo ""
+        if confirm_action "是否现在安装 Node.js？"; then
+            install_nodejs
+        else
+            return 1
+        fi
+    fi
+
+    # 获取 npm bin 路径
+    local npm_bin="$(npm config get prefix 2>/dev/null)/bin"
+
+    print_color "${CYAN}" "  正在安装 Claude Code..."
+    echo ""
+
+    # 使用国内镜像
+    npm install -g @anthropic-ai/claude-code --registry=$NPM_REGISTRY 2>/dev/null &
+
+    show_spinner $! "安装中..."
+
+    wait
+
+    # 验证安装
+    if [ -n "$npm_bin" ] && [ -x "$npm_bin/claude" ]; then
+        print_color "${GREEN}" "  ✓ Claude Code 安装成功！"
+        print_color "${YELLOW}" "  ! 请运行: export PATH=\"$npm_bin:\$PATH\""
+        echo ""
+        print_color "${CYAN}" "  使用方法:"
+        echo "    claude chat              # 启动对话"
+        echo "    claude --help            # 查看帮助"
+    else
+        print_color "${YELLOW}" "  ⊙ 安装完成，请刷新环境变量后验证"
+    fi
+    echo ""
+}
+
+# ==================== OpenCode 安装 ====================
+install_opencode() {
+    print_header
+    print_color "${CYAN}" "       安装 OpenCode 汉化版"
+    print_separator
+    echo ""
+
+    # 检查是否已安装
+    if has_cmd opencode; then
+        print_color "${GREEN}" "  ✓ OpenCode 已安装"
+        echo ""
+        if confirm_action "是否更新汉化配置？"; then
+            install_opencode_i18n
+            return 0
+        else
+            return 0
+        fi
+    fi
+
+    # 检查 Node.js
+    if ! has_cmd node; then
+        print_color "${RED}" "  ✗ 需要先安装 Node.js"
+        if confirm_action "是否现在安装 Node.js？"; then
+            install_nodejs
+        else
+            return 1
+        fi
+    fi
+
+    print_color "${CYAN}" "  正在克隆 OpenCode 源码..."
+    echo ""
+
+    local opencode_dir="$HOME/opencode-zh-CN"
+
+    if [ -d "$opencode_dir" ]; then
+        print_color "${YELLOW}" "  ⊙ 目录已存在，正在更新..."
+        (cd "$opencode_dir" && git pull --rebase 2>/dev/null)
+    else
+        (git clone https://github.com/anomalyco/opencode.git "$opencode_dir" 2>/dev/null) &
+
+        local pid=$!
+        show_spinner $pid "克隆中..."
+        wait $pid
+    fi
+
+    if [ -d "$opencode_dir" ]; then
+        print_color "${GREEN}" "  ✓ OpenCode 源码准备完成"
+        print_color "${YELLOW}" "  ! 目录: $opencode_dir"
+        echo ""
+        print_color "${CYAN}" "  下一步:"
+        echo "    cd $opencode_dir"
+        echo "    npm install"
+        echo "    npm run build"
+        echo "    npm run start"
+    else
+        print_color "${RED}" "  ✗ 克隆失败，请检查网络连接"
+        return 1
+    fi
+    echo ""
+}
+
+# ==================== OpenCode 汉化脚本安装 ====================
+install_opencode_i18n() {
+    print_header
+    print_color "${CYAN}" "       安装 OpenCode 汉化管理工具"
+    print_separator
+    echo ""
+
+    # 确定项目目录
+    local project_dir="$PWD"
+    if [ ! -d "$project_dir/opencode-i18n" ] && [ -d "$PWD/../../opencode-i18n" ]; then
+        project_dir="$(cd "$PWD/../.." && pwd)"
+    fi
+
+    print_color "${CYAN}" "  项目目录: $project_dir"
+    echo ""
+
+    # 检查是否已有汉化脚本
+    if [ -f "$project_dir/scripts/opencode/opencode.ps1" ]; then
+        print_color "${GREEN}" "  ✓ 汉化脚本已存在"
+        echo ""
+        print_color "${CYAN}" "  使用方法:"
+        echo "    cd $project_dir"
+        echo "    ./scripts/opencode/opencode.ps1    # Windows/PowerShell"
+        echo "    或运行: opencodecmd                  # 全局命令"
+        return 0
+    fi
+
+    # 下载汉化脚本
+    print_color "${CYAN}" "  正在下载汉化脚本..."
+    echo ""
+
+    local scripts_dir="$project_dir/scripts"
+    local opencode_dir="$scripts_dir/opencode"
+
+    mkdir -p "$opencode_dir" 2>/dev/null
+
+    # 从 GitHub 下载
+    local base_url="https://raw.githubusercontent.com/1186258278/OpenCodeChineseTranslation/main/scripts/opencode"
+
+    curl -fsSL "$base_url/opencode.ps1" -o "$opencode_dir/opencode.ps1" 2>/dev/null
+    curl -fsSL "$base_url/init.ps1" -o "$opencode_dir/init.ps1" 2>/dev/null
+
+    if [ -f "$opencode_dir/opencode.ps1" ]; then
+        print_color "${GREEN}" "  ✓ 汉化脚本安装成功！"
+        echo ""
+        print_color "${CYAN}}" "  使用方法:"
+        echo "    cd $project_dir"
+        echo "    pwsh ./scripts/opencode/opencode.ps1"
+        echo ""
+        print_color "${YELLOW}" "  Windows 全局命令（添加到 $PROFILE）:"
+        echo '    function opencodecmd { & "C:\Data\PC\OpenCode\scripts\opencode\opencode.ps1" @Args }'
+    else
+        print_color "${RED}" "  ✗ 下载失败，请检查网络"
+        return 1
+    fi
+    echo ""
+}
+
 # ==================== 组件管理 ====================
 cmd_install() {
     local target_num=$1
@@ -769,26 +993,36 @@ show_menu() {
 
     # 快速状态
     local node_ver=$(has_cmd node && get_ver node || echo "未安装")
+    local node_status=$([ "$node_ver" != "未安装" ] && echo "${GREEN}✓${NC}" || echo "${RED}✗${NC}")
     local bun_ver=$(has_cmd bun && get_ver bun || echo "未安装")
+    local bun_status=$([ "$bun_ver" != "未安装" ] && echo "${GREEN}✓${NC}" || echo "${DARK_GRAY}○${NC}")
+    local claude_status=$(has_cmd claude && echo "${GREEN}✓${NC}" || echo "${DARK_GRAY}○${NC}")
+    local git_status=$(has_cmd git && echo "${GREEN}✓${NC}" || echo "${RED}✗${NC}")
 
-    echo -e "${CYAN}   ┌─── 状态 ─────────────────────────────────────────┐${NC}"
-    echo -e "${CYAN}   │${NC}   Node: ${WHITE}$node_ver${NC}"
-    echo -e "${CYAN}   │${NC}   Bun:  ${WHITE}$bun_ver${NC}"
-    echo -e "${CYAN}   └───────────────────────────────────────────────────┘${NC}"
+    echo -e "${CYAN}   ┌─── 系统状态 ─────────────────────────────────────┐${NC}"
+    echo -e "${CYAN}   │${NC}  Node.js: $node_status ${WHITE}$node_ver${NC}"
+    echo -e "${CYAN}   │${NC}  Bun:     $bun_status ${WHITE}$bun_ver${NC}"
+    echo -e "${CYAN}   │${NC}  Git:     $git_status ${WHITE}$(has_cmd git && get_ver git || "未安装")${NC}"
+    echo -e "${CYAN}   │${NC}  Claude:   $claude_status ${WHITE}$(has_cmd claude && claude --version 2>/dev/null | head -1 || "未安装")${NC}"
+    echo -e "${CYAN}   └────────────────────────────────────────────────┘${NC}"
     echo ""
 
-    echo -e "${CYAN}   ┌─── 主菜单 ────────────────────────────────────────┐${NC}"
-    echo -e "${CYAN}   │${NC}"
-    echo -e "${GREEN}   │  [1]  环境诊断      - 检查所有工具状态${NC}"
-    echo -e "${YELLOW}   │  [2]  安装组件      - 安装缺失的工具${NC}"
-    echo -e "${BLUE}   │  [3]  升级组件      - 升级已安装的工具${NC}"
-    echo -e "${MAGENTA}   │  [4]  Node 管理    - 切换 Node.js 版本${NC}"
-    echo -e "${CYAN}   │  [5]  coding-helper - 启动智谱编码助手${NC}"
-    echo -e "${CYAN}   │  [6]  环境变量      - 显示/导出环境变量${NC}"
-    echo -e "${CYAN}   │${NC}"
-    echo -e "${RED}   │  [0]  退出${NC}"
-    echo -e "${CYAN}   │${NC}"
-    echo -e "${CYAN}   └───────────────────────────────────────────────────┘${NC}"
+    echo -e "${CYAN}   ╔═══════════════════════════════════════════════╗${NC}"
+    echo -e "${CYAN}   ║${NC}           ${WHITE}${BOLD}主菜单${NC}                           ${CYAN}║${NC}"
+    echo -e "${CYAN}   ╠═══════════════════════════════════════════════╣${NC}"
+    echo -e "${CYAN}   ║${NC}  ${GREEN}[1]${NC} 环境诊断      ${DARK_GRAY}- 检查所有工具状态${NC}        ${CYAN}║${NC}"
+    echo -e "${CYAN}   ║${NC}  ${YELLOW}[2]${NC} 安装组件      ${DARK_GRAY}- 安装 Node.js/Bun/Git 等${NC}    ${CYAN}║${NC}"
+    echo -e "${CYAN}   ║${NC}  ${BLUE}[3]${NC} 升级组件      ${DARK_GRAY}- 升级已安装的工具${NC}            ${CYAN}║${NC}"
+    echo -e "${CYAN}   ║${NC}  ${MAGENTA}[4]${NC} Node 管理      ${DARK_GRAY}- 切换 Node.js 版本${NC}             ${CYAN}║${NC}"
+    echo -e "${CYAN}   ╠═══════════════════════════════════════════════╣${NC}"
+    echo -e "${CYAN}   ║${NC}  ${CYAN}[5]${NC} Claude Code    ${DARK_GRAY}- 安装 Claude Code CLI${NC}        ${CYAN}║${NC}"
+    echo -e "${CYAN}   ║${NC}  ${CYAN}[6]${NC} OpenCode       ${DARK_GRAY}- 安装 OpenCode 汉化版${NC}        ${CYAN}║${NC}"
+    echo -e "${CYAN}   ║${NC}  ${CYAN}[7]${NC} 汉化脚本       ${DARK_GRAY}- 安装汉化管理工具${NC}           ${CYAN}║${NC}"
+    echo -e "${CYAN}   ║${NC}  ${CYAN}[8]${NC} coding-helper  ${DARK_GRAY}- 启动智谱编码助手${NC}            ${CYAN}║${NC}"
+    echo -e "${CYAN}   ╠═══════════════════════════════════════════════╣${NC}"
+    echo -e "${CYAN}   ║${NC}  ${CYAN}[9]${NC} 环境变量       ${DARK_GRAY}- 显示/导出环境变量${NC}            ${CYAN}║${NC}"
+    echo -e "${CYAN}   ║${NC}  ${RED}[0]${NC} 退出                                             ${CYAN}║${NC}"
+    echo -e "${CYAN}   ╚═══════════════════════════════════════════════╝${NC}"
     echo ""
 
     echo -e "${DARK_GRAY}提示: 也可以直接运行 'codes <命令>'，如: codes doctor${NC}"
@@ -798,35 +1032,44 @@ show_menu() {
 
 # ==================== 帮助 ====================
 show_help() {
-    echo -e "${BOLD}Codes${NC} - 开发环境管理工具 v${VERSION}"
+    echo -e "${BOLD}Codes${NC} - 开发环境智能管理工具 v${VERSION}"
     echo ""
     echo -e "${CYAN}用法:${NC}"
     echo "  codes [命令] [参数]"
     echo ""
     echo -e "${CYAN}命令:${NC}"
-    echo -e "  ${GREEN}doctor${NC}       环境诊断 - 检查所有工具状态"
-    echo -e "  ${GREEN}install${NC} [编号] 安装组件 - 安装缺失的工具（可指定编号）"
-    echo "                  编号: 1=Node.js 2=Bun 3=Git 4=Python 5=nvm 6=coding-helper"
-    echo -e "  ${GREEN}upgrade${NC}      升级组件 - 升级已安装的工具"
-    echo -e "  ${GREEN}node${NC} [ver]   Node 管理 - 切换 Node.js 版本"
-    echo "                  可用: lts, latest, 或具体版本号 (如 20, 22)"
-    echo -e "  ${GREEN}helper${NC} [...]  coding-helper - 启动智谱编码助手"
-    echo -e "  ${GREEN}env${NC}          环境变量 - 显示/导出环境变量"
-    echo -e "  ${GREEN}menu${NC}         显示交互菜单"
-    echo -e "  ${GREEN}--version${NC}    显示版本信息"
-    echo -e "  ${GREEN}--help${NC}       显示此帮助信息"
+    echo -e "  ${GREEN}doctor${NC}         环境诊断 - 检查所有工具状态"
+    echo -e "  ${GREEN}install${NC} [编号]   安装组件 - 安装缺失的工具（可指定编号）"
+    echo "                    编号: 1=Node.js 2=Bun 3=Git 4=Python 5=nvm 6=coding-helper"
+    echo -e "  ${GREEN}upgrade${NC}         升级组件 - 升级已安装的工具"
+    echo -e "  ${GREEN}node${NC} [ver]      Node 管理 - 切换 Node.js 版本"
+    echo "                    可用: lts, latest, 或具体版本号 (如 20, 22)"
+    echo -e "  ${GREEN}claude${NC}          Claude Code - 安装 Claude Code CLI"
+    echo -e "  ${GREEN}opencode${NC}       OpenCode - 安装 OpenCode 汉化版"
+    echo -e "  ${GREEN}i18n${NC}            汉化脚本 - 安装汉化管理工具"
+    echo -e "  ${GREEN}helper${NC} [...]   coding-helper - 启动智谱编码助手"
+    echo -e "  ${GREEN}env${NC}             环境变量 - 显示/导出环境变量"
+    echo -e "  ${GREEN}menu${NC}            显示交互菜单"
+    echo -e "  ${GREEN}--version${NC}       显示版本信息"
+    echo -e "  ${GREEN}--help${NC}          显示此帮助信息"
     echo ""
     echo -e "${CYAN}示例:${NC}"
     echo "  codes doctor              # 诊断环境"
     echo "  codes install             # 安装缺失组件"
     echo "  codes install 1           # 只安装 Node.js"
     echo "  codes node lts            # 切换到 LTS 版本"
-    echo "  codes node 22             # 切换到 v22"
-    echo "  codes helper auth         # 运行 coding-helper auth"
+    echo "  codes claude              # 安装 Claude Code"
+    echo "  codes opencode            # 安装 OpenCode"
+    echo "  codes i18n                 # 安装汉化脚本"
     echo ""
-    echo -e "${CYAN}安装编号:${NC}"
+    echo -e "${CYAN}组件编号:${NC}"
     echo "  [1] Node.js    [2] Bun    [3] Git    [4] Python"
     echo "  [5] nvm        [6] coding-helper"
+    echo ""
+    echo -e "${CYAN}工具安装:${NC}"
+    echo "  codes claude              # Claude Code CLI"
+    echo "  codes opencode            # OpenCode 汉化版"
+    echo "  codes i18n                 # 汉化管理工具"
 }
 
 # ==================== 全局安装 ====================
@@ -902,6 +1145,15 @@ main() {
         env|environment)
             cmd_env
             ;;
+        claude|claudecode)
+            install_claudecode
+            ;;
+        opencode)
+            install_opencode
+            ;;
+        i18n|chinese|localization)
+            install_opencode_i18n
+            ;;
         menu|interactive)
             # 交互式菜单
             if [ ! -t 0 ]; then
@@ -919,8 +1171,11 @@ main() {
                     2) cmd_install ;;
                     3) cmd_upgrade ;;
                     4) cmd_node ;;
-                    5) cmd_helper ;;
-                    6) cmd_env ;;
+                    5) install_claudecode ;;
+                    6) install_opencode ;;
+                    7) install_opencode_i18n ;;
+                    8) cmd_helper ;;
+                    9) cmd_env ;;
                     0)
                         print_color "${DARK_GRAY}" "再见！"
                         exit 0
