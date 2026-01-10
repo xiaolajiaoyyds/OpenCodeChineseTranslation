@@ -2,8 +2,35 @@
 # OpenCode 中文汉化版 - 管理工具 v5.5
 # ========================================
 
-# 版本配置
-$SCRIPT_VERSION = "5.5"
+# 动态版本号（基于 git 提交数）
+function Get-ScriptVersion {
+    $versionBase = "5.5"
+
+    # 尝试从 git 获取提交数
+    $scriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { "." }
+    try {
+        $repoRoot = git -C $scriptDir rev-parse --show-toplevel 2>$null
+        if ($repoRoot) {
+            $commitCount = git -C $repoRoot rev-list --count HEAD 2>$null
+            if ($commitCount) {
+                return "$versionBase.$commitCount"
+            }
+        }
+    } catch {
+        # 忽略 git 错误
+    }
+
+    # 降级：读取本地版本文件
+    $versionFile = "$env:USERPROFILE\.opencode\version"
+    if (Test-Path $versionFile) {
+        return Get-Content $versionFile
+    }
+
+    # 默认版本
+    return "$versionBase.0"
+}
+
+$SCRIPT_VERSION = Get-ScriptVersion
 $UPDATE_CHECK_FILE = "$env:USERPROFILE\.opencode\update_check"
 $UPDATE_CHECK_INTERVAL = 7  # 天数
 $REPO_BASE_URL = "https://raw.githubusercontent.com/1186258278/OpenCodeChineseTranslation/main/scripts/opencode"

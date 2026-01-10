@@ -5,7 +5,32 @@
 # 功能: 环境诊断 / 组件管理 / 工具安装 / 汉化配置
 # ========================================
 
-VERSION="2.0.2"
+# 动态版本号（基于 git 提交数）
+get_version() {
+    local version_base="2.0"
+    local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    local repo_root="$(git -C "$script_dir" rev-parse --show-toplevel 2>/dev/null)"
+
+    if [ -n "$repo_root" ]; then
+        local commit_count=$(git -C "$repo_root" rev-list --count HEAD 2>/dev/null)
+        if [ -n "$commit_count" ]; then
+            echo "${version_base}.${commit_count}"
+            return 0
+        fi
+    fi
+
+    # 降级：读取本地版本文件
+    local version_file="$HOME/.codes/version"
+    if [ -f "$version_file" ]; then
+        cat "$version_file"
+        return 0
+    fi
+
+    # 默认版本
+    echo "${version_base}.0"
+}
+
+VERSION=$(get_version)
 
 # 颜色定义
 RED='\033[0;31m'

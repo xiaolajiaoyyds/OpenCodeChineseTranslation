@@ -11,7 +11,6 @@ BRANCH="main"
 REPO_GITEE="QtCodeCreators/OpenCodeChineseTranslation"
 LIB_DIR="/usr/local/lib/codes"
 BIN_DIR="/usr/local/bin"
-EXPECTED_VERSION="2.0.2"
 
 # 智能 sudo
 SUDO_CMD=""
@@ -86,16 +85,11 @@ $SUDO_CMD chmod +x "$LIB_DIR/codes.sh"
 
 # 验证版本号
 echo "→ 验证版本..."
-DOWNLOAD_VERSION=$($SUDO_CMD grep '^VERSION=' "$LIB_DIR/codes.sh" 2>/dev/null | head -1 | cut -d'"' -f2)
+DOWNLOAD_VERSION=$($SUDO_CMD bash -c '. "'"$LIB_DIR/codes.sh"'" && echo $VERSION' 2>/dev/null)
 if [ -z "$DOWNLOAD_VERSION" ]; then
     echo "  ⚠ 警告: 无法检测版本号"
-elif [ "$DOWNLOAD_VERSION" != "$EXPECTED_VERSION" ]; then
-    echo "  ⚠ 警告: 下载版本 ($DOWNLOAD_VERSION) 与预期版本 ($EXPECTED_VERSION) 不一致"
-    echo "  如果遇到问题，请手动清理后重试:"
-    echo "    sudo rm -rf /usr/local/lib/codes /usr/local/bin/codes"
-    echo "    然后重新运行此安装命令"
 else
-    echo "  ✓ 版本正确: v$DOWNLOAD_VERSION"
+    echo "  ✓ 版本: v$DOWNLOAD_VERSION"
 fi
 
 # 创建 wrapper 脚本
