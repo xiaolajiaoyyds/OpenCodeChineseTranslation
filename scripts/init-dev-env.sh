@@ -135,6 +135,16 @@ get_arch() {
     esac
 }
 
+# 智能获取 sudo 命令（Docker 容器中可能不需要）
+SUDO_CMD=""
+if [ "$(id -u)" = "0" ]; then
+    SUDO_CMD=""  # 已是 root，不需要 sudo
+elif has_cmd sudo; then
+    SUDO_CMD="sudo"
+else
+    SUDO_CMD=""  # 无 sudo 且非 root，将尝试直接运行
+fi
+
 # ==================== 打印汇总报告 ====================
 print_summary() {
     echo ""
@@ -237,9 +247,9 @@ install_nodejs() {
         if curl -L "$node_url" -o node.tar.xz 2>/dev/null; then
             tar -xf node.tar.xz 2>/dev/null
             if [ -d "node-${node_version}-linux-${arch}" ]; then
-                sudo rm -rf /usr/local/node 2>/dev/null
-                sudo mv "node-${node_version}-linux-${arch}" /usr/local/node
-                sudo ln -sf /usr/local/node/bin/* /usr/local/bin/ 2>/dev/null
+                $SUDO_CMD rm -rf /usr/local/node 2>/dev/null
+                $SUDO_CMD mv "node-${node_version}-linux-${arch}" /usr/local/node
+                $SUDO_CMD ln -sf /usr/local/node/bin/* /usr/local/bin/ 2>/dev/null
                 export PATH="/usr/local/node/bin:$PATH"
                 has_cmd node && installed=true
             fi
@@ -253,12 +263,12 @@ install_nodejs() {
         print_color "$YELLOW" "  方法3: 使用系统包管理器..."
         case $pm in
             dnf|yum)
-                curl -fsSL https://rpm.nodesource.com/setup_lts.x | sudo bash - 2>/dev/null
-                sudo $pm install -y nodejs npm 2>/dev/null && installed=true
+                curl -fsSL https://rpm.nodesource.com/setup_lts.x | $SUDO_CMD bash - 2>/dev/null
+                $SUDO_CMD $pm install -y nodejs npm 2>/dev/null && installed=true
                 ;;
             apt)
-                curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash - 2>/dev/null
-                sudo apt-get install -y nodejs 2>/dev/null && installed=true
+                curl -fsSL https://deb.nodesource.com/setup_lts.x | $SUDO_CMD -E bash - 2>/dev/null
+                $SUDO_CMD apt-get install -y nodejs 2>/dev/null && installed=true
                 ;;
         esac
     fi
@@ -354,9 +364,9 @@ install_git() {
 
     local pm=$(get_pm)
     case $pm in
-        dnf|yum) sudo $pm install -y git 2>/dev/null ;;
-        apt) sudo apt-get install -y git 2>/dev/null ;;
-        pacman) sudo pacman -S --noconfirm git 2>/dev/null ;;
+        dnf|yum) $SUDO_CMD $pm install -y git 2>/dev/null ;;
+        apt) $SUDO_CMD apt-get update -qq && $SUDO_CMD apt-get install -y git 2>/dev/null ;;
+        pacman) $SUDO_CMD pacman -S --noconfirm git 2>/dev/null ;;
     esac
 
     if has_cmd git; then
@@ -382,8 +392,8 @@ install_python() {
 
     local pm=$(get_pm)
     case $pm in
-        dnf|yum) sudo $pm install -y python3 python3-pip 2>/dev/null ;;
-        apt) sudo apt-get install -y python3 python3-pip 2>/dev/null ;;
+        dnf|yum) $SUDO_CMD $pm install -y python3 python3-pip 2>/dev/null ;;
+        apt) $SUDO_CMD apt-get update -qq && $SUDO_CMD apt-get install -y python3 python3-pip 2>/dev/null ;;
     esac
 
     if has_cmd python3; then
