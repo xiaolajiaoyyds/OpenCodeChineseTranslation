@@ -926,44 +926,148 @@ install_opencode_i18n() {
     print_color "${CYAN}" "  项目目录: $project_dir"
     echo ""
 
+    # 检测操作系统
+    local os_type="$(uname -s)"
+    local is_linux=false
+
+    case "$os_type" in
+        Linux*) is_linux=true ;;
+        MINGW*|MSYS*|CYGWIN*) is_linux=false ;;
+        Darwin*)
+            print_color "${YELLOW}" "  ⚠ macOS 支持: 使用 Linux 版本"
+            is_linux=true
+            ;;
+    esac
+
     # 检查是否已有汉化脚本
-    if [ -f "$project_dir/scripts/opencode/opencode.ps1" ]; then
+    local has_script=false
+    if [ "$is_linux" = true ] && [ -f "$project_dir/scripts/opencode-linux/opencode.js" ]; then
+        has_script=true
+    elif [ -f "$project_dir/scripts/opencode/opencode.ps1" ]; then
+        has_script=true
+    fi
+
+    if [ "$has_script" = true ]; then
         print_color "${GREEN}" "  ✓ 汉化脚本已存在"
         echo ""
+
+        # 检查是否需要安装依赖
+        if [ "$is_linux" = true ]; then
+            local opencode_linux_dir="$project_dir/scripts/opencode-linux"
+            if [ ! -d "$opencode_linux_dir/node_modules" ]; then
+                print_color "${CYAN}" "  正在安装依赖..."
+                (cd "$opencode_linux_dir" && npm install 2>/dev/null)
+                print_color "${GREEN}" "  ✓ 依赖安装完成"
+            fi
+        fi
+
+        echo ""
         print_color "${CYAN}" "  使用方法:"
-        echo "    cd $project_dir"
-        echo "    ./scripts/opencode/opencode.ps1    # Windows/PowerShell"
-        echo "    或运行: opencodecmd                  # 全局命令"
+        if [ "$is_linux" = true ]; then
+            echo "    cd $project_dir/scripts/opencode-linux"
+            echo "    ./opencode.js              # 或: npm start"
+            echo "    ./opencode.js update       # 拉取源码"
+            echo "    ./opencode.js apply        # 应用汉化"
+            echo "    ./opencode.js build        # 编译构建"
+            echo "    ./opencode.js full         # 一键全流程"
+        else
+            echo "    cd $project_dir"
+            echo "    ./scripts/opencode/opencode.ps1    # Windows/PowerShell"
+        fi
         return 0
     fi
 
-    # 下载汉化脚本
-    print_color "${CYAN}" "  正在下载汉化脚本..."
+    # 下载/安装汉化脚本
+    print_color "${CYAN}" "  正在安装汉化脚本..."
     echo ""
 
-    local scripts_dir="$project_dir/scripts"
-    local opencode_dir="$scripts_dir/opencode"
+    if [ "$is_linux" = true ]; then
+        # Linux 版本 - Node.js 脚本
+        local opencode_linux_dir="$project_dir/scripts/opencode-linux"
+        mkdir -p "$opencode_linux_dir" 2>/dev/null
 
-    mkdir -p "$opencode_dir" 2>/dev/null
+        # 从 Gitee 下载 Linux 版本
+        local base_url="https://gitee.com/QtCodeCreators/OpenCodeChineseTranslation/raw/main/scripts/opencode-linux"
 
-    # 从 Gitee 下载
-    local base_url="https://gitee.com/QtCodeCreators/OpenCodeChineseTranslation/raw/main/scripts/opencode"
+        # 下载所有必要文件
+        local files=("opencode.js" "package.json" "README.md")
+        for file in "${files[@]}"; do
+            curl -fsSL "$base_url/$file" -o "$opencode_linux_dir/$file" 2>/dev/null
+        done
 
-    curl -fsSL "$base_url/opencode.ps1" -o "$opencode_dir/opencode.ps1" 2>/dev/null
-    curl -fsSL "$base_url/init.ps1" -o "$opencode_dir/init.ps1" 2>/dev/null
+        # 创建 lib 目录并下载模块
+        mkdir -p "$opencode_linux_dir/lib" 2>/dev/null
+        local lib_files=("env.js" "git.js" "i18n.js" "build.js" "verify.js" "version.js")
+        for file in "${lib_files[@]}"; do
+            curl -fsSL "$base_url/lib/$file" -o "$opencode_linux_dir/lib/$file" 2>/dev/null
+        done
 
-    if [ -f "$opencode_dir/opencode.ps1" ]; then
-        print_color "${GREEN}" "  ✓ 汉化脚本安装成功！"
-        echo ""
-        print_color "${CYAN}}" "  使用方法:"
-        echo "    cd $project_dir"
-        echo "    pwsh ./scripts/opencode/opencode.ps1"
-        echo ""
-        print_color "${YELLOW}" "  Windows 全局命令（添加到 $PROFILE）:"
-        echo '    function opencodecmd { & "C:\Data\PC\OpenCode\scripts\opencode\opencode.ps1" @Args }'
+        # 设置可执行权限
+        chmod +x "$opencode_linux_dir/opencode.js" 2>/dev/null
+
+        if [ -f "$opencode_linux_dir/opencode.js" ]; then
+            print_color "${GREEN}" "  ✓ 汉化脚本下载成功"
+            echo ""
+
+            # 检查 Node.js
+            if ! has_cmd node; then
+                print_color "${YELLOW}" "  ⚠ 需要安装 Node.js"
+                echo ""
+                if confirm_action "是否现在安装 Node.js？"; then
+                    install_nodejs
+                else
+                    print_color "${YELLOW}" "  ! 请先安装 Node.js 后再运行: cd $opencode_linux_dir && npm install"
+                    return 1
+                fi
+            fi
+
+            # 安装依赖
+            print_color "${CYAN}" "  正在安装依赖..."
+            (cd "$opencode_linux_dir" && npm install 2>/dev/null)
+
+            if [ $? -eq 0 ]; then
+                print_color "${GREEN}" "  ✓ 依赖安装完成"
+                echo ""
+                print_color "${CYAN}}" "  使用方法:"
+                echo "    cd $opencode_linux_dir"
+                echo "    ./opencode.js              # 启动交互菜单"
+                echo "    ./opencode.js full         # 一键全流程"
+                echo ""
+                print_color "${YELLOW}" "  创建全局命令 (可选):"
+                echo "    cd $opencode_linux_dir && npm link"
+            else
+                print_color "${YELLOW}" "  ⚠ 依赖安装可能有问题，请手动运行: cd $opencode_linux_dir && npm install"
+            fi
+        else
+            print_color "${RED}" "  ✗ 下载失败，请检查网络"
+            return 1
+        fi
     else
-        print_color "${RED}" "  ✗ 下载失败，请检查网络"
-        return 1
+        # Windows 版本 - PowerShell 脚本
+        local scripts_dir="$project_dir/scripts"
+        local opencode_dir="$scripts_dir/opencode"
+
+        mkdir -p "$opencode_dir" 2>/dev/null
+
+        # 从 Gitee 下载
+        local base_url="https://gitee.com/QtCodeCreators/OpenCodeChineseTranslation/raw/main/scripts/opencode"
+
+        curl -fsSL "$base_url/opencode.ps1" -o "$opencode_dir/opencode.ps1" 2>/dev/null
+        curl -fsSL "$base_url/init.ps1" -o "$opencode_dir/init.ps1" 2>/dev/null
+
+        if [ -f "$opencode_dir/opencode.ps1" ]; then
+            print_color "${GREEN}" "  ✓ 汉化脚本安装成功！"
+            echo ""
+            print_color "${CYAN}}" "  使用方法:"
+            echo "    cd $project_dir"
+            echo "    pwsh ./scripts/opencode/opencode.ps1"
+            echo ""
+            print_color "${YELLOW}" "  Windows 全局命令（添加到 $PROFILE）:"
+            echo '    function opencodecmd { & "C:\Data\PC\OpenCode\scripts\opencode\opencode.ps1" @Args }'
+        else
+            print_color "${RED}" "  ✗ 下载失败，请检查网络"
+            return 1
+        fi
     fi
     echo ""
 }

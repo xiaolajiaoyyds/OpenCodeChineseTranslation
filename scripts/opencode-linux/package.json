@@ -1,0 +1,30 @@
+{
+  "name": "opencode-linux-i18n",
+  "version": "1.0.0",
+  "description": "OpenCode 中文汉化管理工具 - Linux 版本",
+  "main": "opencode.js",
+  "bin": {
+    "opencode": "./opencode.js"
+  },
+  "scripts": {
+    "start": "node opencode.js",
+    "update": "node opencode.js update",
+    "apply": "node opencode.js apply",
+    "build": "node opencode.js build",
+    "verify": "node opencode.js verify",
+    "full": "node opencode.js full"
+  },
+  "keywords": ["opencode", "i18n", "chinese", "translation"],
+  "author": "CodeCreator",
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "ora": "^8.0.1",
+    "commander": "^12.0.0",
+    "inquirer": "^9.2.0",
+    "glob": "^10.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
