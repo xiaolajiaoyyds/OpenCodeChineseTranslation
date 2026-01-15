@@ -6,6 +6,7 @@
 const { Command } = require('commander');
 const { checkEnvironment } = require('./env.js');
 const { step, success, error, log } = require('./colors.js');
+const { run: runMenu } = require('./menu.js');
 
 // 导入命令
 const updateCmd = require('../commands/update.js');
@@ -128,6 +129,15 @@ function createCLI() {
       log(`  源码目录: ${getOpencodeDir()}`);
       log(`  汉化目录: ${getI18nDir()}`);
       log(`  输出目录: ${getBinDir()}`);
+    });
+
+  // interactive 命令（默认命令）
+  program
+    .command('interactive', { isDefault: true })
+    .alias('ui')
+    .description('打开交互式菜单界面')
+    .action(() => {
+      runMenu();
     });
 
   return program;
