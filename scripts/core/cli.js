@@ -28,7 +28,7 @@ function createCLI() {
   program
     .name('opencodenpm')
     .description('OpenCode 中文汉化管理工具')
-    .version('5.6.0');
+    .version('6.0.0');
 
   // update 命令
   program

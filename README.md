@@ -1,7 +1,7 @@
 # OpenCode 中文汉化版
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/i18n-v5.6-green.svg)](opencode-i18n)
+[![Version](https://img.shields.io/badge/i18n-v6.0-green.svg)](opencode-i18n)
 [![AI](https://img.shields.io/badge/AI%20%E7%BB%B4%E6%8A%A4-purple.svg)](docs/AI_MAINTENANCE.md)
 
 [中文](#中文文档) | [English](#english-documentation)
