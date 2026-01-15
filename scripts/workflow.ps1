@@ -114,35 +114,19 @@ if ($LASTEXITCODE -eq 0) {
 if (-not $SkipBuild) {
     Write-Step "步骤 5: 编译构建"
 
-    $BUILD_DIR = Join-Path $OPencode_DIR "packages\opencode"
+    # 使用 Node.js 脚本进行编译（绕过 PowerShell bun wrapper 问题）
+    $BUILD_SCRIPT = Join-Path $SCRIPT_DIR "build-windows.js"
 
-    if (-not (Test-Path $BUILD_DIR)) {
-        Write-Host "❌ 编译目录不存在: $BUILD_DIR" -ForegroundColor Red
+    if (-not (Test-Path $BUILD_SCRIPT)) {
+        Write-Host "❌ 构建脚本不存在: $BUILD_SCRIPT" -ForegroundColor Red
         exit 1
     }
 
-    Push-Location $BUILD_DIR
-
-    # 安装依赖（如果需要）
-    if (-not (Test-Path "node_modules")) {
-        Write-Host "安装依赖..." -ForegroundColor Cyan
-        bun install
-    }
-
-    # 执行编译
-    Write-Host "开始编译..." -ForegroundColor Cyan
-    $BUILD_OUTPUT = bun run build 2>&1
-
-    if ($LASTEXITCODE -eq 0) {
-        Write-Host "✓ 编译成功" -ForegroundColor Green
-    } else {
+    & node $BUILD_SCRIPT
+    if ($LASTEXITCODE -ne 0) {
         Write-Host "❌ 编译失败" -ForegroundColor Red
-        Write-Host $BUILD_OUTPUT -ForegroundColor Red
-        Pop-Location
         exit 1
     }
-
-    Pop-Location
 } else {
     Write-Host "⊘ 跳过编译" -ForegroundColor DarkGray
 }
