@@ -6,7 +6,8 @@ const inquirer = require('inquirer');
 const fs = require('fs');
 const path = require('path');
 const { log } = require('./colors.js');
-const { getOpencodeDir, exists } = require('./utils.js');
+const { getOpencodeDir, getI18nDir, exists } = require('./utils.js');
+const { getOpencodeVersion, getVersion: getConfigVersion } = require('./version.js');
 
 const updateCmd = require('../commands/update.js');
 const applyCmd = require('../commands/apply.js');
@@ -19,17 +20,44 @@ const checkCmd = require('../commands/check.js');
 const Translator = require('./translator.js');
 
 /**
- * 获取当前版本号
+ * 获取版本信息（官方版本 + 汉化版本）
  */
-function getVersion() {
+function getVersionInfo() {
+  // 1. 尝试从语言包配置获取
+  try {
+    const configPath = path.join(getI18nDir(), 'config.json');
+    if (exists(configPath)) {
+      const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+      if (config.opencodeVersion) {
+        return {
+          official: config.opencodeVersion,
+          zh: config.version || `${config.opencodeVersion}-zh`
+        };
+      }
+    }
+  } catch (e) {}
+  
+  // 2. 尝试从源码获取
   try {
     const pkgPath = path.join(getOpencodeDir(), 'packages', 'opencode', 'package.json');
     if (exists(pkgPath)) {
       const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
-      return `${pkg.version}-zh`;
+      return {
+        official: pkg.version,
+        zh: `${pkg.version}-zh`
+      };
     }
   } catch (e) {}
-  return '未知版本';
+  
+  return { official: null, zh: '未知版本' };
+}
+
+/**
+ * 获取当前版本号（兼容旧调用）
+ */
+function getVersion() {
+  const info = getVersionInfo();
+  return info.zh;
 }
 
 // 主菜单项
@@ -182,15 +210,27 @@ async function askNextStep(currentCmd) {
 async function showMenu() {
   console.clear();
   console.log('');
-  const version = getVersion();
-  const title = `OpenCode 汉化工具 v${version}`;
-  const padding = Math.max(0, 34 - title.length);
-  const left = Math.floor(padding / 2);
-  const right = padding - left;
+  const versionInfo = getVersionInfo();
   
-  log('╔════════════════════════════════════╗', 'cyan');
-  log(`║${' '.repeat(left)} ${title} ${' '.repeat(right)}║`, 'cyan');
-  log('╚════════════════════════════════════╝', 'cyan');
+  // 主标题：显示官方版本
+  const officialVersion = versionInfo.official || '未同步';
+  const title = `OpenCode 汉化工具`;
+  const subtitle = `官方 v${officialVersion}`;
+  
+  // 计算居中
+  const boxWidth = 38;
+  const titlePad = Math.max(0, boxWidth - 2 - title.length);
+  const titleLeft = Math.floor(titlePad / 2);
+  const titleRight = titlePad - titleLeft;
+  
+  const subPad = Math.max(0, boxWidth - 2 - subtitle.length);
+  const subLeft = Math.floor(subPad / 2);
+  const subRight = subPad - subLeft;
+  
+  log('╔' + '═'.repeat(boxWidth) + '╗', 'cyan');
+  log(`║${' '.repeat(titleLeft)} ${title} ${' '.repeat(titleRight)}║`, 'cyan');
+  log(`║${' '.repeat(subLeft)} ${subtitle} ${' '.repeat(subRight)}║`, 'cyan');
+  log('╚' + '═'.repeat(boxWidth) + '╝', 'cyan');
   console.log('');
 
   const { action } = await inquirer.prompt([

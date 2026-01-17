@@ -4,7 +4,8 @@
 
 const fs = require('fs');
 const path = require('path');
-const { getProjectDir, readJSON } = require('./utils.js');
+const { execSync } = require('child_process');
+const { getProjectDir, getOpencodeDir, readJSON } = require('./utils.js');
 
 /**
  * 版本配置文件路径
@@ -104,6 +105,114 @@ function parseVersion(version) {
 }
 
 /**
+ * 保存版本配置
+ */
+function saveVersionConfig(config) {
+  try {
+    // 读取现有配置
+    let existing = {};
+    if (fs.existsSync(VERSION_FILE)) {
+      existing = readJSON(VERSION_FILE);
+    }
+    
+    // 合并配置
+    const merged = { ...existing, ...config };
+    
+    // 写入文件
+    fs.writeFileSync(VERSION_FILE, JSON.stringify(merged, null, 4), 'utf-8');
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+/**
+ * 从 OpenCode 源码获取官方版本号
+ * 读取 package.json 或 git tag
+ */
+function fetchOpencodeVersion() {
+  const opencodeDir = getOpencodeDir();
+  
+  if (!fs.existsSync(opencodeDir)) {
+    return null;
+  }
+  
+  try {
+    // 方式1: 读取 package.json
+    const pkgPath = path.join(opencodeDir, 'package.json');
+    if (fs.existsSync(pkgPath)) {
+      const pkg = readJSON(pkgPath);
+      if (pkg.version) {
+        return pkg.version;
+      }
+    }
+    
+    // 方式2: 读取 go.mod 或其他版本文件
+    const versionFile = path.join(opencodeDir, 'internal', 'version', 'version.go');
+    if (fs.existsSync(versionFile)) {
+      const content = fs.readFileSync(versionFile, 'utf-8');
+      const match = content.match(/Version\s*=\s*["']([^"']+)["']/);
+      if (match) {
+        return match[1];
+      }
+    }
+    
+    // 方式3: 从 git describe 获取
+    const gitVersion = execSync('git describe --tags --abbrev=0 2>/dev/null || git rev-parse --short HEAD', {
+      cwd: opencodeDir,
+      encoding: 'utf-8',
+    }).trim();
+    
+    return gitVersion || null;
+  } catch (e) {
+    return null;
+  }
+}
+
+/**
+ * 获取当前 OpenCode 源码的 commit hash
+ */
+function fetchOpencodeCommit() {
+  const opencodeDir = getOpencodeDir();
+  
+  if (!fs.existsSync(opencodeDir)) {
+    return null;
+  }
+  
+  try {
+    const commit = execSync('git rev-parse HEAD', {
+      cwd: opencodeDir,
+      encoding: 'utf-8',
+    }).trim();
+    return commit;
+  } catch (e) {
+    return null;
+  }
+}
+
+/**
+ * 更新官方版本信息（在 sync 后调用）
+ */
+function updateOpencodeVersion() {
+  const version = fetchOpencodeVersion();
+  const commit = fetchOpencodeCommit();
+  
+  const updates = {
+    lastUpdate: new Date().toISOString().split('T')[0],
+  };
+  
+  if (version) {
+    updates.opencodeVersion = version;
+  }
+  
+  if (commit) {
+    updates.supportedCommit = commit;
+  }
+  
+  return saveVersionConfig(updates);
+}
+
+/**
  * 比较版本号
  * @returns {number} -1: v1 < v2, 0: v1 == v2, 1: v1 > v2
  */
@@ -142,4 +251,8 @@ module.exports = {
   generateVersionFromCount,
   parseVersion,
   compareVersions,
+  saveVersionConfig,
+  fetchOpencodeVersion,
+  fetchOpencodeCommit,
+  updateOpencodeVersion,
 };

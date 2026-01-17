@@ -24,6 +24,25 @@
     "\"Export session transcript\"": "\"导出会话记录 (Export session transcript)\"",
     "\"Failed to export session\"": "\"导出会话失败 (Failed to export session)\"",
     "\"Previous child session\"": "\"上一个子会话 (Previous child session)\"",
-    "\"Fetching from the web...\"": "\"正在从网络获取... (Fetching from the web...)\""
+    "\"Fetching from the web...\"": "\"正在从网络获取... (Fetching from the web...)\"",
+    "title: \"Share session\"": "title: \"分享会话 (Share session)\"",
+    "title: \"Rename session\"": "title: \"重命名会话 (Rename session)\"",
+    "title: \"Jump to message\"": "title: \"跳转到消息 (Jump to message)\"",
+    "title: \"Fork from message\"": "title: \"从此消息分叉 (Fork from message)\"",
+    "title: \"Compact session\"": "title: \"压缩会话 (Compact session)\"",
+    "title: \"Unshare session\"": "title: \"取消分享会话 (Unshare session)\"",
+    "title: \"Redo\"": "title: \"重做 (Redo)\"",
+    "title: \"Toggle diff wrapping\"": "title: \"切换差异自动换行 (Toggle diff wrapping)\"",
+    "title: \"Page up\"": "title: \"向上翻页 (Page up)\"",
+    "title: \"Page down\"": "title: \"向下翻页 (Page down)\"",
+    "title: \"Half page up\"": "title: \"向上翻半页 (Half page up)\"",
+    "title: \"Half page down\"": "title: \"向下翻半页 (Half page down)\"",
+    "title: \"First message\"": "title: \"第一条消息 (First message)\"",
+    "title: \"Last message\"": "title: \"最后一条消息 (Last message)\"",
+    "title: \"Next message\"": "title: \"下一条消息 (Next message)\"",
+    "title: \"Previous message\"": "title: \"上一条消息 (Previous message)\"",
+    "title: \"Next child session\"": "title: \"下一个子会话 (Next child session)\"",
+    "title: \"Go to parent session\"": "title: \"返回父会话 (Go to parent session)\"",
+    "\"Are you sure you want to restore the reverted messages?\"": "\"确定要恢复已撤销的消息吗？ (Are you sure you want to restore the reverted messages?)\""
   }
 }

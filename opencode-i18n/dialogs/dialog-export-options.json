@@ -6,6 +6,7 @@
     ">Include thinking<": ">包含思考过程 (Include thinking)<",
     ">Include tool details<": ">包含工具详情 (Include tool details)<",
     ">Include assistant metadata<": ">包含助手元数据 (Include assistant metadata)<",
-    ">Open without saving<": ">直接打开不保存 (Open without saving)<"
+    ">Open without saving<": ">直接打开不保存 (Open without saving)<",
+    "placeholder=\"Enter filename\"": "placeholder=\"输入文件名 (Enter filename)\""
   }
 }

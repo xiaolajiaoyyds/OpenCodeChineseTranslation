@@ -8,6 +8,7 @@ const path = require('path');
 const { glob } = require('glob');
 const { step, success, error, warn, indent, log } = require('../core/colors.js');
 const { getProjectDir, getOpencodeDir, getI18nDir } = require('../core/utils.js');
+const { updateOpencodeVersion, fetchOpencodeVersion } = require('../core/version.js');
 const updateCmd = require('./update.js');
 const I18n = require('../core/i18n.js');
 
@@ -112,6 +113,7 @@ function updateConfigVersion(version, commit) {
   const zhVersion = `${version}-zh`;
   
   config.version = zhVersion;
+  config.opencodeVersion = version;  // 新增：官方版本号
   config.lastUpdate = new Date().toISOString().split('T')[0];
   if (commit) {
     config.supportedCommit = commit;
