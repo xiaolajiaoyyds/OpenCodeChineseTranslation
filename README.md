@@ -222,6 +222,15 @@ OpenCode 原项目采用 MIT 许可证，版权归 [Anomaly Company](https://ano
 
 ---
 
+### 📚 进阶教程
+
+| 教程 | 说明 |
+|------|------|
+| [🚀 Antigravity 集成指南](docs/ANTIGRAVITY_INTEGRATION.md) | 使用 Antigravity Tools 接入 Gemini 3 Pro、Claude Opus 4.5 等强大模型 |
+| [🔧 AI 维护指南](docs/AI_MAINTENANCE.md) | AI 辅助项目维护说明 |
+
+---
+
 ### 🔗 相关链接
 
 | 链接 | 说明 |
@@ -229,6 +238,7 @@ OpenCode 原项目采用 MIT 许可证，版权归 [Anomaly Company](https://ano
 | [Gitee 仓库](https://gitee.com/QtCodeCreators/OpenCodeChineseTranslation) | 国内镜像 |
 | [GitHub 仓库](https://github.com/1186258278/OpenCodeChineseTranslation) | GitHub 主页 |
 | [OpenCode 官方](https://github.com/anomalyco/opencode) | 原项目 |
+| [Antigravity Tools](https://github.com/lbjlaq/Antigravity-Manager) | 本地 AI 网关工具 |
 | [问题反馈](https://github.com/1186258278/OpenCodeChineseTranslation/issues) | 提交 Issue |
 
 ---
