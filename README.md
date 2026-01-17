@@ -10,11 +10,9 @@
 
 ## 效果展示
 
-<p align="center">
-  <img src="docs/menu.png" alt="交互式菜单" width="300">
-  <img src="docs/coverage-report.png" alt="覆盖率报告" width="300">
-  <img src="docs/quality-check.png" alt="质量检查" width="300">
-</p>
+| 交互式菜单 | 覆盖率报告 | 质量检查 |
+|:---:|:---:|:---:|
+| ![菜单](docs/menu.png) | ![覆盖率](docs/coverage-report.png) | ![质量](docs/quality-check.png) |
 
 ---
 
