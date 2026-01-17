@@ -13,6 +13,7 @@
     ">Open<": ">打开 (Open)<",
     ">Code<": ">代码 (Code)<",
     "\"LSPs have been disabled in settings\"": "\"LSP 已在设置中禁用 (LSPs have been disabled in settings)\"",
-    "\"LSPs will activate as files are read\"": "\"LSP 将在读取文件时激活 (LSPs will activate as files are read)\""
+    "\"LSPs will activate as files are read\"": "\"LSP 将在读取文件时激活 (LSPs will activate as files are read)\"",
+    ">Connect provider<": ">连接提供商 (Connect provider)<"
   }
 }

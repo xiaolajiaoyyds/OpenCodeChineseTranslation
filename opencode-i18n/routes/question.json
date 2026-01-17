@@ -3,6 +3,7 @@
   "description": "question.tsx 汉化配置",
   "replacements": {
     ">Confirm<": ">确认 (Confirm)<",
-    ">Review<": ">查看 (Review)<"
+    ">Review<": ">查看 (Review)<",
+    "placeholder=\"Type your own answer\"": "placeholder=\"输入你的答案 (Type your own answer)\""
   }
 }

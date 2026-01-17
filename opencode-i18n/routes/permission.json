@@ -6,6 +6,8 @@
     ">This will allow the following patterns until OpenCode is restarted<": ">这将允许以下模式直到 OpenCode 重启 (This will allow the following patterns until OpenCode is restarted)<",
     ">Reject permission<": ">拒绝权限 (Reject permission)<",
     ">Tell OpenCode what to do differently<": ">告诉 OpenCode 应该怎么做 (Tell OpenCode what to do differently)<",
-    "\"Continue after repeated failures\"": "\"在多次失败后继续 (Continue after repeated failures)\""
+    "\"Continue after repeated failures\"": "\"在多次失败后继续 (Continue after repeated failures)\"",
+    "title=\"Always allow\"": "title=\"始终允许 (Always allow)\"",
+    "title=\"Permission required\"": "title=\"需要权限 (Permission required)\""
   }
 }

@@ -1,0 +1,20 @@
+{
+  "name": "opencode-chinese-translation",
+  "version": "1.1.25-zh",
+  "description": "OpenCode 中文汉化项目",
+  "scripts": {
+    "postinstall": "cd scripts && npm install",
+    "start": "node scripts/bin/opencodenpm",
+    "update": "node scripts/bin/opencodenpm update",
+    "apply": "node scripts/bin/opencodenpm apply",
+    "build": "node scripts/bin/opencodenpm build",
+    "check": "node scripts/bin/opencodenpm check",
+    "full": "node scripts/bin/opencodenpm full"
+  },
+  "keywords": ["opencode", "i18n", "chinese", "汉化"],
+  "author": "OpenCode Chinese Translation Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

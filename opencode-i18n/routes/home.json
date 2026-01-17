@@ -1,0 +1,7 @@
+{
+  "file": "src/cli/cmd/tui/routes/home.tsx",
+  "description": "home.tsx 汉化配置",
+  "replacements": {
+    "category: \"System\"": "category: \"系统 (System)\""
+  }
+}

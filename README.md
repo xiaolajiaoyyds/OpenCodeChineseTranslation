@@ -23,16 +23,17 @@
 git clone https://github.com/xiaolajiaoyyds/OpenCodeChineseTranslation.git
 cd OpenCodeChineseTranslation
 
-# 2. 安装管理工具
-cd scripts && npm install && npm link
+# 2. 安装依赖（二选一）
+npm install                          # 方式 A: 根目录安装
+cd scripts && npm install && npm link  # 方式 B: 全局命令
 
-# 3. 运行汉化（交互式菜单）
-opencodenpm
+# 3. 运行汉化
+npm start          # 方式 A: npm 脚本
+opencodenpm        # 方式 B: 全局命令
 
 # 4. 编译运行
-opencodenpm build
-opencodenpm deploy
-opencode
+npm run build      # 或 opencodenpm build
+npm run full       # 一键完整流程
 ```
 
 ---
@@ -76,12 +77,12 @@ OpenCodeChineseTranslation/
 ├── scripts/              # 管理工具
 │   ├── core/             # 核心模块（translator.js, i18n.js, menu.js）
 │   └── commands/         # CLI 命令
-├── opencode-i18n/        # 语言包（605 条翻译）
-│   ├── dialogs/          # 对话框（34 文件 / 186 条）
-│   ├── components/       # 组件（16 文件 / 212 条）
-│   ├── routes/           # 路由（11 文件 / 149 条）
-│   ├── common/           # 通用（10 文件 / 54 条）
-│   └── contexts/         # 上下文（2 文件 / 4 条）
+├── opencode-i18n/        # 语言包（401 条翻译）
+│   ├── dialogs/          # 对话框（32 文件 / 176 条）
+│   ├── components/       # 组件（12 文件 / 157 条）
+│   ├── routes/           # 路由（5 文件 / 43 条）
+│   ├── common/           # 通用（3 文件 / 24 条）
+│   └── contexts/         # 上下文（1 文件 / 1 条）
 └── opencode-zh-CN/       # OpenCode 源码（自动克隆）
 ```
 
@@ -124,7 +125,7 @@ OpenCodeChineseTranslation/
 - 修复菜单 stdin 事件监听冲突
 
 **统计**
-- 605 条翻译，质量评分 100/100
+- 401 条翻译，质量评分 100/100
 
 ### [5.x] - 历史版本
 

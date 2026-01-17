@@ -22,6 +22,24 @@
     "title: \"Toggle console\"": "title: \"切换控制台 (Toggle console)\"",
     "title: \"Write heap snapshot\"": "title: \"写入堆快照 (Write heap snapshot)\"",
     "title: \"Suspend terminal\"": "title: \"挂起终端 (Suspend terminal)\"",
-    "\"The current session was deleted\"": "\"当前会话已被删除 (The current session was deleted)\""
+    "\"The current session was deleted\"": "\"当前会话已被删除 (The current session was deleted)\"",
+    ">Successfully copied<": ">复制成功 (Successfully copied)<",
+    "message: \"Copied to clipboard\"": "message: \"已复制到剪贴板 (Copied to clipboard)\"",
+    "category: \"Session\"": "category: \"会话 (Session)\"",
+    "category: \"Agent\"": "category: \"智能体 (Agent)\"",
+    "title: \"Model cycle\"": "title: \"切换模型 (Model cycle)\"",
+    "title: \"Model cycle reverse\"": "title: \"反向切换模型 (Model cycle reverse)\"",
+    "title: \"Favorite cycle\"": "title: \"切换收藏 (Favorite cycle)\"",
+    "title: \"Favorite cycle reverse\"": "title: \"反向切换收藏 (Favorite cycle reverse)\"",
+    "title: \"Agent cycle\"": "title: \"切换智能体 (Agent cycle)\"",
+    "title: \"Variant cycle\"": "title: \"切换变体 (Variant cycle)\"",
+    "title: \"Agent cycle reverse\"": "title: \"反向切换智能体 (Agent cycle reverse)\"",
+    "category: \"Provider\"": "category: \"提供商 (Provider)\"",
+    "category: \"System\"": "category: \"系统 (System)\"",
+    "title: \"Update Available\"": "title: \"有可用更新 (Update Available)\"",
+    "return \"An error occurred\"": "return \"发生错误 (An error occurred)\"",
+    "\"Favorite cycle reverse\"": "\"反向切换收藏 (Favorite cycle reverse)\"",
+    "\"Disable terminal title\"": "\"禁用终端标题 (Disable terminal title)\"",
+    "\"Enable terminal title\"": "\"启用终端标题 (Enable terminal title)\""
   }
 }
