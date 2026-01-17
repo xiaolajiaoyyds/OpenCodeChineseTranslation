@@ -1,40 +1,49 @@
 /**
  * CLI 入口模块
- * 使用 Commander.js 处理命令行参数
  */
 
+const path = require('path');
 const { Command } = require('commander');
-const { checkEnvironment } = require('./env.js');
-const { step, success, error, log } = require('./colors.js');
+const { error } = require('./colors.js');
 const { run: runMenu } = require('./menu.js');
 
-// 导入命令
+const pkg = require('../package.json');
+
+// 加载 .env 配置（从项目根目录）
+try {
+  const dotenv = require('dotenv');
+  const projectRoot = path.resolve(__dirname, '../../');
+  dotenv.config({ path: path.join(projectRoot, '.env') });
+} catch (e) {
+  // dotenv 未安装或 .env 不存在，不影响其他功能
+}
+
 const updateCmd = require('../commands/update.js');
 const applyCmd = require('../commands/apply.js');
 const buildCmd = require('../commands/build.js');
 const verifyCmd = require('../commands/verify.js');
 const fullCmd = require('../commands/full.js');
-const launchCmd = require('../commands/launch.js');
-const helperCmd = require('../commands/helper.js');
-const packageCmd = require('../commands/package.js');
 const deployCmd = require('../commands/deploy.js');
+const syncCmd = require('../commands/sync.js');
+const checkCmd = require('../commands/check.js');
 
-/**
- * 创建 CLI 应用
- */
 function createCLI() {
   const program = new Command();
 
   program
     .name('opencodenpm')
-    .description('OpenCode 中文汉化管理工具')
-    .version('6.0.0');
+    .description('OpenCode 汉化工具')
+    .version(pkg.version)
+    .action(async () => {
+      // 无参数时显示交互菜单
+      await runMenu();
+    });
 
-  // update 命令
+  // update - 更新源码
   program
     .command('update')
-    .description('更新 OpenCode 源码到最新版本')
-    .option('-f, --force', '强制重新克隆（删除现有目录）')
+    .description('更新 OpenCode 源码')
+    .option('-f, --force', '强制重新克隆')
     .action(async (options) => {
       try {
         const result = await updateCmd.run(options);
@@ -45,11 +54,17 @@ function createCLI() {
       }
     });
 
-  // apply 命令
+  // apply - 应用汉化
   program
     .command('apply')
-    .description('应用汉化配置到源码')
+    .description('应用汉化（扫描→AI翻译→写入语言包→验证→替换）')
     .option('-s, --silent', '静默模式')
+    .option('--skip-verify', '跳过配置验证')
+    .option('--skip-translate', '跳过 AI 翻译')
+    .option('--auto-translate', '自动翻译（不询问）')
+    .option('--dry-run', '测试模式，只扫描不翻译')
+    .option('-i, --incremental', '增量模式，只翻译变更文件')
+    .option('--since <commit>', '增量起点（git commit）')
     .action(async (options) => {
       try {
         const result = await applyCmd.run(options);
@@ -60,12 +75,11 @@ function createCLI() {
       }
     });
 
-  // build 命令
+  // build - 编译
   program
     .command('build')
-    .description('编译构建 OpenCode')
-    .option('-p, --platform <platform>', '目标平台 (windows-x64, darwin-arm64, linux-x64)')
-    .option('--no-deploy', '不部署到本地 bin 目录')
+    .description('编译 OpenCode')
+    .option('--no-deploy', '不部署到本地 bin')
     .option('-s, --silent', '静默模式')
     .action(async (options) => {
       try {
@@ -77,11 +91,13 @@ function createCLI() {
       }
     });
 
-  // verify 命令
+  // verify - 验证配置
   program
     .command('verify')
-    .description('验证汉化配置和覆盖率')
+    .description('验证汉化配置')
     .option('-d, --detailed', '显示详细信息')
+    .option('-t, --translate', '自动翻译新文件（需配置 OPENAI_API_KEY）')
+    .option('--dry-run', '测试模式，不保存配置文件')
     .action(async (options) => {
       try {
         const result = await verifyCmd.run(options);
@@ -92,13 +108,13 @@ function createCLI() {
       }
     });
 
-  // full 命令
+  // full - 完整流程
   program
     .command('full')
-    .description('完整工作流：更新 → 恢复 → 汉化 → 编译')
-    .option('--skip-update', '跳过更新源码')
+    .description('完整流程：更新 → 汉化 → 编译')
+    .option('--skip-update', '跳过更新')
     .option('--skip-build', '跳过编译')
-    .option('-y, --auto', '自动模式（跳过所有确认）')
+    .option('-y, --auto', '自动模式')
     .action(async (options) => {
       try {
         const result = await fullCmd.run(options);
@@ -109,93 +125,10 @@ function createCLI() {
       }
     });
 
-  // env 命令
-  program
-    .command('env')
-    .description('检查编译环境')
-    .action(async () => {
-      try {
-        await checkEnvironment();
-        process.exit(0);
-      } catch (e) {
-        error(e.message);
-        process.exit(1);
-      }
-    });
-
-  // config 命令
-  program
-    .command('config')
-    .description('显示当前配置')
-    .action(() => {
-      const { getProjectDir, getOpencodeDir, getI18nDir, getBinDir } = require('./utils');
-      log('项目配置:', 'cyan');
-      log(`  项目目录: ${getProjectDir()}`);
-      log(`  源码目录: ${getOpencodeDir()}`);
-      log(`  汉化目录: ${getI18nDir()}`);
-      log(`  输出目录: ${getBinDir()}`);
-    });
-
-  // launch 命令
-  program
-    .command('launch')
-    .alias('start')
-    .description('启动已编译的 OpenCode')
-    .option('-b, --background', '后台启动')
-    .action(async (options) => {
-      try {
-        const result = await launchCmd.run(options);
-        process.exit(result ? 0 : 1);
-      } catch (e) {
-        error(e.message);
-        process.exit(1);
-      }
-    });
-
-  // helper 命令
-  program
-    .command('helper')
-    .description('智谱助手 - 安装/启动')
-    .option('-i, --install', '安装智谱助手')
-    .option('-f, --force', '强制重装')
-    .allowUnknownOption(true)
-    .action(async (options) => {
-      try {
-        if (options.install) {
-          const result = await helperCmd.install(options);
-          process.exit(result ? 0 : 1);
-        } else {
-          // 转发其他参数给 coding-helper
-          const args = process.argv.slice(3);
-          await helperCmd.launch(args);
-        }
-      } catch (e) {
-        error(e.message);
-        process.exit(1);
-      }
-    });
-
-  // package 命令
-  program
-    .command('package')
-    .alias('pack')
-    .description('打包 Releases (生成分发包)')
-    .option('-p, --platform <platform>', '指定平台 (windows-x64, darwin-arm64, linux-x64)')
-    .option('-a, --all', '打包所有平台')
-    .action(async (options) => {
-      try {
-        const result = await packageCmd.run(options);
-        process.exit(result ? 0 : 1);
-      } catch (e) {
-        error(e.message);
-        process.exit(1);
-      }
-    });
-
-  // deploy 命令
+  // deploy - 部署到系统
   program
     .command('deploy')
-    .description('部署 opencode 全局命令到三端')
+    .description('部署到系统全局')
     .action(async () => {
       try {
         const result = await deployCmd.run();
@@ -206,21 +139,50 @@ function createCLI() {
       }
     });
 
-  // interactive 命令（默认命令）
+  // sync - 同步官方版本
   program
-    .command('interactive', { isDefault: true })
-    .alias('ui')
-    .description('打开交互式菜单界面')
-    .action(() => {
-      runMenu();
+    .command('sync')
+    .description('同步官方版本')
+    .option('-y, --yes', '自动确认')
+    .option('--check-only', '仅检查')
+    .action(async (options) => {
+      try {
+        const result = await syncCmd.run(options);
+        process.exit(result ? 0 : 1);
+      } catch (e) {
+        error(e.message);
+        process.exit(1);
+      }
+    });
+
+  // check - 检查遗漏翻译 / 翻译质量
+  program
+    .command('check')
+    .description('检查遗漏翻译或审查翻译质量')
+    .option('-v, --verbose', '显示详细信息')
+    .option('-o, --output <file>', '导出报告到文件')
+    .option('--all', '扫描所有源码（不仅是 TUI）')
+    .option('-q, --quality', 'AI 审查翻译质量')
+    .option('--limit <n>', '质量检查抽样数量', '50')
+    .action(async (options) => {
+      try {
+        const result = await checkCmd.run({
+          verbose: options.verbose,
+          output: options.output,
+          tuiOnly: !options.all,
+          quality: options.quality,
+          limit: parseInt(options.limit, 10) || 50,
+        });
+        process.exit(result ? 0 : 1);
+      } catch (e) {
+        error(e.message);
+        process.exit(1);
+      }
     });
 
   return program;
 }
 
-/**
- * 运行 CLI
- */
 function run() {
   const program = createCLI();
   program.parseAsync(process.argv).catch((err) => {

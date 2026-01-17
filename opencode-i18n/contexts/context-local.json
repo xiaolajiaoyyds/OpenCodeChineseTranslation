@@ -1,7 +1,9 @@
 {
   "file": "src/cli/cmd/tui/context/local.tsx",
-  "description": "本地上下文",
+  "description": "本地上下文汉化",
   "replacements": {
-    "provider: \"Connect a provider\"": "provider: \"连接提供商\""
+    "provider: \"Connect a provider\"": "provider: \"连接提供商 (Connect a provider)\"",
+    "model: \"No provider selected\"": "model: \"未选择提供商 (No provider selected)\"",
+    "message: \"Add a favorite model to use this shortcut\"": "message: \"添加收藏模型以使用此快捷方式 (Add a favorite model to use this shortcut)\""
   }
 }

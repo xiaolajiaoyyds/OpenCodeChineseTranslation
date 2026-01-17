@@ -2,6 +2,6 @@
   "file": "src/cli/cmd/tui/routes/session/dialog-fork-from-timeline.tsx",
   "description": "Fork对话框",
   "replacements": {
-    "title=\"Fork from message\"": "title=\"从消息分支\""
+    "title=\"Fork from message\"": "title=\"从消息分支 (Fork from message)\""
   }
 }

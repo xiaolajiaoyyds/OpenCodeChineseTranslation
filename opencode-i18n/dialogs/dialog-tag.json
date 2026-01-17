@@ -2,6 +2,6 @@
   "file": "src/cli/cmd/tui/component/dialog-tag.tsx",
   "description": "标签对话框",
   "replacements": {
-    "title=\"Autocomplete\"": "title=\"自动完成\""
+    "title=\"Autocomplete\"": "title=\"自动完成 (Autocomplete)\""
   }
 }

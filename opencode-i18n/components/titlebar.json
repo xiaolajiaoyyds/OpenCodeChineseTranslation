@@ -1,0 +1,7 @@
+{
+  "file": "src/components/titlebar.tsx",
+  "description": "标题栏组件",
+  "replacements": {
+    "title=\"Toggle sidebar\"": "title=\"切换侧边栏 (Toggle sidebar)\""
+  }
+}

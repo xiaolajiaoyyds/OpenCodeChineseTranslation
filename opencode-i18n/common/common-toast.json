@@ -2,6 +2,6 @@
   "file": "src/cli/cmd/tui/ui/toast.tsx",
   "description": "Toast提示消息",
   "replacements": {
-    "message: \"An unknown error has occurred\"": "message: \"发生未知错误\""
+    "message: \"An unknown error has occurred\"": "message: \"发生未知错误 (An unknown error has occurred)\""
   }
 }

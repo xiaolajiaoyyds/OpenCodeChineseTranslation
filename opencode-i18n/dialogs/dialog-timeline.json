@@ -2,6 +2,6 @@
   "file": "src/cli/cmd/tui/routes/session/dialog-timeline.tsx",
   "description": "时间线对话框",
   "replacements": {
-    "title=\"Timeline\"": "title=\"时间线\""
+    "title=\"Timeline\"": "title=\"时间线 (Timeline)\""
   }
 }

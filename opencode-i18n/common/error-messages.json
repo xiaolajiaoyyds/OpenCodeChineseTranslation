@@ -2,11 +2,11 @@
   "file": "src/cli/cmd/tui/app.tsx",
   "description": "提示消息",
   "replacements": {
-    "message: \"The current session was deleted\"": "message: \"当前会话已删除\"",
-    "message: \"Copied to clipboard\"": "message: \"已复制到剪贴板\"",
-    "return \"An error occurred\"": "return \"发生错误\"",
-    "title: \"Update Available\"": "title: \"有可用更新\"",
-    "\"Warning\"": "\"警告\""
+    "message: \"The current session was deleted\"": "message: \"当前会话已删除 (The current session was deleted)\"",
+    "message: \"Copied to clipboard\"": "message: \"已复制到剪贴板 (Copied to clipboard)\"",
+    "return \"An error occurred\"": "return \"发生错误 (An error occurred)\"",
+    "title: \"Update Available\"": "title: \"有可用更新 (Update Available)\"",
+    "\"Warning\"": "\"警告 (Warning)\""
   },
   "note": "Update Complete 在源代码中不存在，已移除"
 }

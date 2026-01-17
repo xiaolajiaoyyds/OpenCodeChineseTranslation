@@ -1,6 +1,6 @@
 {
   "name": "opencodenpm",
-  "version": "6.0.0",
+  "version": "1.1.25-zh",
   "description": "OpenCode 中文汉化管理工具 - 跨平台统一版本",
   "main": "core/cli.js",
   "bin": {
@@ -14,8 +14,8 @@
     "full": "node bin/opencodenpm full",
     "launch": "node bin/opencodenpm launch",
     "deploy": "node bin/opencodenpm deploy",
-    "helper": "node bin/opencodenpm helper",
-    "package": "node bin/opencodenpm package",
+    "check": "node bin/opencodenpm check",
+    "sync": "node bin/opencodenpm sync",
     "env": "node bin/opencodenpm env",
     "config": "node bin/opencodenpm config"
   },
@@ -33,6 +33,7 @@
   },
   "dependencies": {
     "commander": "^12.0.0",
+    "dotenv": "^16.6.1",
     "glob": "^11.0.0",
     "inquirer": "^8.2.7"
   }

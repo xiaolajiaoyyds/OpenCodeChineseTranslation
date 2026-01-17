@@ -1,0 +1,16 @@
+{
+  "file": "src/components/dialog-select-server.tsx",
+  "description": "选择服务器对话框",
+  "replacements": {
+    "title=\"Servers\"": "title=\"服务器 (Servers)\"",
+    "description=\"Switch which OpenCode server this app connects to.\"": "description=\"切换此应用连接的 OpenCode 服务器。(Switch which OpenCode server this app connects to.)\"",
+    "placeholder: \"Search servers\"": "placeholder: \"搜索服务器 (Search servers)\"",
+    "emptyMessage=\"No servers yet\"": "emptyMessage=\"暂无服务器 (No servers yet)\"",
+    "Could not connect to server": "无法连接到服务器 (Could not connect to server)",
+    ">healthy<": ">正常 (healthy)<",
+    ">unhealthy<": ">异常 (unhealthy)<",
+    ">Add server<": ">添加服务器 (Add server)<",
+    "label=\"Server URL\"": "label=\"服务器 URL (Server URL)\"",
+    ">Add<": ">添加 (Add)<"
+  }
+}

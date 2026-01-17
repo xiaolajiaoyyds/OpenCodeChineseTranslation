@@ -1,0 +1,11 @@
+{
+  "file": "src/components/terminal.tsx",
+  "description": "终端组件",
+  "replacements": {
+    "Loading terminal...": "加载终端中... (Loading terminal...)",
+    "Failed to create terminal": "创建终端失败 (Failed to create terminal)",
+    "Failed to update terminal": "更新终端失败 (Failed to update terminal)",
+    "Failed to clone terminal": "克隆终端失败 (Failed to clone terminal)",
+    "Failed to close terminal": "关闭终端失败 (Failed to close terminal)"
+  }
+}

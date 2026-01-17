@@ -1,0 +1,8 @@
+{
+  "file": "src/cli/cmd/tui/ui/dialog-confirm.tsx",
+  "description": "确认对话框",
+  "replacements": {
+    "Locale.titlecase(key)": "Locale.titlecase(key)"
+  },
+  "note": "此组件使用 Locale.titlecase 动态生成文本 (confirm/cancel)，需要在 Locale 中处理"
+}

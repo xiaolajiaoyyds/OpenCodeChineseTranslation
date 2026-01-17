@@ -2,11 +2,11 @@
   "file": "src/cli/cmd/tui/routes/home.tsx",
   "description": "首页",
   "replacements": {
-    "title: tipsHidden() ? \"Show tips\" : \"Hide tips\"": "title: tipsHidden() ? \"显示提示\" : \"隐藏提示\"",
-    "mcp errors": "MCP错误",
-    "{} mcp server": "{} mcp服务器",
-    "{} mcp servers": "{} mcp服务器",
-    "/status": "/状态",
-    "category: \"System\"": "category: \"系统\""
+    "title: tipsHidden() ? \"Show tips\" : \"Hide tips\"": "title: tipsHidden() ? \"显示提示 (Show tips)\" : \"隐藏提示 (Hide tips)\"",
+    "mcp errors": "MCP错误 (mcp errors)",
+    "{} mcp server": "{} mcp服务器 (mcp server)",
+    "{} mcp servers": "{} mcp服务器 (mcp servers)",
+    "/status": "/状态 (status)",
+    "category: \"System\"": "category: \"系统 (System)\""
   }
 }

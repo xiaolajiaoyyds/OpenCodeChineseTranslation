@@ -4,6 +4,17 @@
 node_modules/
 
 # ====================
+# Environment variables
+# ====================
+.env
+.env.local
+
+# ====================
+# Translation cache
+# ====================
+.translation-cache.json
+
+# ====================
 # Build outputs
 # ====================
 dist/

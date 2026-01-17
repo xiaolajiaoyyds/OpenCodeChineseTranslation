@@ -1,0 +1,8 @@
+{
+  "file": "src/command/index.ts",
+  "description": "内置命令定义",
+  "replacements": {
+    "description: \"create/update AGENTS.md\"": "description: \"创建/更新 AGENTS.md (create/update AGENTS.md)\"",
+    "description: \"review changes [commit|branch|pr], defaults to uncommitted\"": "description: \"审查变更 [commit|branch|pr]，默认为未提交 (review changes)\""
+  }
+}

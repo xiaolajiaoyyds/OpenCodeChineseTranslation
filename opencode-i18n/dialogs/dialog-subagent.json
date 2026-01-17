@@ -2,8 +2,8 @@
   "file": "src/cli/cmd/tui/routes/session/dialog-subagent.tsx",
   "description": "子智能体对话框",
   "replacements": {
-    "title=\"Subagent Actions\"": "title=\"子智能体操作\"",
-    "title: \"Open\"": "title: \"打开\"",
-    "the subagent's session": "子智能体会话"
+    "title=\"Subagent Actions\"": "title=\"子智能体操作 (Subagent Actions)\"",
+    "title: \"Open\"": "title: \"打开 (Open)\"",
+    "the subagent's session": "子智能体会话 (the subagent's session)"
   }
 }

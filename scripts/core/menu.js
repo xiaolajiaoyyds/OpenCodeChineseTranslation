@@ -1,304 +1,235 @@
 /**
- * 交互式菜单模块
- * 使用 Inquirer.js 实现跨平台交互界面
+ * 交互式菜单
  */
 
 const inquirer = require('inquirer');
-const { existsSync } = require('node:fs');
-const { execSync } = require('node:child_process');
-const { getProjectDir, getOpencodeDir, getI18nDir } = require('./utils.js');
-const { step, success, warn, error, log } = require('./colors.js');
+const fs = require('fs');
+const path = require('path');
+const { log } = require('./colors.js');
+const { getOpencodeDir, exists } = require('./utils.js');
 
-// 导入功能模块
 const updateCmd = require('../commands/update.js');
 const applyCmd = require('../commands/apply.js');
 const buildCmd = require('../commands/build.js');
 const verifyCmd = require('../commands/verify.js');
-const launchCmd = require('../commands/launch.js');
-const helperCmd = require('../commands/helper.js');
-const packageCmd = require('../commands/package.js');
+const fullCmd = require('../commands/full.js');
 const deployCmd = require('../commands/deploy.js');
-const { cleanRepo } = require('../core/git.js');
+const syncCmd = require('../commands/sync.js');
+const checkCmd = require('../commands/check.js');
+const Translator = require('./translator.js');
 
 /**
- * 检查脚本是否有更新
- * git rev-list --left-right main...@{u} 返回: "领先数\t落后数"
- * 例如: "3\t0" = 本地领先3个提交, "0\t1" = 远程有1个新提交
+ * 获取当前版本号
  */
-async function checkScriptUpdate() {
+function getVersion() {
   try {
-    const result = execSync('git rev-list --count --left-right main...@{u}', {
-      cwd: getProjectDir(),
-      stdio: 'pipe',
-      encoding: 'utf-8',
-    });
-    const [ahead, behind] = result.trim().split('\t').map(Number);
-    return { ahead, behind, hasUpdate: behind > 0 };
+    const pkgPath = path.join(getOpencodeDir(), 'packages', 'opencode', 'package.json');
+    if (exists(pkgPath)) {
+      const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+      return `${pkg.version}-zh`;
+    }
+  } catch (e) {}
+  return '未知版本';
+}
+
+// 主菜单项
+const MENU_ITEMS = [
+  { name: '🚀 一键汉化 - 完整流程（同步→汉化→编译→部署）', value: 'full' },
+  new inquirer.Separator('─── 分步操作 ───'),
+  { name: '🔄 同步官方 - 拉取最新代码（会重置汉化，需重新应用）', value: 'sync' },
+  { name: '🌐 应用汉化 - AI翻译 + 替换源码', value: 'apply' },
+  { name: '⚡ 增量翻译 - 只翻译 git 变更的文件', value: 'incremental' },
+  { name: '🔨 编译构建 - 生成可执行文件', value: 'build' },
+  { name: '📦 部署系统 - 安装到 PATH', value: 'deploy' },
+  new inquirer.Separator('─── 质量工具 ───'),
+  { name: '🔍 质量检查 - AI 审查翻译质量', value: 'quality' },
+  { name: '📋 遗漏扫描 - 检查未翻译的文本', value: 'check' },
+  new inquirer.Separator(),
+  { name: '❌ 退出', value: 'exit' },
+];
+
+// 定义每个操作的下一步建议
+const NEXT_STEP_MAP = {
+  sync: {
+    recommended: 'apply',
+    choices: ['apply', 'incremental', 'menu', 'exit'],
+    labels: { apply: '应用汉化', incremental: '增量翻译', menu: '返回菜单', exit: '退出' }
+  },
+  apply: {
+    recommended: 'build',
+    choices: ['build', 'quality', 'menu', 'exit'],
+    labels: { build: '编译构建', quality: '质量检查', menu: '返回菜单', exit: '退出' }
+  },
+  incremental: {
+    recommended: 'build',
+    choices: ['build', 'apply', 'menu', 'exit'],
+    labels: { build: '编译构建', apply: '全量汉化', menu: '返回菜单', exit: '退出' }
+  },
+  build: {
+    recommended: 'deploy',
+    choices: ['deploy', 'apply', 'menu', 'exit'],
+    labels: { deploy: '部署系统', apply: '重新汉化', menu: '返回菜单', exit: '退出' }
+  },
+  deploy: {
+    recommended: 'menu',
+    choices: ['menu', 'sync', 'exit'],
+    labels: { menu: '返回菜单', sync: '同步官方', exit: '退出' }
+  },
+  full: {
+    recommended: 'menu',
+    choices: ['menu', 'exit'],
+    labels: { menu: '返回菜单', exit: '退出' }
+  },
+  quality: {
+    recommended: 'menu',
+    choices: ['apply', 'menu', 'exit'],
+    labels: { apply: '应用汉化', menu: '返回菜单', exit: '退出' }
+  },
+  check: {
+    recommended: 'apply',
+    choices: ['apply', 'menu', 'exit'],
+    labels: { apply: '应用汉化', menu: '返回菜单', exit: '退出' }
+  }
+};
+
+async function runCommand(cmd) {
+  console.log('');
+  
+  try {
+    switch (cmd) {
+      case 'full':
+        await fullCmd.run({ auto: false });
+        break;
+      case 'sync':
+        await syncCmd.run({});
+        break;
+      case 'apply':
+        await applyCmd.run({});
+        break;
+      case 'incremental':
+        // 增量翻译
+        await applyCmd.run({ incremental: true });
+        break;
+      case 'build':
+        await buildCmd.run({});
+        break;
+      case 'deploy':
+        await deployCmd.run({});
+        break;
+      case 'quality':
+        // 翻译质量检查
+        const translator = new Translator();
+        await translator.showQualityReport();
+        break;
+      case 'check':
+        // 遗漏扫描
+        await checkCmd.run({ verbose: false });
+        break;
+      case 'exit':
+        console.log('再见~ 👋');
+        process.exit(0);
+      case 'menu':
+        return 'menu';
+    }
+    return 'success';
   } catch (e) {
-    return { ahead: 0, behind: 0, hasUpdate: false };
+    console.error(`执行失败: ${e.message}`);
+    return 'error';
   }
 }
 
-/**
- * 检查 OpenCode 源码是否有更新
- */
-async function checkSourceUpdate() {
-  const opencodeDir = getOpencodeDir();
-
-  if (!existsSync(opencodeDir)) {
-    return { hasUpdate: false, localCommit: null, remoteCommit: null };
-  }
-
-  try {
-    // 获取本地最新提交
-    const localCommit = execSync('git rev-parse HEAD', {
-      cwd: opencodeDir,
-      stdio: 'pipe',
-      encoding: 'utf-8',
-    }).trim();
-
-    // 获取远程最新提交
-    const remoteCommit = execSync('git rev-parse @{u}', {
-      cwd: opencodeDir,
-      stdio: 'pipe',
-      encoding: 'utf-8',
-    }).trim();
-
-    const hasUpdate = localCommit !== remoteCommit;
-    return { hasUpdate, localCommit, remoteCommit };
-  } catch (e) {
-    return { hasUpdate: false, localCommit: null, remoteCommit: null };
-  }
-}
-
-/**
- * 获取项目状态信息
- */
-async function getProjectStatus() {
-  const opencodeDir = getOpencodeDir();
-  const i18nDir = getI18nDir();
-
-  const status = {
-    opencodeExists: existsSync(opencodeDir),
-    i18nExists: existsSync(i18nDir),
-    scriptUpdate: await checkScriptUpdate(),
-    sourceUpdate: await checkSourceUpdate(),
+async function askNextStep(currentCmd) {
+  const nextStepConfig = NEXT_STEP_MAP[currentCmd];
+  
+  const defaultConfig = {
+    recommended: 'menu',
+    choices: ['menu', 'exit'],
+    labels: { menu: '返回菜单', exit: '退出' }
   };
 
-  return status;
+  const config = nextStepConfig || defaultConfig;
+  const choices = config.choices;
+  const labels = config.labels;
+  let currentIndex = choices.indexOf(config.recommended);
+  if (currentIndex === -1) currentIndex = 0;
+
+  // 使用 inquirer 的 rawlist 改为自定义实现
+  // 但为了避免 stdin 冲突，用 inquirer 的 list 配合水平显示
+  const choiceItems = choices.map((c, i) => ({
+    name: labels[c],
+    value: c,
+    short: labels[c]
+  }));
+
+  // 分隔线
+  console.log('');
+  console.log('  ─────────────────────────────────────────');
+
+  const { next } = await inquirer.prompt([
+    {
+      type: 'list',
+      name: 'next',
+      message: '下一步:',
+      choices: choiceItems,
+      default: config.recommended,
+      pageSize: choices.length
+    }
+  ]);
+
+  return next;
 }
 
-/**
- * 显示主菜单
- */
-async function showMainMenu() {
-  const status = await getProjectStatus();
-
-  // 构建状态提示
-  const statusLines = [];
-  statusLines.push(`=== OpenCode 汉化管理工具 ===`);
-
-  if (status.scriptUpdate.hasUpdate) {
-    statusLines.push(`[!] 脚本有更新可用 (落后 ${status.scriptUpdate.behind} 个提交)`);
-  } else if (status.scriptUpdate.ahead > 0) {
-    statusLines.push(`[i] 本地有 ${status.scriptUpdate.ahead} 个未推送提交`);
-  }
-  if (status.sourceUpdate.hasUpdate) {
-    statusLines.push(`[!] 源码有更新可用`);
-  }
-
-  statusLines.push(`源码目录: ${status.opencodeExists ? '[OK]' : '[--]'}`);
-  statusLines.push(`汉化目录: ${status.i18nExists ? '[OK]' : '[--]'}`);
-  statusLines.push('');
-
-  const choices = [
-    { name: '[>>] 一键汉化全流程', value: 'full' },
-    { name: '[DL] 更新源码', value: 'update' },
-    { name: '[RS] 恢复源码', value: 'restore' },
-    { name: '[AP] 应用汉化', value: 'apply' },
-    { name: '[CK] 验证汉化', value: 'verify' },
-    { name: '[BD] 编译', value: 'build' },
-    { name: '[DP] 部署 opencode 命令', value: 'deploy' },
-    new inquirer.Separator(),
-    { name: '[PK] 打包三端', value: 'package-all' },
-    { name: '[GO] 启动 OpenCode', value: 'launch' },
-    { name: '[ZH] 智谱助手', value: 'helper' },
-    new inquirer.Separator(),
-    { name: '[UP] 更新脚本', value: 'update-script' },
-    { name: '[ENV] 检查环境', value: 'env' },
-    { name: '[CFG] 显示配置', value: 'config' },
-    new inquirer.Separator(),
-    { name: '[XX] 退出', value: 'exit' },
-  ];
+async function showMenu() {
+  console.clear();
+  console.log('');
+  const version = getVersion();
+  const title = `OpenCode 汉化工具 v${version}`;
+  const padding = Math.max(0, 34 - title.length);
+  const left = Math.floor(padding / 2);
+  const right = padding - left;
+  
+  log('╔════════════════════════════════════╗', 'cyan');
+  log(`║${' '.repeat(left)} ${title} ${' '.repeat(right)}║`, 'cyan');
+  log('╚════════════════════════════════════╝', 'cyan');
+  console.log('');
 
   const { action } = await inquirer.prompt([
     {
       type: 'list',
       name: 'action',
-      message: statusLines.join('\n'),
-      choices,
+      message: '选择操作:',
+      choices: MENU_ITEMS,
+      pageSize: 15,  // 增大显示数量，避免循环滚动
+      loop: false,   // 禁止循环
     },
   ]);
 
-  return action;
-}
-
-/**
- * 执行完整工作流
- */
-async function runFullWorkflow() {
-  step('开始完整工作流...');
-
-  // 1. 更新源码
-  step('[1/4] 更新 OpenCode 源码');
-  await updateCmd.run({});
-
-  // 2. 应用汉化
-  step('[2/4] 应用汉化配置');
-  await applyCmd.run({});
-
-  // 3. 验证
-  step('[3/4] 验证汉化配置');
-  await verifyCmd.run({});
-
-  // 4. 编译
-  step('[4/4] 编译构建');
-  await buildCmd.run({});
-
-  success('完整工作流执行完成!');
-}
-
-/**
- * 更新脚本
- */
-async function updateScript() {
-  step('更新脚本到最新版本...');
-  try {
-    execSync('git pull --ff-only', {
-      cwd: getProjectDir(),
-      stdio: 'inherit',
-    });
-    success('脚本已更新，请重新运行命令');
+  if (action === 'exit') {
+    console.log('再见~ 👋');
     process.exit(0);
-  } catch (e) {
-    error('更新失败，可能存在本地修改');
-    const { confirm } = await inquirer.prompt([
-      {
-        type: 'confirm',
-        name: 'confirm',
-        message: '是否强制覆盖本地修改?',
-        default: false,
-      },
-    ]);
+  }
 
-    if (confirm) {
-      execSync('git reset --hard @{u}', {
-        cwd: getProjectDir(),
-        stdio: 'inherit',
-      });
-      success('脚本已强制更新，请重新运行命令');
-      process.exit(0);
-    }
+  // 执行命令
+  await runCommand(action);
+
+  // 询问下一步
+  let nextAction = await askNextStep(action);
+  
+  // 循环执行直到返回菜单或退出
+  while (nextAction !== 'menu' && nextAction !== 'exit') {
+    await runCommand(nextAction);
+    nextAction = await askNextStep(nextAction);
+  }
+
+  if (nextAction === 'menu') {
+    await showMenu();
+  } else {
+    console.log('再见~ 👋');
   }
 }
 
-/**
- * 运行菜单循环
- */
 async function run() {
-  log('\n欢迎使用 OpenCode 汉化管理工具\n', 'cyan');
-
-  while (true) {
-    try {
-      const action = await showMainMenu();
-
-      switch (action) {
-        case 'full':
-          await runFullWorkflow();
-          break;
-        case 'update':
-          await updateCmd.run({});
-          break;
-        case 'restore':
-          await cleanRepo(getOpencodeDir());
-          break;
-        case 'apply':
-          await applyCmd.run({});
-          break;
-        case 'build':
-          await buildCmd.run({});
-          break;
-        case 'verify':
-          await verifyCmd.run({ detailed: true });
-          break;
-        case 'launch':
-          await launchCmd.run({});
-          break;
-        case 'deploy':
-          await deployCmd.run({});
-          break;
-        case 'package-all':
-          await packageCmd.run({ all: true });
-          break;
-        case 'helper':
-          const { helperAction } = await inquirer.prompt([
-            {
-              type: 'list',
-              name: 'helperAction',
-              message: '智谱助手操作:',
-              choices: [
-                { name: '[1] 安装/更新 智谱助手', value: 'install' },
-                { name: '[2] 启动 智谱助手', value: 'launch' },
-              ],
-            },
-          ]);
-          if (helperAction === 'install') {
-            await helperCmd.install({});
-          } else {
-            await helperCmd.launch([]);
-          }
-          break;
-        case 'update-script':
-          await updateScript();
-          return; // 更新后退出
-        case 'env':
-          await require('./env.js').checkEnvironment();
-          break;
-        case 'config':
-          const { getProjectDir, getOpencodeDir, getI18nDir, getBinDir } = require('./utils.js');
-          log('\n项目配置:', 'cyan');
-          log(`  项目目录: ${getProjectDir()}`);
-          log(`  源码目录: ${getOpencodeDir()}`);
-          log(`  汉化目录: ${getI18nDir()}`);
-          log(`  输出目录: ${getBinDir()}`);
-          break;
-        case 'exit':
-          log('\n再见!\n');
-          return;
-      }
-
-      // 操作后暂停，让用户看到结果
-      const { cont } = await inquirer.prompt([
-        {
-          type: 'confirm',
-          name: 'cont',
-          message: '按 Enter 继续...',
-          default: true,
-        },
-      ]);
-    } catch (e) {
-      error(e.message);
-      const { retry } = await inquirer.prompt([
-        {
-          type: 'confirm',
-          name: 'retry',
-          message: '是否返回主菜单?',
-          default: true,
-        },
-      ]);
-      if (!retry) return;
-    }
-  }
+  await showMenu();
 }
 
 module.exports = { run };

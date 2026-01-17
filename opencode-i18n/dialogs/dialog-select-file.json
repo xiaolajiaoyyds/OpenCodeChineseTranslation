@@ -1,0 +1,10 @@
+{
+  "file": "src/components/dialog-select-file.tsx",
+  "description": "选择文件对话框",
+  "replacements": {
+    "category: \"Commands\"": "category: \"命令 (Commands)\"",
+    "category: \"Files\"": "category: \"文件 (Files)\"",
+    "placeholder: \"Search files and commands\"": "placeholder: \"搜索文件和命令 (Search files and commands)\"",
+    "emptyMessage=\"No results found\"": "emptyMessage=\"未找到结果 (No results found)\""
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "file": "src/components/dialog-select-model-unpaid.tsx",
+  "description": "选择免费模型对话框",
+  "replacements": {
+    "title=\"Select model\"": "title=\"选择模型 (Select model)\"",
+    "Free models provided by OpenCode": "OpenCode 提供的免费模型 (Free models provided by OpenCode)",
+    ">Free<": ">免费 (Free)<",
+    ">Latest<": ">最新 (Latest)<",
+    "Or bring your own API key": "或使用您自己的 API 密钥 (Or bring your own API key)",
+    ">Connect provider<": ">连接提供商 (Connect provider)<"
+  }
+}

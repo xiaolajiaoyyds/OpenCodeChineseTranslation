@@ -2,6 +2,6 @@
   "file": "src/cli/cmd/tui/component/dialog-session-rename.tsx",
   "description": "重命名对话框",
   "replacements": {
-    "title=\"Rename Session\"": "title=\"重命名会话\""
+    "title=\"Rename Session\"": "title=\"重命名会话 (Rename Session)\""
   }
 }

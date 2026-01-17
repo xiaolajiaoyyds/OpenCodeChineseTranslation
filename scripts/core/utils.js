@@ -1,5 +1,5 @@
 /**
- * 通用工具模块
+ * 通用工具模块 (macOS)
  */
 
 const { execSync, spawn } = require('child_process');
@@ -8,23 +8,9 @@ const path = require('path');
 const os = require('os');
 
 /**
- * 检测当前平台
- */
-function getPlatform() {
-  const platform = process.platform;
-  return {
-    isWindows: platform === 'win32',
-    isMacOS: platform === 'darwin',
-    isLinux: platform === 'linux',
-    platform,
-  };
-}
-
-/**
  * 获取项目根目录
  */
 function getProjectDir() {
-  // 从当前文件向上查找项目根目录
   let currentDir = __dirname;
   while (currentDir !== path.parse(currentDir).root) {
     const markerFile = path.join(currentDir, 'opencode-i18n');
@@ -33,7 +19,6 @@ function getProjectDir() {
     }
     currentDir = path.dirname(currentDir);
   }
-  // 如果找不到，返回 scripts 的父目录
   return path.dirname(__dirname);
 }
 
@@ -41,40 +26,29 @@ function getProjectDir() {
  * 获取 OpenCode 源码目录
  */
 function getOpencodeDir() {
-  const projectDir = getProjectDir();
-  return path.join(projectDir, 'opencode-zh-CN');
+  return path.join(getProjectDir(), 'opencode-zh-CN');
 }
 
 /**
  * 获取汉化配置目录
  */
 function getI18nDir() {
-  const projectDir = getProjectDir();
-  return path.join(projectDir, 'opencode-i18n');
+  return path.join(getProjectDir(), 'opencode-i18n');
 }
 
 /**
  * 获取 bin 目录
  */
 function getBinDir() {
-  const projectDir = getProjectDir();
-  return path.join(projectDir, 'bin');
+  return path.join(getProjectDir(), 'bin');
 }
 
 /**
  * 检查命令是否存在
  */
 function hasCommand(cmd) {
-  const { isWindows } = getPlatform();
-
   try {
-    if (isWindows) {
-      // Windows 使用 where
-      execSync(`where ${cmd}`, { stdio: 'ignore' });
-    } else {
-      // Unix 使用 which
-      execSync(`which ${cmd}`, { stdio: 'ignore' });
-    }
+    execSync(`which ${cmd}`, { stdio: 'ignore' });
     return true;
   } catch (e) {
     return false;
@@ -115,14 +89,8 @@ function exec(command, options = {}) {
  */
 function execLive(command, args, options = {}) {
   return new Promise((resolve, reject) => {
-    const { isWindows } = getPlatform();
-    const shell = isWindows ? true : false;
-    const cmd = isWindows ? command : command;
-    const cmdArgs = isWindows ? undefined : args;
-
-    const child = spawn(cmd, cmdArgs, {
+    const child = spawn(command, args, {
       stdio: 'inherit',
-      shell,
       ...options,
     });
 
@@ -134,9 +102,7 @@ function execLive(command, args, options = {}) {
       }
     });
 
-    child.on('error', (err) => {
-      reject(err);
-    });
+    child.on('error', reject);
   });
 }
 
@@ -177,8 +143,7 @@ function copy(src, dest) {
  * 读取 JSON 文件
  */
 function readJSON(filePath) {
-  const content = fs.readFileSync(filePath, 'utf-8');
-  return JSON.parse(content);
+  return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
 }
 
 /**
@@ -219,23 +184,7 @@ function getHomeDir() {
   return os.homedir();
 }
 
-/**
- * 获取全局 bin 目录
- */
-function getGlobalBinDir() {
-  const { isWindows } = getPlatform();
-
-  if (isWindows) {
-    // Windows: npm 全局目录
-    return path.join(process.env.APPDATA || '', 'npm');
-  } else {
-    // Unix: ~/.local/bin
-    return path.join(getHomeDir(), '.local', 'bin');
-  }
-}
-
 module.exports = {
-  getPlatform,
   getProjectDir,
   getOpencodeDir,
   getI18nDir,
@@ -253,5 +202,4 @@ module.exports = {
   formatSize,
   sleep,
   getHomeDir,
-  getGlobalBinDir,
 };

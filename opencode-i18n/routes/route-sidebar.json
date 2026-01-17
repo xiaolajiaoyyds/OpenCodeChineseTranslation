@@ -2,13 +2,21 @@
   "file": "src/cli/cmd/tui/routes/session/sidebar.tsx",
   "description": "会话侧边栏",
   "replacements": {
-    ">Connected</Match>": ">已连接</Match>",
-    ">Disabled</Match>": ">已禁用</Match>",
-    ">Needs auth</Match>": ">需要认证</Match>",
-    "Needs client ID": "需要客户端 ID",
-    "} active": "} 个活跃",
-    "} error": "} 错误",
-    "LSPs have been disabled in settings": "LSP 已在设置中禁用",
-    "LSPs will activate as files are read": "LSP 将在读取文件时激活"
+    ">Connected</Match>": ">已连接 (Connected)</Match>",
+    ">Disabled</Match>": ">已禁用 (Disabled)</Match>",
+    ">Needs auth</Match>": ">需要认证 (Needs auth)</Match>",
+    "Needs client ID": "需要客户端 ID (Needs client ID)",
+    "} active": "} 个活跃 (active)",
+    "} error": "} 错误 (error)",
+    "LSPs have been disabled in settings": "LSP 已在设置中禁用 (LSPs have been disabled in settings)",
+    "LSPs will activate as files are read": "LSP 将在读取文件时激活 (LSPs will activate as files are read)",
+    "<b>Open</b>": "<b>打开 (Open)</b>",
+    "<b>Context</b>": "<b>上下文 (Context)</b>",
+    "<b>Todo</b>": "<b>待办 (Todo)</b>",
+    "<b>Modified Files</b>": "<b>已修改文件 (Modified Files)</b>",
+    "<b>Getting started</b>": "<b>入门指南 (Getting started)</b>",
+    "OpenCode includes free models so you can start immediately.": "OpenCode 包含免费模型，您可以立即开始使用。(OpenCode includes free models so you can start immediately.)",
+    ">Connect provider<": ">连接提供商 (Connect provider)<",
+    "<b>Code</b>": "<b>代码 (Code)</b>"
   }
 }

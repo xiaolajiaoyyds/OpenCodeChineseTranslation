@@ -2,7 +2,7 @@
   "file": "src/cli/cmd/tui/component/dialog-command.tsx",
   "description": "命令对话框",
   "replacements": {
-    "category: \"Suggested\"": "category: \"建议\"",
-    "title=\"Commands\"": "title=\"命令\""
+    "category: \"Suggested\"": "category: \"建议 (Suggested)\"",
+    "title=\"Commands\"": "title=\"命令 (Commands)\""
   }
 }

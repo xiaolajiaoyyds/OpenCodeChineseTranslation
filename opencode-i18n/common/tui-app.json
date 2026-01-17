@@ -1,0 +1,8 @@
+{
+  "file": "src/cli/cmd/tui/app.tsx",
+  "description": "TUI 应用主入口",
+  "replacements": {
+    "renderer.setTerminalTitle(\"OpenCode\")": "renderer.setTerminalTitle(\"OpenCode\")"
+  },
+  "note": "TUI 主入口文件，命令相关翻译在 command-panel.json 中"
+}

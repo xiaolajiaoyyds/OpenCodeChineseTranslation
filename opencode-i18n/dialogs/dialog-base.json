@@ -1,0 +1,7 @@
+{
+  "file": "src/cli/cmd/tui/ui/dialog.tsx",
+  "description": "TUI 对话框基础组件",
+  "replacements": {
+    "message: \"Copied to clipboard\"": "message: \"已复制到剪贴板 (Copied to clipboard)\""
+  }
+}

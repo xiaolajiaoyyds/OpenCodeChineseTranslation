@@ -1,0 +1,18 @@
+{
+  "file": "src/cli/cmd/tui/routes/session/sidebar.tsx",
+  "description": "sidebar.tsx 汉化配置",
+  "replacements": {
+    ">Context<": ">上下文 (Context)<",
+    ">Connected<": ">已连接 (Connected)<",
+    ">Disabled<": ">已禁用 (Disabled)<",
+    ">Needs auth<": ">需要授权 (Needs auth)<",
+    ">Todo<": ">待办事项 (Todo)<",
+    ">Modified Files<": ">已修改文件 (Modified Files)<",
+    ">Getting started<": ">开始使用 (Getting started)<",
+    ">OpenCode includes free models so you can start immediately.<": ">OpenCode 包含免费模型，您可以立即开始使用。(OpenCode includes free models so you can start immediately.)<",
+    ">Open<": ">打开 (Open)<",
+    ">Code<": ">代码 (Code)<",
+    "\"LSPs have been disabled in settings\"": "\"LSP 已在设置中禁用 (LSPs have been disabled in settings)\"",
+    "\"LSPs will activate as files are read\"": "\"LSP 将在读取文件时激活 (LSPs will activate as files are read)\""
+  }
+}

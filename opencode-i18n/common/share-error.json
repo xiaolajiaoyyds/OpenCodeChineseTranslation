@@ -2,6 +2,6 @@
   "file": "src/cli/cmd/tui/routes/session/index.tsx",
   "description": "分享错误消息",
   "replacements": {
-    "message: \"Failed to copy URL to clipboard\"": "message: \"复制链接到剪贴板失败\""
+    "message: \"Failed to copy URL to clipboard\"": "message: \"复制链接到剪贴板失败 (Failed to copy URL to clipboard)\""
   }
 }

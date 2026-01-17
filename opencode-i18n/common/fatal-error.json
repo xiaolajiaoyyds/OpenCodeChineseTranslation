@@ -2,9 +2,9 @@
   "file": "src/cli/cmd/tui/app.tsx",
   "description": "致命错误界面",
   "replacements": {
-    "message: `Heap snapshot written to ${path}`": "message: `堆快照已写入到 ${path}`",
-    "<text fg={colors.text}>A fatal error occurred!</text>": "<text fg={colors.text}>发生致命错误！</text>",
-    "<text fg={colors.bg}>Reset TUI</text>": "<text fg={colors.bg}>重置TUI</text>",
-    "<text fg={colors.bg}>Exit</text>": "<text fg={colors.bg}>退出</text>"
+    "message: `Heap snapshot written to ${path}`": "message: `堆快照已写入到 (Heap snapshot written to) ${path}`",
+    "<text fg={colors.text}>A fatal error occurred!</text>": "<text fg={colors.text}>发生致命错误！(A fatal error occurred!)</text>",
+    "<text fg={colors.bg}>Reset TUI</text>": "<text fg={colors.bg}>重置TUI (Reset TUI)</text>",
+    "<text fg={colors.bg}>Exit</text>": "<text fg={colors.bg}>退出 (Exit)</text>"
   }
 }

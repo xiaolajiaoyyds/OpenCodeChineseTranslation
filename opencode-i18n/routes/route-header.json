@@ -2,9 +2,9 @@
   "file": "src/cli/cmd/tui/routes/session/header.tsx",
   "description": "会话页头部",
   "replacements": {
-    "Subagent session": "子智能体会话",
-    "Parent": "父会话",
-    "Prev": "上一个",
-    "Next": "下一个"
+    "Subagent session": "子智能体会话 (Subagent session)",
+    "Parent": "父会话 (Parent)",
+    "Prev": "上一个 (Prev)",
+    "Next": "下一个 (Next)"
   }
 }

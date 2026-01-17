@@ -1,0 +1,27 @@
+{
+  "file": "src/cli/cmd/tui/app.tsx",
+  "description": "app.tsx 汉化配置",
+  "replacements": {
+    ">A fatal error occurred!<": ">发生了致命错误！ (A fatal error occurred!)<",
+    ">Reset TUI<": ">重置界面 (Reset TUI)<",
+    ">Exit<": ">退出 (Exit)<",
+    "title: \"Switch session\"": "title: \"切换会话 (Switch session)\"",
+    "title: \"New session\"": "title: \"新建会话 (New session)\"",
+    "title: \"Switch model\"": "title: \"切换模型 (Switch model)\"",
+    "title: \"Switch agent\"": "title: \"切换智能体 (Switch agent)\"",
+    "title: \"Toggle MCPs\"": "title: \"切换 MCPs (Toggle MCPs)\"",
+    "title: \"Connect provider\"": "title: \"连接提供商 (Connect provider)\"",
+    "title: \"View status\"": "title: \"查看状态 (View status)\"",
+    "title: \"Switch theme\"": "title: \"切换主题 (Switch theme)\"",
+    "title: \"Toggle appearance\"": "title: \"切换外观 (Toggle appearance)\"",
+    "title: \"Help\"": "title: \"帮助 (Help)\"",
+    "title: \"Open docs\"": "title: \"打开文档 (Open docs)\"",
+    "title: \"Open WebUI\"": "title: \"打开网页界面 (Open WebUI)\"",
+    "title: \"Exit the app\"": "title: \"退出应用 (Exit the app)\"",
+    "title: \"Toggle debug panel\"": "title: \"切换调试面板 (Toggle debug panel)\"",
+    "title: \"Toggle console\"": "title: \"切换控制台 (Toggle console)\"",
+    "title: \"Write heap snapshot\"": "title: \"写入堆快照 (Write heap snapshot)\"",
+    "title: \"Suspend terminal\"": "title: \"挂起终端 (Suspend terminal)\"",
+    "\"The current session was deleted\"": "\"当前会话已被删除 (The current session was deleted)\""
+  }
+}
