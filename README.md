@@ -13,7 +13,7 @@
 ### 交互式菜单
 
 <p align="center">
-  <img src="docs/menu.png" alt="交互式菜单" width="700">
+  <img src="docs/menu.png" alt="交互式菜单" width="500">
 </p>
 
 运行 `opencodenpm` 即可进入交互式菜单，提供完整的汉化工作流：
@@ -26,7 +26,7 @@
 ### 翻译覆盖率报告
 
 <p align="center">
-  <img src="docs/coverage-report.png" alt="覆盖率报告" width="700">
+  <img src="docs/coverage-report.png" alt="覆盖率报告" width="500">
 </p>
 
 应用汉化后会生成详细的覆盖率报告：
@@ -39,7 +39,7 @@
 ### 质量检查报告
 
 <p align="center">
-  <img src="docs/quality-check.png" alt="质量检查" width="700">
+  <img src="docs/quality-check.png" alt="质量检查" width="500">
 </p>
 
 质量检查确保翻译不会破坏代码：
