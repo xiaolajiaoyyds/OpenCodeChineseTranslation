@@ -4,7 +4,7 @@
 [![Version](https://img.shields.io/badge/version-v7.0-green.svg)](scripts/package.json)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue.svg)](#)
 
-[中文](#中文文档) | [English](#english-documentation)
+[English Documentation](README_EN.md)
 
 ---
 
@@ -70,29 +70,48 @@ opencodenpm
 
 ---
 
-## 功能指南
+## 命令行参考
 
-`opencodenpm` 工具集成了项目维护所需的所有功能。以下是常用命令说明：
+除了交互式菜单，`opencodenpm` 还支持丰富的命令行参数，方便集成到 CI/CD 或脚本中。
 
-### 基础操作
+| 命令 | 参数 | 说明 |
+|------|------|------|
+| **full** | `-y, --auto` | 执行完整工作流（更新->汉化->编译），`--auto` 跳过确认 |
+| **update** | `-f, --force` | 更新 OpenCode 源码，`--force` 强制重新克隆 |
+| **apply** | `-b, --backup`<br>`-r, --report` | 应用汉化配置。`-b` 备份源码，`-r` 生成报告 |
+| **build** | `-p <platform>` | 编译构建。平台可选 `windows-x64`, `linux-x64`, `darwin-arm64` |
+| **verify** | `-d, --detailed` | 验证汉化覆盖率和配置完整性 |
+| **deploy** | - | 将 `opencode` 和 `opencodenpm` 部署到系统 PATH |
+| **rollback** | `-l, --list`<br>`-i <id>` | 回滚备份。`-l` 列出备份，`-i` 回滚到指定 ID |
+| **package** | `-a, --all`<br>`-p <platform>` | 打包发布版 ZIP。`-a` 打包所有平台 |
+| **launch** | `-b, --background` | 启动 OpenCode，`-b` 后台运行 |
+| **antigravity** | - | 配置 Antigravity 本地 AI 网关 |
+| **ohmyopencode** | - | 安装 Oh-My-OpenCode 增强插件 |
+| **helper** | `-i, --install` | 安装/启动智谱编码助手 |
+| **env** | - | 检查开发环境 |
 
-*   **一键全流程 (`full`)**: 自动执行源码更新、环境清理、汉化应用、配置验证及编译构建。推荐初次安装或版本升级时使用。
-*   **更新源码 (`update`)**: 从官方仓库拉取最新代码。支持检测本地修改并提示处理。
-*   **应用汉化 (`apply`)**: 将 `opencode-i18n` 目录下的翻译配置注入到源码中。包含变量保护机制，防止误翻译代码变量。
-*   **编译构建 (`build`)**: 使用 Bun 编译生成可执行文件。构建产物将自动部署到 `bin` 目录。
+**示例：**
 
-### 高级功能
+```bash
+# 强制更新源码并应用汉化
+opencodenpm update --force
+opencodenpm apply
 
-*   **部署命令 (`deploy`)**: 将 `opencode` 和 `opencodenpm` 命令注册到系统 PATH 环境变量中，使其可在任意终端直接调用。
-*   **Oh-My-OpenCode (`ohmyopencode`)**: 安装增强插件，启用 Sisyphus、Oracle 等高级智能体角色，并支持界面美化（字体、背景图）。
-*   **Antigravity (`antigravity`)**: 配置本地 AI 网关，支持接入 Claude 3.5、GPT-4o、DeepSeek 等模型。
-*   **打包发布 (`package`)**: 为 Windows、macOS 和 Linux 生成发布版 ZIP 包，自动生成校验码和更新日志。
+# 为 Linux 平台编译
+opencodenpm build -p linux-x64
 
-### 维护与排查
+# 部署全局命令
+opencodenpm deploy
+```
 
-*   **恢复源码 (`restore`)**: 清除源码目录下的所有未提交修改，恢复到纯净状态。
-*   **回滚备份 (`rollback`)**: 如果汉化后出现问题，可一键回滚到上一次的状态。
-*   **环境检查 (`env`)**: 检测本地开发环境是否满足编译要求。
+---
+
+## 进阶文档
+
+*   [📅 更新日志 (CHANGELOG)](CHANGELOG.md)
+*   [🚀 Antigravity 集成指南](docs/ANTIGRAVITY_INTEGRATION.md)
+*   [🛠️ AI 维护指南](docs/AI_MAINTENANCE.md)
+*   [📦 Oh My OpenCode 指南](docs/OH_MY_OPENCODE_GUIDE.md)
 
 ---
 

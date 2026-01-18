@@ -4,7 +4,7 @@
 [![Version](https://img.shields.io/badge/version-v7.0-green.svg)](scripts/package.json)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue.svg)](#)
 
-[中文](#chinese-documentation) | [English](#english-documentation)
+[Chinese Documentation](README.md)
 
 ---
 
@@ -21,6 +21,17 @@ With the built-in `opencodenpm` management tool, you can easily update source co
 *   **Multi-Platform Support**: Fully supports Windows, macOS, and Linux.
 *   **Plugin Integration**: Built-in setup wizards for Oh-My-OpenCode and Antigravity, unlocking multi-agent collaboration and local model support.
 *   **Professional CLI**: Provides an intuitive TUI interactive menu.
+
+## Screenshots
+
+<p align="center">
+  <img src="docs/0-0.png" alt="Management Tool Main Interface" width="800">
+</p>
+
+<p align="center">
+  <img src="docs/1-1.png" alt="MCP Server Localization" width="45%">
+  <img src="docs/2-2.png" alt="Status Dialog Localization" width="45%">
+</p>
 
 ---
 
@@ -59,29 +70,48 @@ You will see a grid-based interactive menu. Use arrow keys or number keys to sel
 
 ---
 
-## Feature Guide
+## Command Reference
 
-The `opencodenpm` tool integrates all necessary maintenance functions. Here are the common commands:
+Besides the interactive menu, `opencodenpm` supports rich CLI arguments for CI/CD integration.
 
-### Basic Operations
+| Command | Args | Description |
+|---------|------|-------------|
+| **full** | `-y, --auto` | Run full workflow (update->apply->build). `--auto` skips confirmation |
+| **update** | `-f, --force` | Update source code. `--force` to re-clone |
+| **apply** | `-b, --backup`<br>`-r, --report` | Apply translation. `-b` backup source, `-r` generate report |
+| **build** | `-p <platform>` | Build binary. Platforms: `windows-x64`, `linux-x64`, `darwin-arm64` |
+| **verify** | `-d, --detailed` | Verify coverage and config integrity |
+| **deploy** | - | Deploy `opencode` and `opencodenpm` to system PATH |
+| **rollback** | `-l, --list`<br>`-i <id>` | Rollback backup. `-l` list backups, `-i` rollback to specific ID |
+| **package** | `-a, --all`<br>`-p <platform>` | Package release ZIP. `-a` for all platforms |
+| **launch** | `-b, --background` | Launch OpenCode. `-b` run in background |
+| **antigravity** | - | Configure Antigravity local AI gateway |
+| **ohmyopencode** | - | Install Oh-My-OpenCode plugin |
+| **helper** | `-i, --install` | Install/Launch Coding Helper |
+| **env** | - | Check development environment |
 
-*   **Full Workflow (`full`)**: Automatically executes source update, cleanup, translation application, verification, and building. Recommended for first-time installation or upgrades.
-*   **Update Source (`update`)**: Pulls the latest code from the official repository. Detects local changes and prompts for handling.
-*   **Apply Translation (`apply`)**: Injects translation configs from `opencode-i18n` into the source code. Includes variable protection to prevent breaking code.
-*   **Build (`build`)**: Compiles OpenCode using Bun. The binary is automatically deployed to the `bin` directory.
+**Examples:**
 
-### Advanced Features
+```bash
+# Force update source and apply translation
+opencodenpm update --force
+opencodenpm apply
 
-*   **Deploy (`deploy`)**: Registers `opencode` and `opencodenpm` commands to the system PATH for global access.
-*   **Oh-My-OpenCode (`ohmyopencode`)**: Installs the enhancement plugin, enabling Sisyphus, Oracle agents, and UI customization (fonts, background).
-*   **Antigravity (`antigravity`)**: Configures the local AI gateway to support Claude 3.5, GPT-4o, DeepSeek, etc.
-*   **Package (`package`)**: Generates release ZIP packages for Windows, macOS, and Linux, with auto-generated checksums and release notes.
+# Build for Linux
+opencodenpm build -p linux-x64
 
-### Maintenance
+# Deploy global commands
+opencodenpm deploy
+```
 
-*   **Restore Source (`restore`)**: Cleans all uncommitted changes in the source directory, restoring it to a clean Git state.
-*   **Rollback (`rollback`)**: One-click rollback to the previous state if issues occur after translation.
-*   **Check Environment (`env`)**: Checks if the local development environment meets build requirements.
+---
+
+## Documentation
+
+*   [📅 Changelog](CHANGELOG.md)
+*   [🚀 Antigravity Integration Guide](docs/ANTIGRAVITY_INTEGRATION.md)
+*   [🛠️ AI Maintenance Guide](docs/AI_MAINTENANCE.md)
+*   [📦 Oh My OpenCode Guide](docs/OH_MY_OPENCODE_GUIDE.md)
 
 ---
 
