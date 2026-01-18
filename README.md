@@ -120,7 +120,7 @@ OPENAI_MODEL=claude-sonnet-4-20250514
 
 ## ⚙️ OpenCode 配置文件
 
-> **配置文件位置**：`~/.config/Claude/` 和 `~/.config/opencode/`  
+> **配置文件位置**：`~/.config/opencode/`  
 > 所有配置文件保存在用户根目录，**更新项目不会丢失配置**。
 
 ![配置文件位置](docs/images/config.jpeg)
@@ -129,7 +129,7 @@ OPENAI_MODEL=claude-sonnet-4-20250514
 
 ### 1. AGENTS.md - AI 助手身份定义
 
-**位置**: `~/.config/Claude/AGENTS.md`  
+**位置**: `~/.config/opencode/AGENTS.md`  
 **作用**: 定义 AI 助手的性格、原则、回复习惯和安全规范  
 **示例文件**: 查看完整内容请展开下方折叠块
 
@@ -200,7 +200,7 @@ OPENAI_MODEL=claude-sonnet-4-20250514
 
 ### 2. global-rules.md - 开发规范与工具指南
 
-**位置**: `~/.config/Claude/global-rules.md`  
+**位置**: `~/.config/opencode/global-rules.md`  
 **作用**: 完整的编码规范、工具使用指南、工作流程定义  
 **示例文件**: 查看完整内容请展开下方折叠块
 
@@ -210,7 +210,7 @@ OPENAI_MODEL=claude-sonnet-4-20250514
 ````markdown
 # Claude Code 开发规范 v3.1
 
-> 开发规范、工具使用指南、工作流程。身份定义见 `~/.config/Claude/AGENTS.md`
+> 开发规范、工具使用指南、工作流程。身份定义见 `~/.config/opencode/AGENTS.md`
 
 ---
 
@@ -788,13 +788,13 @@ opencode.json
 
 ```bash
 # 创建配置目录
-mkdir -p ~/.config/Claude
 mkdir -p ~/.config/opencode
 
 # 编辑配置文件（参考上面的配置内容）
-vim ~/.config/Claude/AGENTS.md
-vim ~/.config/Claude/global-rules.md
+vim ~/.config/opencode/AGENTS.md
+vim ~/.config/opencode/global-rules.md
 vim ~/.config/opencode/oh-my-opencode.json
+vim ~/.config/opencode/opencode.json
 ```
 
 ### 2. 自定义 Agent 模型
@@ -830,7 +830,6 @@ opencodenpm build && opencodenpm deploy && opencode
 建议定期备份：
 
 ```bash
-cp -r ~/.config/Claude ~/backup-claude-config
 cp -r ~/.config/opencode ~/backup-opencode-config
 ```
 
