@@ -226,6 +226,7 @@ OpenCode 原项目采用 MIT 许可证，版权归 [Anomaly Company](https://ano
 
 | 教程 | 说明 |
 |------|------|
+| [🎭 Oh My OpenCode 指南](docs/OH_MY_OPENCODE_GUIDE.md) | 多模型协作插件完整使用教程，Agent 团队配置 |
 | [🚀 Antigravity 集成指南](docs/ANTIGRAVITY_INTEGRATION.md) | 使用 Antigravity Tools 接入 Gemini 3 Pro、Claude Opus 4.5 等强大模型 |
 | [🔧 AI 维护指南](docs/AI_MAINTENANCE.md) | AI 辅助项目维护说明 |
 
