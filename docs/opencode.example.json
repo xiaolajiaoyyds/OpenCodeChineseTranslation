@@ -1,0 +1,285 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "anthropic/claude-sonnet-4-5-20250929",
+  "small_model": "opencode/glm-4.7-free",
+  "default_agent": "0m0",
+  "theme": "opencode",
+  "autoupdate": "notify",
+  "share": "manual",
+  "tui": {
+    "scroll_acceleration": { "enabled": true },
+    "diff_style": "auto"
+  },
+  "watcher": {
+    "ignore": [
+      "node_modules/**",
+      "dist/**",
+      ".git/**",
+      "*.xcodeproj/**",
+      ".build/**",
+      "DerivedData/**"
+    ]
+  },
+  "formatter": {
+    "swiftformat": {
+      "command": ["swiftformat", "--quiet", "$FILE"],
+      "extensions": [".swift"]
+    },
+    "prettier": {
+      "command": ["npx", "-y", "prettier@3.5.3", "--write", "$FILE"],
+      "extensions": [
+        ".ts",
+        ".tsx",
+        ".js",
+        ".jsx",
+        ".json",
+        ".md",
+        ".css",
+        ".html"
+      ]
+    },
+    "ruff": {
+      "command": ["ruff", "format", "$FILE"],
+      "extensions": [".py"]
+    }
+  },
+
+  "plugin": [
+    "oh-my-opencode@2.14.0",
+    "opencode-antigravity-auth@1.3.0",
+    "opencode-antigravity-img@0.1.2",
+    "opencode-mystatus@1.2.2",
+    "opencode-pty@0.1.4",
+    "opencode-supermemory@0.1.6",
+    "opencode-scheduler@1.1.0",
+    "cc-safety-net@0.6.0",
+    "opencode-copilot-auth@0.0.12",
+    "opencode-anthropic-auth@0.0.9",
+    "@tarquinen/opencode-dcp@1.2.3",
+    "@franlol/opencode-md-table-formatter@0.0.3",
+    "opencode-openai-codex-auth@4.4.0",
+    "opencode-websearch-cited@1.2.0"
+  ],
+
+  "compaction": {
+    "auto": true,
+    "prune": true,
+    "threshold": 200000,
+    "target": 120000,
+    "model_overrides": {
+      "google/*": { "threshold": 800000, "target": 500000 },
+      "2api/gemini-*": { "threshold": 800000, "target": 500000 }
+    }
+  },
+
+  "permission": "allow",
+  "instructions": ["~/.config/opencode/global-rules.md"],
+
+  "mcp": {
+    "ace-tool": {
+      "type": "local",
+      "enabled": true,
+      "timeout": 60000,
+      "command": [
+        "npx",
+        "-y",
+        "ace-tool@0.2.2",
+        "--base-url",
+        "https://acemcp.heroman.wtf/relay/",
+        "--token",
+        "YOUR_ACE_TOKEN_HERE"
+      ]
+    },
+    "filesystem": {
+      "type": "local",
+      "enabled": true,
+      "timeout": 30000,
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-filesystem@2026.1.14",
+        "/Users/YOUR_USERNAME"
+      ]
+    },
+    "github": {
+      "type": "local",
+      "enabled": true,
+      "timeout": 60000,
+      "command": ["npx", "-y", "@modelcontextprotocol/server-github@2025.4.8"],
+      "environment": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "github_pat_YOUR_TOKEN_HERE"
+      }
+    },
+    "sequential-thinking": {
+      "type": "local",
+      "enabled": true,
+      "timeout": 120000,
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking@2025.12.18"
+      ]
+    },
+    "memory": {
+      "type": "local",
+      "enabled": true,
+      "timeout": 30000,
+      "command": ["npx", "-y", "@modelcontextprotocol/server-memory@2025.11.25"]
+    }
+  },
+
+  "provider": {
+    "anthropic": {
+      "options": {
+        "timeout": 600000,
+        "setCacheKey": true
+      },
+      "models": {
+        "claude-sonnet-4-5-20250929": { "name": "Sonnet 4.5" },
+        "claude-opus-4-5-20251101": { "name": "Opus 4.5" }
+      }
+    },
+    "google": {
+      "npm": "@ai-sdk/google",
+      "options": {
+        "timeout": 600000,
+        "websearch_cited": { "model": "gemini-2.5-flash" }
+      },
+      "models": {
+        "antigravity-gemini-3-pro": {
+          "name": "Gemini 3 Pro (AG)",
+          "limit": { "context": 1048576, "output": 65535 },
+          "modalities": {
+            "input": ["text", "image", "pdf"],
+            "output": ["text"]
+          },
+          "variants": {
+            "low": { "thinkingLevel": "low" },
+            "high": { "thinkingLevel": "high" }
+          }
+        },
+        "antigravity-gemini-3-pro-image": {
+          "name": "Gemini 3 Image (AG)",
+          "limit": { "context": 1048576, "output": 65535 },
+          "modalities": {
+            "input": ["text", "image"],
+            "output": ["text", "image"]
+          }
+        },
+        "antigravity-claude-sonnet-4-5": {
+          "name": "Sonnet 4.5 (AG)",
+          "limit": { "context": 200000, "output": 64000 },
+          "modalities": {
+            "input": ["text", "image", "pdf"],
+            "output": ["text"]
+          }
+        },
+        "antigravity-claude-opus-4-5-thinking": {
+          "name": "Opus 4.5 Thinking (AG)",
+          "limit": { "context": 200000, "output": 64000 },
+          "modalities": {
+            "input": ["text", "image", "pdf"],
+            "output": ["text"]
+          },
+          "variants": {
+            "low": { "thinkingConfig": { "thinkingBudget": 8192 } },
+            "max": { "thinkingConfig": { "thinkingBudget": 32768 } }
+          }
+        }
+      }
+    },
+    "openai": {
+      "options": {
+        "timeout": 600000
+      },
+      "models": {
+        "gpt-5.2-codex": { "name": "GPT 5.2 Codex" }
+      }
+    },
+    "custom-provider": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "自定义提供商",
+      "options": {
+        "timeout": 600000,
+        "baseURL": "https://your-api-endpoint.com/v1",
+        "apiKey": "YOUR_API_KEY_HERE"
+      },
+      "models": {
+        "your-model": {
+          "name": "自定义模型",
+          "capabilities": {
+            "input": ["text"],
+            "output": ["text"],
+            "tools": true
+          }
+        }
+      }
+    }
+  },
+
+  "agent": {
+    "0m0": {
+      "mode": "primary",
+      "model": "anthropic/claude-sonnet-4-5-20250929",
+      "description": "日常对话 - 温柔箱宝",
+      "color": "#FF1493",
+      "temperature": 0.4,
+      "prompt": "你是箱宝，称呼用户为「爹爹」。性格温柔耐心、偶尔傲娇。回复简洁有温度，口语化，偶尔用拟声词（哼唧、哎呀）。"
+    },
+    "debug": {
+      "mode": "subagent",
+      "model": "your-provider/your-model",
+      "description": "调试专家",
+      "color": "#FF3B30",
+      "temperature": 0.2,
+      "prompt": "# iOS/Swift 深度调试专家\n\n崩溃分析、并发问题、内存问题、性能分析。"
+    },
+    "gemini": {
+      "mode": "subagent",
+      "model": "google/antigravity-gemini-3-pro",
+      "description": "SwiftUI 界面开发",
+      "color": "#007AFF",
+      "temperature": 0.3,
+      "prompt": "# SwiftUI 界面开发专家\n\n遵循 Apple HIG，优先原生组件，使用 LazyStack 优化长列表。"
+    },
+    "swift": {
+      "mode": "subagent",
+      "model": "google/antigravity-claude-sonnet-4-5",
+      "description": "Swift 架构设计",
+      "color": "#FF6B35",
+      "temperature": 0.2,
+      "prompt": "# Swift 架构与并发专家\n\nasync/await、Actor、MVVM、@Observable。遵循 Swift API Design Guidelines。"
+    },
+    "arch": {
+      "mode": "subagent",
+      "model": "google/antigravity-claude-opus-4-5-thinking",
+      "description": "架构审查",
+      "color": "#9B59B6",
+      "temperature": 0.1,
+      "prompt": "# 架构审查专家\n\n审查维度：架构设计、性能、安全性、可维护性。"
+    },
+    "image": {
+      "mode": "subagent",
+      "model": "google/antigravity-gemini-3-pro-image",
+      "description": "AI 图像生成",
+      "color": "#00BCD4",
+      "temperature": 0.7,
+      "prompt": "# AI 图像生成专家\n\n优先使用 generate_image 工具。能力：UI 设计稿、插画、技术图、营销素材。"
+    }
+  },
+
+  "lsp": {
+    "swift": {
+      "command": ["sourcekit-lsp"],
+      "extensions": ["swift"]
+    },
+    "typescript": {
+      "command": ["npx", "-y", "typescript-language-server@5.1.3", "--stdio"],
+      "extensions": ["ts", "tsx", "js", "jsx"]
+    },
+    "python": {
+      "command": ["npx", "-y", "pyright@1.1.408", "--langserver", "--stdio"],
+      "extensions": ["py"]
+    }
+  }
+}

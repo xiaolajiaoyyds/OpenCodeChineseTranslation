@@ -43,6 +43,9 @@
     "title: \"Previous message\"": "title: \"上一条消息 (Previous message)\"",
     "title: \"Next child session\"": "title: \"下一个子会话 (Next child session)\"",
     "title: \"Go to parent session\"": "title: \"返回父会话 (Go to parent session)\"",
-    "\"Are you sure you want to restore the reverted messages?\"": "\"确定要恢复已撤销的消息吗？ (Are you sure you want to restore the reverted messages?)\""
+    "\"Are you sure you want to restore the reverted messages?\"": "\"确定要恢复已撤销的消息吗？ (Are you sure you want to restore the reverted messages?)\"",
+    "title: \"Line up\"": "title: \"向上移动行 (Line up)\"",
+    "title: \"Line down\"": "title: \"向下移动行 (Line down)\"",
+    "\"Preparing apply_patch...\"": "\"正在准备 apply_patch... (Preparing apply_patch...)\""
   }
 }
