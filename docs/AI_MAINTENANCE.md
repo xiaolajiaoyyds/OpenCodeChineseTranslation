@@ -2,7 +2,7 @@
 
 > 本文档为 AI 助手（如 Claude Code、Cursor 等）提供维护此汉化项目的完整指南。
 
-[![Version](https://img.shields.io/badge/i18n-v6.0-green.svg)](../opencode-i18n/config.json)
+[![Version](https://img.shields.io/badge/i18n-v7.0-green.svg)](../opencode-i18n/config.json)
 [![Coverage](https://img.shields.io/badge/汉化覆盖率-100%25-brightgreen.svg)]()
 
 ---
@@ -15,7 +15,7 @@
 | **原项目** | https://github.com/opencode-ai/opencode |
 | **汉化仓库** | https://github.com/1186258278/OpenCodeChineseTranslation |
 | **管理工具** | `opencodenpm` (npm 包) |
-| **当前版本** | v6.0 |
+| **当前版本** | v7.0 |
 
 ---
 
@@ -311,7 +311,7 @@ opencodenpm launch
 
 ```json
 {
-  "version": "6.1",
+  "version": "7.1",
   "lastUpdate": "2026-01-18",
   "supportedCommit": "新的 commit hash"
 }
@@ -343,8 +343,8 @@ opencodenpm package -a
 
 ```bash
 git add .
-git commit -m "release(i18n): v6.1 - 更新说明"
-git tag v6.1
+git commit -m "release(i18n): v7.1 - 更新说明"
+git tag v7.1
 git push && git push --tags
 ```
 
@@ -376,4 +376,4 @@ git push && git push --tags
 
 > **最后更新**: 2026-01-18
 > **维护者**: CodeCreator
-> **汉化版本**: v6.0
+> **汉化版本**: v7.0
