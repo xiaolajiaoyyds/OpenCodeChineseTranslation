@@ -53,7 +53,7 @@ jobs:
       - name: Apply translations
         run: |
           cd scripts
-          node cli.js apply --no-ai
+          node bin/opencodenpm apply --skip-translate --skip-verify --skip-quality-check
 
       - name: Build OpenCode
         run: |
