@@ -71,14 +71,30 @@ jobs:
         if: runner.os != 'Windows'
         run: |
           cd opencode-zh-CN/packages/opencode/dist
-          tar -czvf opencode-${{ matrix.platform }}.tar.gz opencode-${{ matrix.platform }}
+          # 查找实际的编译产物目录
+          ACTUAL_DIR=$(ls -d opencode-* 2>/dev/null | head -1)
+          if [ -z "$ACTUAL_DIR" ]; then
+            echo "Error: No build artifact found in dist/"
+            ls -la
+            exit 1
+          fi
+          echo "Found build artifact: $ACTUAL_DIR"
+          tar -czvf opencode-${{ matrix.platform }}.tar.gz "$ACTUAL_DIR"
           mv opencode-${{ matrix.platform }}.tar.gz ${{ github.workspace }}/
 
       - name: Package artifact (Windows)
         if: runner.os == 'Windows'
         run: |
           cd opencode-zh-CN/packages/opencode/dist
-          Compress-Archive -Path opencode-${{ matrix.platform }} -DestinationPath opencode-${{ matrix.platform }}.zip
+          # 查找实际的编译产物目录
+          $ActualDir = Get-ChildItem -Directory -Filter "opencode-*" | Select-Object -First 1 -ExpandProperty Name
+          if (-not $ActualDir) {
+            Write-Error "Error: No build artifact found in dist/"
+            Get-ChildItem
+            exit 1
+          }
+          Write-Host "Found build artifact: $ActualDir"
+          Compress-Archive -Path $ActualDir -DestinationPath opencode-${{ matrix.platform }}.zip
           Move-Item opencode-${{ matrix.platform }}.zip ${{ github.workspace }}/
         shell: pwsh
 
