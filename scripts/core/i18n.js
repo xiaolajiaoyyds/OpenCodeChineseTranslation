@@ -18,6 +18,10 @@ const {
   barPrefix,
   groupStart,
   groupEnd,
+  l1,
+  l3Info,
+  l3Warn,
+  l3Success,
 } = require("./colors.js");
 const Translator = require("./translator.js");
 
@@ -785,15 +789,15 @@ ${content}
 
     const pct = stats.files.coverage.toFixed(1);
 
-    log(barPrefix());
-    indent(
+    blank();
+    l1(
       `${coverageColor}${c.bold}${pct}%${c.reset}  ${c.gray}${"▓".repeat(filled)}${"░".repeat(empty)}${c.reset}`,
     );
-    log(barPrefix());
-    indent(
+    blank();
+    l1(
       `${c.cyan}文件${c.reset} ${stats.files.configuredFiles}/${stats.files.total}    ${c.cyan}翻译${c.reset} ${stats.translations.total} 条`,
     );
-    log(barPrefix());
+    blank();
 
     const categoryInfo = {
       dialogs: { emoji: "💬", name: "对话框" },
@@ -806,7 +810,7 @@ ${content}
     for (const [cat, info] of Object.entries(categoryInfo)) {
       const data = stats.categories[cat];
       if (data) {
-        indent(
+        l1(
           `${info.emoji} ${c.dim}${info.name}${c.reset}  ${data.files} 文件 / ${data.replacements} 条`,
         );
       }
@@ -816,28 +820,28 @@ ${content}
       const { needTranslate, noNeedTranslate } = stats.uncoveredAnalysis;
 
       if (needTranslate.length > 0) {
-        log(barPrefix());
-        indent(`${c.yellow}⚠ 待翻译 ${needTranslate.length} 个文件${c.reset}`);
+        blank();
+        l1(`${c.yellow}⚠ 待翻译 ${needTranslate.length} 个文件${c.reset}`);
         needTranslate.slice(0, 3).forEach((f) => {
           const shortPath = f.file.replace("src/cli/cmd/tui/", "");
-          indent(`  ${c.dim}→ ${shortPath}${c.reset}`);
+          l3Info(`→ ${shortPath}`);
         });
         if (needTranslate.length > 3) {
-          indent(`  ${c.dim}... 还有 ${needTranslate.length - 3} 个${c.reset}`);
+          l3Info(`... 还有 ${needTranslate.length - 3} 个`);
         }
       }
 
       if (noNeedTranslate.length > 0) {
-        log(barPrefix());
-        indent(
+        blank();
+        l1(
           `${c.dim}○ 跳过 ${noNeedTranslate.length} 个文件（无 UI 文本）${c.reset}`,
         );
       }
     }
 
     if (stats.files.coverage >= 100) {
-      log(barPrefix());
-      indent(`${c.green}✓ 所有文件都已覆盖！${c.reset}`);
+      blank();
+      l1(`${c.green}✓ 所有文件都已覆盖！${c.reset}`);
     }
 
     groupEnd();

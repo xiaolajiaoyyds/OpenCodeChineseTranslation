@@ -24,6 +24,10 @@ const {
   nestedWarn,
   nestedKv,
   nestedFinal,
+  l1,
+  l3Success,
+  l3Warn,
+  l3Info,
 } = require("../core/colors.js");
 const { getOpencodeDir } = require("../core/utils.js");
 const fs = require("fs");
@@ -39,7 +43,7 @@ async function run(options = {}) {
 
   // nested 模式下使用 clack 风格嵌套输出
   const outputStep = nested ? nestedStep : step;
-  const outputContent = nested ? nestedContent : indent;
+  const outputContent = nested ? nestedContent : (msg) => indent(msg, 1);
   const outputSuccess = nested ? nestedSuccess : success;
   const outputWarn = nested ? nestedWarn : warn;
   const outputKv = nested ? nestedKv : kv;

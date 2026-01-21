@@ -31,6 +31,8 @@ const {
   isPlainMode,
   INDENT,
   getIndent,
+  l1,
+  l3Info,
 } = require("./colors.js");
 const { getI18nDir, getOpencodeDir, getProjectDir } = require("./utils.js");
 const { applyUserConfigToEnv } = require("./user-config.js");
@@ -1453,8 +1455,8 @@ ${texts.map((t, i) => `${i + 1}. "${t.text}"`).join("\n")}
 
     try {
       blank();
-      groupStart(`${c.cyan}🤖${c.reset} ${c.bold}AI 总结${c.reset}`);
-      blank(); // 标题后换行
+      groupStart(`AI 总结`);
+      blank();
 
       spinner.start();
 
@@ -1463,10 +1465,15 @@ ${texts.map((t, i) => `${i + 1}. "${t.text}"`).join("\n")}
       const termWidth = process.stdout.columns || 80;
       const maxWidth = Math.max(40, Math.min(termWidth - 15, 90));
 
+      // 使用 L1 格式的前缀：│ + 2 空格
+      const linePrefix = `${c.gray}${S.BAR}${c.reset}  `;
+
       const result = await this.streamAISummaryWrapped(prompt, maxWidth, () => {
         if (firstChar) {
           spinner.clear();
-          process.stdout.write(`${barPrefix()}    `);
+          process.stdout.write(linePrefix);
+          // 补齐额外的空格，使第一行与后续换行行对齐
+          process.stdout.write(getIndent(INDENT.STREAM_BASE - INDENT.L1_CONTENT));
           firstChar = false;
         }
       });
@@ -1476,9 +1483,9 @@ ${texts.map((t, i) => `${i + 1}. "${t.text}"`).join("\n")}
       }
 
       if (result === null) {
-        indent(`   ${c.dim}(未配置 AI，跳过总结)${c.reset}`);
+        l3Info("(未配置 AI，跳过总结)");
       } else if (!result || result.trim() === "") {
-        indent(`   ${c.dim}(AI 返回为空)${c.reset}`);
+        l3Info("(AI 返回为空)");
       }
 
       blank();
@@ -1486,7 +1493,7 @@ ${texts.map((t, i) => `${i + 1}. "${t.text}"`).join("\n")}
     } catch (err) {
       spinner.fail("分析失败");
       const errMsg = err.message || String(err);
-      indent(`   ${c.dim}(失败: ${errMsg.slice(0, 40)})${c.reset}`);
+      l3Info(`(失败: ${errMsg.slice(0, 40)})`);
       groupEnd();
     }
   }
@@ -2292,7 +2299,17 @@ ${texts.map((t, i) => `${i + 1}. "${t.text}"`).join("\n")}
 
     if (aiCheck && this.checkConfig() && syntaxErrorCount === 0) {
       blank();
-      step(`AI 语义质量检查 (抽样 ${sampleSize} 条)`);
+
+      // 询问用户是否需要进行 AI 语义质量检查
+      const { confirmAction } = require("./colors.js");
+      const shouldRunAICheck = await confirmAction(
+        `是否进行 AI 语义质量检查？(抽样 ${sampleSize} 条)`,
+      );
+
+      if (!shouldRunAICheck) {
+        success("已跳过 AI 语义质量检查");
+      } else {
+        step(`AI 语义质量检查 (抽样 ${sampleSize} 条)`);
 
       // 先初始化模型，确保 "指定模型" 输出在 spinner 之前
       await this.ensureModel();
@@ -2331,6 +2348,7 @@ ${texts.map((t, i) => `${i + 1}. "${t.text}"`).join("\n")}
         spinner.fail("审查失败");
         warn(`AI 审查跳过: ${err.message}`);
       }
+      } // 关闭 shouldRunAICheck else 块
     }
 
     if (fixAi && aiIssues.length > 0 && this.checkConfig()) {

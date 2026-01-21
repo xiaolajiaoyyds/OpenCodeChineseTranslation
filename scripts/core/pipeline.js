@@ -28,6 +28,15 @@ const {
   nestedError,
   nestedKv,
   confirmAction,
+  l1,
+  l2Step,
+  l3Success,
+  l3Warn,
+  l3Error,
+  l3Info,
+  l3Kv,
+  S,
+  out,
 } = require("./colors.js");
 
 function presetToSteps(preset) {
@@ -268,15 +277,20 @@ function printStepSummary(stepResult) {
   const time = stepResult.ms
     ? `${c.dim}${(stepResult.ms / 1000).toFixed(1)}s${c.reset}`
     : "";
-  indent(`${icon} ${label}  ${c.dim}${stepResult.summary}${c.reset}  ${time}`);
+
+  // L2 格式：使用 l2Step 输出主步骤
+  const bar = `${c.gray}${S.BAR}${c.reset}`;
+  const content = `${icon} ${label}  ${c.dim}${stepResult.summary}${c.reset}  ${time}`;
+  out(`${bar}  ${content}`.trimEnd());
 }
 
 function printPipelineSummary(preset, result) {
   const c = colors;
   blank();
   groupStart("执行总结");
-  indent(`${c.cyan}流程${c.reset}: ${preset}`);
-  indent(
+
+  l1(`${c.cyan}流程${c.reset}: ${preset}`);
+  l1(
     `${c.cyan}状态${c.reset}: ${result.ok ? c.green + "成功" + c.reset : c.red + "失败" + c.reset}`,
   );
   blank();
@@ -299,8 +313,8 @@ function printPipelineSummary(preset, result) {
 
     if (stepResult.name === "repairPack") {
       if (d.newFiles && typeof d.newFiles.total === "number") {
-        indent(`质量检查: 扫描 ${d.quality?.checked || 0} 条`);
-        indent(
+        l3Info(`质量检查: 扫描 ${d.quality?.checked || 0} 条`);
+        l3Info(
           `语法问题: ${d.quality?.syntaxErrors || 0}，AI 语义问题: ${d.quality?.aiIssues || 0}`,
         );
       }
@@ -308,20 +322,21 @@ function printPipelineSummary(preset, result) {
 
     if (stepResult.name === "applyToSource" && d) {
       if (typeof d.files === "number" && typeof d.replacements === "number") {
-        indent(`替换结果: ${d.files} 个文件, ${d.replacements} 处替换`);
+        l3Info(`替换结果: ${d.files} 个文件, ${d.replacements} 处替换`);
       }
     }
   }
 
+  // 部署信息放在 groupEnd 之前
   if (deployToLocalInfo) {
     blank();
     printStepSummary(deployToLocalInfo);
     const d = deployToLocalInfo.details || {};
     if (d.target) {
-      indent(`已部署到: ${d.target}`);
+      l3Info(`已部署到: ${d.target}`);
     }
     if (d.size) {
-      indent(`大小: ${d.size}`);
+      l3Info(`大小: ${d.size}`);
     }
   }
 
@@ -330,10 +345,10 @@ function printPipelineSummary(preset, result) {
     printStepSummary(deployInfo);
     const d = deployInfo.details || {};
     if (d.target) {
-      indent(`已部署到: ${d.target}`);
+      l3Info(`已部署到: ${d.target}`);
     }
     if (d.size) {
-      indent(`大小: ${d.size}`);
+      l3Info(`大小: ${d.size}`);
     }
   }
 

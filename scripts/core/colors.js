@@ -249,6 +249,48 @@ function nestedFinal(message, type = "success") {
   out(`${bar}  ${colors.gray}└─${colors.reset} ${icon} ${message}`);
 }
 
+// ============================================
+// L1/L2/L3 三层格式输出函数（统一格式）
+// ============================================
+
+// L1: 主内容层（│ + 2 空格）
+function l1(message) {
+  const bar = `${colors.gray}${S.BAR}${colors.reset}`;
+  out(`${bar}  ${message}`);
+}
+
+// L2: 子步骤层（│ + 2 空格 + ├─）
+function l2Step(title) {
+  const bar = `${colors.gray}${S.BAR}${colors.reset}`;
+  out(`${bar}  ${colors.gray}├─${colors.reset} ${colors.bold}${title}${colors.reset}`);
+}
+
+// L3: 详情层（│ + 2 空格 + │ + 3 空格 + ●）
+function l3Success(message) {
+  const bar = `${colors.gray}${S.BAR}${colors.reset}`;
+  out(`${bar}  ${colors.gray}│${colors.reset}   ${colors.green}${S.SUCCESS}${colors.reset} ${message}`);
+}
+
+function l3Warn(message) {
+  const bar = `${colors.gray}${S.BAR}${colors.reset}`;
+  out(`${bar}  ${colors.gray}│${colors.reset}   ${colors.yellow}${S.WARN}${colors.reset} ${message}`);
+}
+
+function l3Error(message) {
+  const bar = `${colors.gray}${S.BAR}${colors.reset}`;
+  out(`${bar}  ${colors.gray}│${colors.reset}   ${colors.red}${S.ERROR}${colors.reset} ${message}`);
+}
+
+function l3Info(message) {
+  const bar = `${colors.gray}${S.BAR}${colors.reset}`;
+  out(`${bar}  ${colors.gray}│${colors.reset}   ${colors.dim}${message}${colors.reset}`);
+}
+
+function l3Kv(key, value) {
+  const bar = `${colors.gray}${S.BAR}${colors.reset}`;
+  out(`${bar}  ${colors.gray}│${colors.reset}   ${colors.dim}${key}${colors.reset}  ${value}`);
+}
+
 const coloredLog = {
   reset: (msg) => log(msg, "reset"),
   black: (msg) => log(msg, "black"),
@@ -888,6 +930,13 @@ module.exports = {
   nestedError,
   nestedKv,
   nestedFinal,
+  l1,
+  l2Step,
+  l3Success,
+  l3Warn,
+  l3Error,
+  l3Info,
+  l3Kv,
   createSpinner,
   Spinner,
   S,
