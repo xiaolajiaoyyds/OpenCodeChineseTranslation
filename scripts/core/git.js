@@ -95,6 +95,15 @@ async function cloneRepo(url, targetPath, options = {}) {
         spinner.stop("克隆失败", 1);
         error(`克隆失败: ${e.message}`);
       }
+
+      // 网络错误提示
+      if (
+        e.message.includes("Could not resolve host") ||
+        e.message.includes("Failed to connect")
+      ) {
+        warn("检测到网络连接问题");
+        indent("建议检查网络连接或配置 Git 代理", nested ? 0 : 2);
+      }
     }
     return false;
   }
@@ -156,6 +165,15 @@ async function pullRepo(repoPath, options = {}) {
       } else {
         spinner.stop("拉取失败", 1);
         error(`拉取失败: ${e.message}`);
+      }
+
+      // 网络错误提示
+      if (
+        e.message.includes("Could not resolve host") ||
+        e.message.includes("Failed to connect")
+      ) {
+        warn("检测到网络连接问题");
+        indent("建议检查网络连接或配置 Git 代理", nested ? 0 : 2);
       }
     }
     return false;

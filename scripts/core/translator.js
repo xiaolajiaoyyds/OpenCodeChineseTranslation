@@ -29,8 +29,14 @@ const {
   groupStart,
   groupEnd,
   isPlainMode,
+  INDENT,
+  getIndent,
 } = require("./colors.js");
 const { getI18nDir, getOpencodeDir, getProjectDir } = require("./utils.js");
+const { applyUserConfigToEnv } = require("./user-config.js");
+
+// 在模块加载时就应用用户配置到环境变量
+applyUserConfigToEnv();
 
 class Translator {
   constructor() {
@@ -49,21 +55,32 @@ class Translator {
     this.failedModels = new Set();
 
     this.MODEL_PRIORITY = [
-      // 质量优先：Pro/High 级别模型
+      // 免费/高性价比模型 (优先)
+      "deepseek-ai/DeepSeek-V3",
+      "deepseek-chat",
+      "glm-4-flash",
+
+      // OpenAI 官方通用模型
+      "gpt-4o",
+      "gpt-4o-mini",
+      "gpt-4-turbo",
+      "gpt-4",
+      "gpt-3.5-turbo",
+
+      // Claude 系列 (备选)
+      "claude-3-5-sonnet-20240620",
+      "claude-3-opus-20240229",
+      "claude-3-sonnet-20240229",
+      "claude-3-haiku-20240307",
+
+      // Gemini 系列 (备选)
+      "gemini-1.5-pro",
+      "gemini-1.5-flash",
+
+      // 兼容旧配置/第三方名称
       "claude-sonnet-4-5",
       "claude-opus",
-      "gpt-4o",
-      "gpt-4",
-      "gemini-3-pro-high",
       "gemini-3-pro",
-      "gemini-2.5-pro",
-      // 平衡模型
-      "gemini-3-pro-low",
-      "gemini-2.5-flash",
-      "gemini-3-flash",
-      // 轻量模型
-      "gemini-2.5-flash-lite",
-      "gpt-3.5",
     ];
   }
 
@@ -464,7 +481,9 @@ class Translator {
    */
   async simpleCallAI(prompt) {
     if (!this.checkConfig()) {
-      throw new Error("未配置 OPENAI_API_KEY，请运行 opencodenpm ai 或创建 .env");
+      throw new Error(
+        "未配置 OPENAI_API_KEY，请运行 opencodenpm ai 或创建 .env",
+      );
     }
     await this.ensureModel();
 
@@ -533,7 +552,9 @@ class Translator {
    */
   async callAI(texts, fileName) {
     if (!this.checkConfig()) {
-      throw new Error("未配置 OPENAI_API_KEY，请运行 opencodenpm ai 或创建 .env");
+      throw new Error(
+        "未配置 OPENAI_API_KEY，请运行 opencodenpm ai 或创建 .env",
+      );
     }
     await this.ensureModel();
 
@@ -731,10 +752,14 @@ ${texts.map((t, i) => `${i + 1}. "${t.text}"`).join("\n")}
   updateLanguagePack(filePath, newTranslations) {
     const category = this.categorizeFile(filePath);
     const fileName = this.generateConfigFileName(filePath);
-    const categoryDirs = ["components", "routes", "contexts", "dialogs", "common"];
-    const subDir = path
-      .dirname(filePath)
-      .replace(/^src\/cli\/cmd\/tui\/?/, "");
+    const categoryDirs = [
+      "components",
+      "routes",
+      "contexts",
+      "dialogs",
+      "common",
+    ];
+    const subDir = path.dirname(filePath).replace(/^src\/cli\/cmd\/tui\/?/, "");
     const firstPart = subDir.split("/")[0];
     const skipCategory = categoryDirs.includes(firstPart);
 
@@ -789,7 +814,7 @@ ${texts.map((t, i) => `${i + 1}. "${t.text}"`).join("\n")}
       return null;
     }
 
-    log(`发现 ${untranslatedTexts.length} 处未翻译文本`);
+    indent(`发现 ${untranslatedTexts.length} 处未翻译文本`);
 
     // 分离缓存命中和需要翻译的文本
     const cachedTranslations = {};
@@ -811,14 +836,14 @@ ${texts.map((t, i) => `${i + 1}. "${t.text}"`).join("\n")}
     }
 
     if (cacheHits > 0) {
-      log(`缓存命中 ${cacheHits} 处`);
+      indent(`缓存命中 ${cacheHits} 处`);
     }
 
     let aiTranslations = {};
 
     // 仍有需要翻译的文本
     if (needTranslate.length > 0) {
-      log(`需要 AI 翻译 ${needTranslate.length} 处`);
+      indent(`需要 AI 翻译 ${needTranslate.length} 处`);
 
       try {
         // 调用 AI 翻译
@@ -962,7 +987,7 @@ ${texts.map((t, i) => `${i + 1}. "${t.text}"`).join("\n")}
 
     success(`翻译完成: ${successCount} 文件成功, ${failCount} 失败`);
     if (statsInfo.length > 0) {
-      log(`统计: ${statsInfo.join(", ")}`);
+      indent(`统计: ${statsInfo.join(", ")}`);
     }
 
     return {
@@ -979,7 +1004,11 @@ ${texts.map((t, i) => `${i + 1}. "${t.text}"`).join("\n")}
     if (!this.checkConfig()) {
       return {
         success: false,
-        stats: { successCount: 0, failCount: newFiles.length, totalFiles: newFiles.length },
+        stats: {
+          successCount: 0,
+          failCount: newFiles.length,
+          totalFiles: newFiles.length,
+        },
       };
     }
 
@@ -1004,18 +1033,26 @@ ${texts.map((t, i) => `${i + 1}. "${t.text}"`).join("\n")}
         }
 
         step(`翻译新文件 ${fileName}`);
-        log(`发现 ${texts.length} 处可翻译文本`);
+        indent(`发现 ${texts.length} 处可翻译文本`);
 
         const response = await this.callAIWithRetry(texts, `new:${fileName}`);
         const translations = this.parseTranslations(response, texts);
 
         if (!dryRun) {
           const saved = this.updateLanguagePack(file, translations);
-          results.push({ file, saved, count: Object.keys(translations).length });
-          success(`已写入 ${saved.category}/${saved.fileName} (${saved.count} 条)`);
+          results.push({
+            file,
+            saved,
+            count: Object.keys(translations).length,
+          });
+          success(
+            `已写入 ${saved.category}/${saved.fileName} (${saved.count} 条)`,
+          );
         } else {
           results.push({ file, count: Object.keys(translations).length });
-          success(`(dry-run) 将写入 ${Object.keys(translations).length} 条翻译`);
+          success(
+            `(dry-run) 将写入 ${Object.keys(translations).length} 条翻译`,
+          );
         }
 
         successCount++;
@@ -1107,9 +1144,9 @@ ${texts.map((t, i) => `${i + 1}. "${t.text}"`).join("\n")}
   showCacheStatus() {
     const stats = this.getCacheStats();
     step("翻译缓存状态");
-    log(`缓存条目: ${stats.entries}`);
-    log(`缓存大小: ${(stats.size / 1024).toFixed(2)} KB`);
-    log(`缓存路径: ${stats.path}`);
+    indent(`缓存条目: ${stats.entries}`);
+    indent(`缓存大小: ${(stats.size / 1024).toFixed(2)} KB`);
+    indent(`缓存路径: ${stats.path}`);
   }
 
   /**
@@ -1217,7 +1254,7 @@ ${texts.map((t, i) => `${i + 1}. "${t.text}"`).join("\n")}
       return null;
     }
 
-    step("汉化覆盖率");
+    groupStart("汉化覆盖率");
 
     // 总体覆盖率 - 用进度条展示
     const barWidth = 20;
@@ -1262,6 +1299,8 @@ ${texts.map((t, i) => `${i + 1}. "${t.text}"`).join("\n")}
         indent(`... 还有 ${incomplete.length - 5} 个文件`, 2);
       }
     }
+
+    groupEnd();
 
     return stats;
   }
@@ -1360,10 +1399,7 @@ ${texts.map((t, i) => `${i + 1}. "${t.text}"`).join("\n")}
     }
 
     const reasonList = Object.entries(byReason)
-      .map(
-        ([reason, files]) =>
-          `• ${files.length} 个文件: ${reason}`,
-      )
+      .map(([reason, files]) => `• ${files.length} 个文件: ${reason}`)
       .join("\n");
 
     // 构建新翻译的内容摘要
@@ -1409,12 +1445,16 @@ ${texts.map((t, i) => `${i + 1}. "${t.text}"`).join("\n")}
     }
 
     const c = colors;
+
+    // 先初始化模型，确保 "指定模型" 输出在 spinner 之前
+    await this.ensureModel();
+
     const spinner = createSpinner("AI 分析中...");
 
     try {
       blank();
       groupStart(`${c.cyan}🤖${c.reset} ${c.bold}AI 总结${c.reset}`);
-      blank();  // 标题后换行
+      blank(); // 标题后换行
 
       spinner.start();
 
@@ -1563,7 +1603,19 @@ ${texts.map((t, i) => `${i + 1}. "${t.text}"`).join("\n")}
       let inHighlight = false;
       const c = colors;
       // 断点字符（可以在这些字符后换行）
-      const breakChars = new Set(["，", "。", "！", "？", "、", "；", "：", " ", "~", "）", "】"]);
+      const breakChars = new Set([
+        "，",
+        "。",
+        "！",
+        "？",
+        "、",
+        "；",
+        "：",
+        " ",
+        "~",
+        "）",
+        "】",
+      ]);
 
       const processQueue = async () => {
         if (isProcessing) return;
@@ -1581,7 +1633,7 @@ ${texts.map((t, i) => `${i + 1}. "${t.text}"`).join("\n")}
           if (char === "\n") {
             stopTailAnimation();
             process.stdout.write(c.reset);
-            process.stdout.write(`\n${barPrefix()}    `);
+            process.stdout.write(`\n${barPrefix()}${getIndent(INDENT.STREAM_BASE)}`);
             inHighlight = false;
             startTailAnimation();
             currentLineLength = 0;
@@ -1594,39 +1646,52 @@ ${texts.map((t, i) => `${i + 1}. "${t.text}"`).join("\n")}
               isListItem = true;
             }
 
-            // 颜色处理
+            // 颜色处理和宽度计算（分离逻辑宽度和实际输出）
             let output = char;
+            let logicalWidth = 1;
 
             if (char === "▸") {
-              output = `${c.cyan}${c.bold}▸${c.reset} `;
+              output = `${c.cyan}${c.bold}▸${c.reset}`;
+              logicalWidth = 1;
             } else if (char === "【") {
               inHighlight = true;
               output = `${c.yellow}${c.bold}【`;
+              logicalWidth = 2; // 全角字符宽度为 2
             } else if (char === "】") {
               output = `】${c.reset}`;
               inHighlight = false;
+              logicalWidth = 2; // 全角字符宽度为 2
             } else if (char === "💡") {
               output = `${c.yellow}💡${c.reset}`;
+              logicalWidth = 2; // emoji 宽度为 2
             } else if (char === "#") {
               output = `${c.magenta}${c.bold}#${c.reset}`;
+              logicalWidth = 1;
             } else if (char === "*") {
               output = `${c.green}${c.bold}*${c.reset}`;
+              logicalWidth = 1;
             } else if (inHighlight) {
               output = `${c.yellow}${c.bold}${char}`;
+              // 计算字符实际显示宽度
+              logicalWidth = /[\u4e00-\u9fa5]/.test(char) ? 2 : 1;
+            } else {
+              // 计算字符实际显示宽度
+              logicalWidth = /[\u4e00-\u9fa5]/.test(char) ? 2 : 1;
             }
 
             process.stdout.write(output);
             startTailAnimation();
 
-            const charWidth = /[\u4e00-\u9fa5]/.test(char) ? 2 : 1;
-            currentLineLength += charWidth;
+            currentLineLength += logicalWidth;
 
             // 智能换行：只在断点字符后换行
             if (currentLineLength >= maxWidth && breakChars.has(char)) {
               stopTailAnimation();
               process.stdout.write(c.reset);
-              const indent = isListItem ? "      " : "    ";
-              process.stdout.write(`\n${barPrefix()}${indent}`);
+              const lineIndent = isListItem
+                ? getIndent(INDENT.STREAM_LIST)
+                : getIndent(INDENT.STREAM_BASE);
+              process.stdout.write(`\n${barPrefix()}${lineIndent}`);
               if (inHighlight) process.stdout.write(`${c.yellow}${c.bold}`);
               startTailAnimation();
               currentLineLength = 0;
@@ -1771,14 +1836,14 @@ ${texts.map((t, i) => `${i + 1}. "${t.text}"`).join("\n")}
     if (uncommitted) {
       changedFiles = this.getUncommittedFiles();
       if (changedFiles.length > 0) {
-        log(`发现 ${changedFiles.length} 个未提交的变更文件`);
+        indent(`发现 ${changedFiles.length} 个未提交的变更文件`);
       }
     }
 
     if (since) {
       const sinceFiles = this.getChangedFiles(since);
       if (sinceFiles.length > 0) {
-        log(`发现 ${sinceFiles.length} 个自 ${since} 以来的变更文件`);
+        indent(`发现 ${sinceFiles.length} 个自 ${since} 以来的变更文件`);
         changedFiles = [...new Set([...changedFiles, ...sinceFiles])];
       }
     }
@@ -2229,6 +2294,9 @@ ${texts.map((t, i) => `${i + 1}. "${t.text}"`).join("\n")}
       blank();
       step(`AI 语义质量检查 (抽样 ${sampleSize} 条)`);
 
+      // 先初始化模型，确保 "指定模型" 输出在 spinner 之前
+      await this.ensureModel();
+
       const spinner = createSpinner("正在审查...");
       spinner.start();
 
@@ -2272,7 +2340,11 @@ ${texts.map((t, i) => `${i + 1}. "${t.text}"`).join("\n")}
         dryRun,
       });
       if (fixedSemantic > 0) {
-        success(dryRun ? `将修复 ${fixedSemantic} 处语义问题` : `成功修复 ${fixedSemantic} 处语义问题`);
+        success(
+          dryRun
+            ? `将修复 ${fixedSemantic} 处语义问题`
+            : `成功修复 ${fixedSemantic} 处语义问题`,
+        );
       }
     }
 
@@ -2405,7 +2477,8 @@ ${texts.map((t, i) => `${i + 1}. "${t.text}"`).join("\n")}
       const requests = fileIssues.map((issue, idx) => ({
         index: idx + 1,
         originalKey: issue.original,
-        currentTranslation: config.replacements?.[issue.original] || issue.translated || "",
+        currentTranslation:
+          config.replacements?.[issue.original] || issue.translated || "",
         reason: issue.reason || "",
         suggestion: issue.suggestion || "",
       }));
@@ -2423,8 +2496,12 @@ ${texts.map((t, i) => `${i + 1}. "${t.text}"`).join("\n")}
         for (const fix of fixes) {
           const req = requests.find((r) => r.index === fix.index);
           if (!req || !fix.fixedTranslation) continue;
-          if (!config.replacements || !config.replacements[req.originalKey]) continue;
-          const issues = this.checkSyntaxSafety(req.originalKey, fix.fixedTranslation);
+          if (!config.replacements || !config.replacements[req.originalKey])
+            continue;
+          const issues = this.checkSyntaxSafety(
+            req.originalKey,
+            fix.fixedTranslation,
+          );
           if (issues.some((x) => x.severity === "error")) continue;
           config.replacements[req.originalKey] = fix.fixedTranslation;
           fileFixed++;
@@ -2439,7 +2516,9 @@ ${texts.map((t, i) => `${i + 1}. "${t.text}"`).join("\n")}
             );
           }
           fixedCount += fileFixed;
-          fixSpinner.stop(dryRun ? `将修复 ${fileFixed} 处` : `修复 ${fileFixed} 处`);
+          fixSpinner.stop(
+            dryRun ? `将修复 ${fileFixed} 处` : `修复 ${fileFixed} 处`,
+          );
         } else {
           fixSpinner.stop("无需修复");
         }

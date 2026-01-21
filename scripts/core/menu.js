@@ -153,6 +153,8 @@ function showEnvInfo() {
 
   groupEnd();
 
+  blank();
+
   groupStart("运行状态");
 
   const runningInfo = isOpencodeRunning();
@@ -170,7 +172,9 @@ function showEnvInfo() {
   let recommend = null;
 
   if (ocPath && fs.existsSync(ocPath)) {
-    const status = runningInfo.running ? color.green("运行中") : color.dim("已停止");
+    const status = runningInfo.running
+      ? color.green("运行中")
+      : color.dim("已停止");
     const clickable = makeClickable(color.dim(ocPath), path.dirname(ocPath));
     kv(padLabel("OpenCode", 10), `${status}  ${clickable}`);
   } else {
@@ -203,6 +207,8 @@ function showEnvInfo() {
 
   groupEnd();
 
+  blank();
+
   groupStart("项目信息");
 
   kv(padLabel("作者", 10), color.dim("xiaolajiao"));
@@ -216,9 +222,21 @@ function showEnvInfo() {
 }
 
 const MENU_OPTIONS = [
-  { value: "full", label: label("🚀", "一键汉化"), hint: "下载/更新 → 扫描 → 汉化 → 检查 → 应用 → 构建 → 部署" },
-  { value: "fix", label: label("🩹", "一键修复"), hint: "扫描 → 汉化 → 检查 → 修复 → 应用 → 构建 → 部署" },
-  { value: "ai", label: label("⚙️", "配置 AI"), hint: "设置 OPENAI_API_KEY/BASE/MODEL（编译版也可用）" },
+  {
+    value: "full",
+    label: label("🚀", "一键汉化"),
+    hint: "下载/更新 → 扫描 → 汉化 → 检查 → 应用 → 构建 → 部署",
+  },
+  {
+    value: "fix",
+    label: label("🩹", "一键修复"),
+    hint: "扫描 → 汉化 → 检查 → 修复 → 应用 → 构建 → 部署",
+  },
+  {
+    value: "ai",
+    label: label("⚙️", "配置 AI"),
+    hint: "设置 OPENAI_API_KEY/BASE/MODEL（编译版也可用）",
+  },
   { value: "exit", label: label("👋", "退出程序") },
 ];
 
@@ -254,7 +272,9 @@ async function runCommand(cmd) {
         await aiCmd.run({ interactive: true });
         break;
       case "exit":
-        p.outro(color.cyan(isPlainMode() ? "再见~ 下次见！" : "🐰 再见~ 下次见！"));
+        p.outro(
+          color.cyan(isPlainMode() ? "再见~ 下次见！" : "🐰 再见~ 下次见！"),
+        );
         process.exit(0);
       case "menu":
         return "menu";
@@ -310,7 +330,7 @@ async function showMenu() {
   showEnvInfo();
 
   const action = await p.select({
-    message: "",
+    message: "选择操作",
     options: MENU_OPTIONS,
     initialValue: "full",
   });

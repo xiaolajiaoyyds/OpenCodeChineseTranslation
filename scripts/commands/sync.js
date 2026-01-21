@@ -113,18 +113,34 @@ function updateConfigVersion(version, commit) {
  */
 function updateScriptVersion(version) {
   const projectDir = getProjectDir();
-  const pkgPath = path.join(projectDir, "scripts", "package.json");
-
-  if (!fs.existsSync(pkgPath)) {
-    return false;
-  }
-
-  const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
   const zhVersion = `${version}-zh`;
 
-  pkg.version = zhVersion;
+  // 更新 scripts/package.json
+  const scriptPkgPath = path.join(projectDir, "scripts", "package.json");
+  if (fs.existsSync(scriptPkgPath)) {
+    const pkg = JSON.parse(fs.readFileSync(scriptPkgPath, "utf-8"));
+    pkg.version = zhVersion;
+    fs.writeFileSync(scriptPkgPath, JSON.stringify(pkg, null, 2) + "\n");
+  }
 
-  fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n");
+  // 更新根目录 package.json
+  const rootPkgPath = path.join(projectDir, "package.json");
+  if (fs.existsSync(rootPkgPath)) {
+    const pkg = JSON.parse(fs.readFileSync(rootPkgPath, "utf-8"));
+    pkg.version = zhVersion;
+    fs.writeFileSync(rootPkgPath, JSON.stringify(pkg, null, 2) + "\n");
+  }
+
+  // 更新 opencode-i18n/config.json
+  const i18nConfigPath = path.join(projectDir, "opencode-i18n", "config.json");
+  if (fs.existsSync(i18nConfigPath)) {
+    const config = JSON.parse(fs.readFileSync(i18nConfigPath, "utf-8"));
+    config.version = zhVersion;
+    config.opencodeVersion = version;
+    config.lastUpdate = new Date().toISOString().split("T")[0];
+    fs.writeFileSync(i18nConfigPath, JSON.stringify(config, null, 4) + "\n");
+  }
+
   return zhVersion;
 }
 

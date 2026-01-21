@@ -201,7 +201,7 @@ class Builder {
     }
 
     try {
-      const args = ["run", "script/build.ts", "--single"];
+      const args = ["run", "script/build.ts", "--single", "--skip-install"];
 
       const chineseVersion = getChineseVersion();
       const env = { ...process.env };
@@ -222,14 +222,14 @@ class Builder {
 
       const spinner = createSpinner("正在编译 OpenCode...");
       spinner.start();
-      let seconds = 0;
+      const startTime = Date.now();
       const tick = setInterval(() => {
-        seconds += 1;
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        const mins = Math.floor(elapsed / 60);
+        const secs = elapsed % 60;
         const time = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
         const stage =
-          seconds < 30 ? "Bundling" : seconds < 180 ? "Compiling" : "Packaging";
+          elapsed < 30 ? "Bundling" : elapsed < 180 ? "Compiling" : "Packaging";
         spinner.update(`正在编译 OpenCode (${stage})... ${time}`);
       }, 1000);
       try {
@@ -240,10 +240,11 @@ class Builder {
           timeoutMs: 30 * 60 * 1000,
         });
         clearInterval(tick);
+        const totalSeconds = Math.round((Date.now() - startTime) / 1000);
         const finalTime =
-          seconds > 60
-            ? `${Math.floor(seconds / 60)}m ${seconds % 60}s`
-            : `${seconds}s`;
+          totalSeconds > 60
+            ? `${Math.floor(totalSeconds / 60)}m ${totalSeconds % 60}s`
+            : `${totalSeconds}s`;
         spinner.stop(`编译完成 (${finalTime})`);
       } catch (err) {
         clearInterval(tick);

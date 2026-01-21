@@ -1,9 +1,0 @@
-{
-  "file": "src/components/file-tree.tsx",
-  "description": "文件树组件",
-  "deprecated": true,
-  "replacements": {
-    ">Loading...<": ">加载中... (Loading...)<",
-    ">No files<": ">无文件 (No files)<"
-  }
-}

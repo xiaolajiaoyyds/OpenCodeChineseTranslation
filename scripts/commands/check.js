@@ -16,6 +16,7 @@ const {
   blank,
   log,
   kv,
+  isPlainMode,
 } = require("../core/colors.js");
 const {
   getOpencodeDir,
@@ -249,7 +250,7 @@ async function run(options = {}) {
       break;
     }
 
-    indent(`📄 ${file} (${items.length} 处):`);
+    indent(`${isPlainMode() ? "" : "📄 "}${file} (${items.length} 处):`);
 
     const showItems = verbose ? items : items.slice(0, 3);
     for (const item of showItems) {

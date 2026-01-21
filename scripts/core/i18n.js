@@ -16,6 +16,8 @@ const {
   blank,
   log,
   barPrefix,
+  groupStart,
+  groupEnd,
 } = require("./colors.js");
 const Translator = require("./translator.js");
 
@@ -247,7 +249,11 @@ ${content}
 
         stats.translatedFiles++;
         stats.translatedEntries += result.translations.length;
-        stats.savedConfigs.push({ file, configPath, count: result.translations.length });
+        stats.savedConfigs.push({
+          file,
+          configPath,
+          count: result.translations.length,
+        });
 
         if (!dryRun) {
           fs.mkdirSync(path.dirname(configPath), { recursive: true });
@@ -266,7 +272,8 @@ ${content}
         // 不需要翻译 → 加入跳过列表
         stats.skippedFiles++;
         stats.skipped.push({ file, reason: result.reason || "无需翻译的文本" });
-        if (!dryRun) this.addToSkipList(file, result.reason || "无需翻译的文本");
+        if (!dryRun)
+          this.addToSkipList(file, result.reason || "无需翻译的文本");
         if (!silent) info(`  ○ 已跳过: ${result.reason}`);
       }
     }
@@ -639,6 +646,55 @@ ${content}
   }
 
   /**
+   * 检查废弃的翻译配置
+   */
+  checkObsoleteTranslations() {
+    const configs = this.loadConfig();
+    const sourceFiles = new Set(this.getTuiSourceFiles());
+    const obsolete = [];
+
+    for (const config of configs) {
+      // 检查文件是否存在
+      const fullPath = path.join(this.sourceBase, config.file);
+      if (!fs.existsSync(fullPath)) {
+        obsolete.push({
+          file: config.file,
+          configPath: config.configPath,
+          reason: "源码文件已删除",
+          type: "file_missing",
+        });
+        continue;
+      }
+
+      // 检查是否还在源码列表中（可能是被移动了）
+      if (!sourceFiles.has(config.file)) {
+        obsolete.push({
+          file: config.file,
+          configPath: config.configPath,
+          reason: "文件不再属于 TUI 源码范围",
+          type: "out_of_scope",
+        });
+      }
+    }
+
+    return obsolete;
+  }
+
+  /**
+   * 删除废弃的翻译配置
+   */
+  removeObsoleteTranslations(obsoleteList) {
+    let removed = 0;
+    for (const item of obsoleteList) {
+      if (item.configPath && fs.existsSync(item.configPath)) {
+        fs.unlinkSync(item.configPath);
+        removed++;
+      }
+    }
+    return removed;
+  }
+
+  /**
    * 获取汉化覆盖率统计
    */
   getCoverageStats() {
@@ -714,7 +770,7 @@ ${content}
     const { colors } = require("./colors.js");
     const c = colors;
 
-    step("汉化覆盖率");
+    groupStart("汉化覆盖率");
 
     const barWidth = 24;
     const filled = Math.round((stats.files.coverage / 100) * barWidth);
@@ -767,9 +823,7 @@ ${content}
           indent(`  ${c.dim}→ ${shortPath}${c.reset}`);
         });
         if (needTranslate.length > 3) {
-          indent(
-            `  ${c.dim}... 还有 ${needTranslate.length - 3} 个${c.reset}`,
-          );
+          indent(`  ${c.dim}... 还有 ${needTranslate.length - 3} 个${c.reset}`);
         }
       }
 
@@ -786,6 +840,8 @@ ${content}
       indent(`${c.green}✓ 所有文件都已覆盖！${c.reset}`);
     }
 
+    groupEnd();
+
     return stats;
   }
 
@@ -795,7 +851,6 @@ ${content}
    */
   async showCoverageReportWithAI(newTranslations = null) {
     const stats = this.showCoverageReport();
-    const { log: colorLog } = require("./colors.js");
 
     // 显示本次新增翻译
     if (
@@ -804,19 +859,16 @@ ${content}
       newTranslations.files.length > 0
     ) {
       blank();
-      colorLog(`    ✨ 本次新增翻译:`, "green");
+      indent(`✨ 本次新增翻译:`);
 
       for (const fileResult of newTranslations.files.slice(0, 5)) {
         const shortPath = fileResult.file.replace("src/cli/cmd/tui/", "");
         const count = Object.keys(fileResult.translations).length;
-        colorLog(`      + ${shortPath} (${count} 条)`, "green");
+        indent(`  + ${shortPath} (${count} 条)`);
       }
 
       if (newTranslations.files.length > 5) {
-        colorLog(
-          `      ... 还有 ${newTranslations.files.length - 5} 个文件`,
-          "green",
-        );
+        indent(`  ... 还有 ${newTranslations.files.length - 5} 个文件`);
       }
     }
 

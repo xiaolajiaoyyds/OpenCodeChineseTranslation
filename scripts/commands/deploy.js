@@ -90,12 +90,16 @@ async function promptAutoupdateConfig() {
 
   const configPath = getOpencodeConfigPath();
   blank();
-  warn(isPlainMode() ? "提示: 如需禁用版本更新提示" : "💡 提示: 如需禁用版本更新提示");
+  warn(
+    isPlainMode()
+      ? "提示: 如需禁用版本更新提示"
+      : "💡 提示: 如需禁用版本更新提示",
+  );
   indent(`配置文件: ${configPath}`);
   indent(`添加配置: "autoupdate": false`);
   blank();
 
-  const shouldWrite = await confirmAction("   是否自动添加此配置? (y/n): ");
+  const shouldWrite = await confirmAction("是否自动添加此配置?");
   if (shouldWrite) {
     const savedPath = setAutoupdateConfig();
     success(`已添加配置: ${savedPath}`);
@@ -109,13 +113,17 @@ async function run(options = {}) {
   if (runningInfo.running) {
     const { processes } = runningInfo;
     const { isWindows } = getPlatform();
-    warn(isPlainMode() ? "警告: 检测到 OpenCode 正在运行！" : "⚠️  检测到 OpenCode 正在运行！");
+    warn(
+      isPlainMode()
+        ? "警告: 检测到 OpenCode 正在运行！"
+        : "⚠️  检测到 OpenCode 正在运行！",
+    );
     indent("以下进程可能阻止部署:");
     for (const proc of processes) {
       indent(`  PID ${proc.pid}: ${proc.command}`, 2);
     }
     blank();
-    const shouldKill = await confirmAction("   是否终止进程并继续部署? (y/n): ");
+    const shouldKill = await confirmAction("是否终止进程并继续部署?");
     if (!shouldKill) {
       indent("已取消部署", 2);
       return false;
@@ -124,7 +132,9 @@ async function run(options = {}) {
     const pids = processes.map((p) => p.pid).join(" ");
     try {
       if (isWindows) {
-        execSync(`taskkill /F /PID ${pids.split(" ").join(" /PID ")}`, { stdio: "pipe" });
+        execSync(`taskkill /F /PID ${pids.split(" ").join(" /PID ")}`, {
+          stdio: "pipe",
+        });
       } else {
         execSync(`kill -9 ${pids}`, { stdio: "pipe" });
       }
@@ -143,7 +153,7 @@ async function run(options = {}) {
   indent(`源文件: ${binaryPath}`);
 
   try {
-    const result = deployBinary(binaryPath);
+    const result = await deployBinary(binaryPath);
     if (result) {
       blank();
       indent("运行 opencode 启动");

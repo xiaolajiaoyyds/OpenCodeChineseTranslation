@@ -8,7 +8,7 @@ const {
   getPlatform,
   ensureDir,
 } = require("./utils.js");
-const { success, warn, error, indent } = require("./colors.js");
+const { success, warn, error, indent, confirmAction } = require("./colors.js");
 
 function getBuildPlatform() {
   const { platform, arch } = getPlatform();
@@ -109,7 +109,7 @@ function getCompiledBinary() {
   return null;
 }
 
-function deployBinary(binaryPath) {
+async function deployBinary(binaryPath) {
   const { isWindows } = getPlatform();
   const existingPath = findExistingOpencode();
   let targetPath;
@@ -121,7 +121,13 @@ function deployBinary(binaryPath) {
     const isRunning = checkOpencodeRunning();
     if (isRunning) {
       warn("检测到 opencode 正在运行");
-      indent("部署前需要终止运行中的进程，是否继续？");
+      const confirmed = await confirmAction(
+        "部署前需要终止运行中的进程，是否继续？",
+      );
+      if (!confirmed) {
+        indent("已取消部署");
+        return null;
+      }
       killRunningOpencode();
       indent("已终止正在运行的 opencode 进程");
     }
@@ -152,7 +158,8 @@ function deployBinary(binaryPath) {
     }
     if (e.code === "EACCES" || e.code === "EPERM") {
       if (isWindows) {
-        error("部署失败，请以管理员身份运行");
+        error("部署失败: 权限不足");
+        indent("请尝试以管理员身份运行终端 (右键 -> 以管理员身份运行)", 2);
         return null;
       }
       indent(`需要管理员权限...`);
@@ -179,11 +186,11 @@ function formatFileSize(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
 }
 
-function deployCompiledBinary() {
+async function deployCompiledBinary() {
   const binary = getCompiledBinary();
   if (!binary) return null;
 
-  const target = deployBinary(binary);
+  const target = await deployBinary(binary);
   if (!target) return null;
 
   let size = null;

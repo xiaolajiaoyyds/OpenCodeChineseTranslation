@@ -22,6 +22,12 @@ const {
   flushStream,
   groupStart,
   groupEnd,
+  nestedStep,
+  nestedSuccess,
+  nestedWarn,
+  nestedError,
+  nestedKv,
+  confirmAction,
 } = require("./colors.js");
 
 function presetToSteps(preset) {
@@ -171,6 +177,31 @@ async function runQualitySourceCheck(i18n, outputIndent = indent) {
     results.push({ ok: "warn", text: `发现 ${unclosedCount} 个潜在问题` });
   }
 
+  // 检查废弃翻译
+  const obsoleteSpinner = createSpinner("检查废弃翻译...");
+  obsoleteSpinner.start();
+  const obsolete = i18n.checkObsoleteTranslations();
+  if (obsolete.length > 0) {
+    obsoleteSpinner.stop();
+
+    // 询问用户是否清理废弃翻译
+    const shouldClean = await confirmAction(
+      `发现 ${obsolete.length} 个废弃翻译配置，是否清理？`,
+    );
+    if (shouldClean) {
+      const removed = i18n.removeObsoleteTranslations(obsolete);
+      results.push({ ok: true, text: `已清理 ${removed} 个废弃翻译配置` });
+    } else {
+      results.push({
+        ok: "warn",
+        text: `跳过清理 ${obsolete.length} 个废弃翻译文件`,
+      });
+    }
+  } else {
+    obsoleteSpinner.stop();
+    results.push({ ok: true, text: "无废弃翻译文件" });
+  }
+
   blank();
   for (const r of results) {
     if (r.ok === true) indent(`${c.green}✓${c.reset} ${r.text}`);
@@ -268,34 +299,16 @@ function printPipelineSummary(preset, result) {
 
     if (stepResult.name === "repairPack") {
       if (d.newFiles && typeof d.newFiles.total === "number") {
-        indent(`新增需汉化文件: ${d.newFiles.total} 个`, 4);
-      }
-      if (d.newFiles && typeof d.newFiles.translatedFiles === "number") {
+        indent(`质量检查: 扫描 ${d.quality?.checked || 0} 条`);
         indent(
-          `新增文件写入语言包: ${d.newFiles.translatedFiles} 个 / ${d.newFiles.translatedEntries} 条`,
-          4,
-        );
-      }
-      if (d.scan) {
-        if (typeof d.scan.successCount === "number") {
-          indent(
-            `补齐遗漏翻译: 成功 ${d.scan.successCount}，失败 ${d.scan.failCount}`,
-            4,
-          );
-        }
-      }
-      if (d.quality) {
-        indent(`质量检查: 扫描 ${d.quality.checked} 条`, 4);
-        indent(
-          `语法问题: ${d.quality.syntaxErrors}，AI 语义问题: ${d.quality.aiIssues}`,
-          4,
+          `语法问题: ${d.quality?.syntaxErrors || 0}，AI 语义问题: ${d.quality?.aiIssues || 0}`,
         );
       }
     }
 
     if (stepResult.name === "applyToSource" && d) {
       if (typeof d.files === "number" && typeof d.replacements === "number") {
-        indent(`替换结果: ${d.files} 个文件, ${d.replacements} 处替换`, 4);
+        indent(`替换结果: ${d.files} 个文件, ${d.replacements} 处替换`);
       }
     }
   }
@@ -305,10 +318,10 @@ function printPipelineSummary(preset, result) {
     printStepSummary(deployToLocalInfo);
     const d = deployToLocalInfo.details || {};
     if (d.target) {
-      indent(`已部署到: ${d.target}`, 4);
+      indent(`已部署到: ${d.target}`);
     }
     if (d.size) {
-      indent(`大小: ${d.size}`, 4);
+      indent(`大小: ${d.size}`);
     }
   }
 
@@ -317,10 +330,10 @@ function printPipelineSummary(preset, result) {
     printStepSummary(deployInfo);
     const d = deployInfo.details || {};
     if (d.target) {
-      indent(`已部署到: ${d.target}`, 4);
+      indent(`已部署到: ${d.target}`);
     }
     if (d.size) {
-      indent(`大小: ${d.size}`, 4);
+      indent(`大小: ${d.size}`);
     }
   }
 
@@ -425,10 +438,10 @@ function buildSteps(options = {}) {
       let qualityRes = null;
 
       if (!skipPackTranslate) {
-        step("语言包阶段: 扫描新增文件");
+        nestedStep("语言包阶段: 扫描新增文件");
         const newFiles = i18n.detectNewFiles();
         if (newFiles.length > 0) {
-          kv("新增需汉化文件", `${newFiles.length} 个`);
+          nestedKv("新增需汉化文件", `${newFiles.length} 个`);
           if (translator.checkConfig()) {
             const spinner = createSpinner("AI 分析新增文件...");
             spinner.start();
@@ -436,26 +449,28 @@ function buildSteps(options = {}) {
               silent: true,
               dryRun,
             });
-            spinner.stop("分析完成");
+            spinner.stop();
             if (newFileStats?.translatedFiles) {
-              success(
+              nestedSuccess(
                 dryRun
                   ? `(dry-run) 将写入 ${newFileStats.translatedFiles} 个配置 / ${newFileStats.translatedEntries} 条`
                   : `已写入 ${newFileStats.translatedFiles} 个配置 / ${newFileStats.translatedEntries} 条`,
               );
             }
           } else {
-            warn("未配置 OPENAI_API_KEY，跳过新增文件 AI 分析/翻译");
+            nestedWarn("未配置 OPENAI_API_KEY，跳过新增文件 AI 分析/翻译");
           }
         } else {
-          success("没有新增需要汉化的文件");
+          nestedSuccess("没有新增需要汉化的文件");
         }
         blank();
       }
 
       if (!skipPackTranslate) {
-        step("语言包阶段: 扫描遗漏翻译");
+        nestedStep("语言包阶段: 扫描遗漏翻译");
         if (translator.checkConfig()) {
+          const spinner = createSpinner("正在扫描并翻译...");
+          spinner.start();
           scanRes = incremental
             ? await translator.incrementalTranslate({
                 since,
@@ -463,16 +478,17 @@ function buildSteps(options = {}) {
                 dryRun,
               })
             : await translator.scanAndTranslate({ dryRun });
-          if (!scanRes.success) warn("部分翻译失败，继续后续步骤");
+          spinner.stop();
+          if (!scanRes.success) nestedWarn("部分翻译失败，继续后续步骤");
           ctx.newTranslations = scanRes;
         } else {
-          warn("未配置 OPENAI_API_KEY，跳过遗漏翻译补齐");
+          nestedWarn("未配置 OPENAI_API_KEY，跳过遗漏翻译补齐");
         }
         blank();
       }
 
       if (!skipPackQuality) {
-        step("语言包阶段: 质量检查与修复");
+        nestedStep("语言包阶段: 质量检查与修复");
         const hasAI = translator.checkConfig();
         qualityRes = await translator.checkQuality({
           fix: hasAI,
@@ -481,16 +497,16 @@ function buildSteps(options = {}) {
           dryRun,
           sampleSize: qualitySampleSize,
         });
-        if (!qualityRes.success) warn("语言包质量未完全通过");
+        if (!qualityRes.success) nestedWarn("语言包质量未完全通过");
         blank();
       }
 
       if (!skipPackVerify) {
-        step("语言包阶段: 验证");
+        nestedStep("语言包阶段: 验证");
         const errors = i18n.validate();
         if (errors.length > 0) {
-          error("发现配置错误:");
-          errors.forEach((e) => indent(`- ${e}`, 2));
+          nestedError("发现配置错误:");
+          errors.forEach((e) => indent(`- ${e}`, 4));
           return {
             ok: false,
             changed: false,
@@ -498,7 +514,7 @@ function buildSteps(options = {}) {
             details: errors,
           };
         }
-        success("语言包验证通过");
+        nestedSuccess("语言包验证通过");
         blank();
       }
 
@@ -560,12 +576,10 @@ function buildSteps(options = {}) {
     applyToSource: async (ctx) => {
       const i18n = ctx.i18n || new I18n();
       ctx.i18n = i18n;
-      if (dryRun)
-        return { ok: true, changed: false, summary: "dry-run 跳过应用" };
-      step("应用语言包到源码");
+      nestedStep("应用语言包到源码");
       const result = await i18n.apply({ silent: true, skipNewFileCheck: true });
-      success(
-        `汉化应用完成: ${result.files} 个文件, ${result.replacements} 处替换`,
+      nestedSuccess(
+        `汉化应用完成: ${result.files} 个文件, ${result.replacements}处替换`,
       );
       ctx.applyResult = result;
       blank();
@@ -574,6 +588,64 @@ function buildSteps(options = {}) {
         changed: result.replacements > 0,
         summary: "已应用到源码",
         details: result,
+      };
+    },
+    qualitySource: async (ctx) => {
+      if (skipQualitySource)
+        return { ok: true, changed: false, summary: "跳过替换后质量检查" };
+      if (dryRun)
+        return {
+          ok: true,
+          changed: false,
+          summary: "dry-run 跳过替换后质量检查",
+        };
+      const i18n = ctx.i18n || new I18n();
+      const ok = await runQualitySourceCheck(i18n, (m) => indent(m, 4));
+      blank();
+      return {
+        ok,
+        changed: false,
+        summary: ok ? "替换后质量检查通过" : "替换后质量检查失败",
+      };
+    },
+    build: async () => {
+      if (skipBuild) return { ok: true, changed: false, summary: "跳过编译" };
+      if (dryRun)
+        return { ok: true, changed: false, summary: "dry-run 跳过编译" };
+
+      nestedStep("编译构建");
+      const builder = new Builder();
+      const ok = await builder.build({ silent: false, nested: true });
+      if (!ok) {
+        return { ok: false, changed: false, summary: "编译失败" };
+      }
+      if (buildDeployToLocal) {
+        await builder.deployToLocal({ silent: false, nested: true });
+      }
+      blank();
+      return { ok: true, changed: true, summary: "编译完成" };
+    },
+    deploy: async () => {
+      if (skipDeploy) return { ok: true, changed: false, summary: "跳过部署" };
+      if (dryRun)
+        return { ok: true, changed: false, summary: "dry-run 跳过部署" };
+
+      nestedStep("部署到系统 PATH");
+      const result = await deployCompiledBinary();
+      blank();
+      if (result) {
+        return {
+          ok: true,
+          changed: true,
+          summary: "部署完成",
+          details: { target: result.target, size: result.size },
+        };
+      }
+      return {
+        ok: false,
+        changed: false,
+        summary: "部署失败",
+        details: null,
       };
     },
     qualitySource: async (ctx) => {
@@ -613,8 +685,8 @@ function buildSteps(options = {}) {
       if (skipDeploy) return { ok: true, changed: false, summary: "跳过部署" };
       if (dryRun)
         return { ok: true, changed: false, summary: "dry-run 跳过部署" };
-      step("部署到系统 PATH");
-      const result = deployCompiledBinary();
+      nestedStep("部署到系统 PATH");
+      const result = await deployCompiledBinary();
       blank();
       if (result) {
         return {
@@ -640,12 +712,18 @@ async function runPipeline(preset, options = {}) {
   const ctx = {};
   const results = [];
 
+  // 整个流程用 groupStart/End 包裹
+  groupStart("一键汉化流程");
+  blank();
+
   for (const stepName of stepsToRun) {
     const fn = steps[stepName];
     if (!fn) continue;
     results.push(await runStep(ctx, stepName, fn));
     if (!results[results.length - 1].ok) break;
   }
+
+  groupEnd();
 
   return {
     ok: results.every((r) => r.ok),

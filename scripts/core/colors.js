@@ -66,6 +66,27 @@ const S = {
   SKIP: "○",
 };
 
+// 标准缩进配置（统一管理所有缩进宽度）
+const INDENT = {
+  // L1 主步骤层
+  L1_CONTENT: 2,              // │ 之后空格数
+  
+  // L2 子步骤层
+  L2_PREFIX: 2,               // │ 之后到 ├─ 的空格数
+  
+  // L3 详情层
+  L3_PREFIX: 2,               // │ 之后空格数
+  L3_CONTENT: 3,              // 第二个 │ 之后空格数
+  
+  // 流式输出（AI）
+  STREAM_BASE: 4,             // 基础缩进
+  STREAM_LIST: 6,             // 列表项缩进
+};
+
+function getIndent(level) {
+  return " ".repeat(level);
+}
+
 function colorize(text, color) {
   const code = colors[color] || colors.reset;
   return `${code}${text}${colors.reset}`;
@@ -127,37 +148,33 @@ function step(title) {
 }
 
 function success(message) {
-  const bar = `${colors.gray}${S.BAR}${colors.reset}`;
-  out(`${bar} ${colors.green}${S.SUCCESS}${colors.reset} ${message}`);
+  out(`${colors.green}${S.SUCCESS}${colors.reset} ${message}`);
 }
 
 function error(message) {
-  const bar = `${colors.gray}${S.BAR}${colors.reset}`;
-  out(`${bar} ${colors.red}${S.ERROR}${colors.reset} ${message}`);
+  out(`${colors.red}${S.ERROR}${colors.reset} ${message}`);
 }
 
 function warn(message) {
-  const bar = `${colors.gray}${S.BAR}${colors.reset}`;
-  out(`${bar} ${colors.yellow}${S.WARN}${colors.reset} ${message}`);
+  out(`${colors.yellow}${S.WARN}${colors.reset} ${message}`);
 }
 
 function info(message) {
-  const bar = `${colors.gray}${S.BAR}${colors.reset}`;
-  out(`${bar} ${colors.blue}${S.INFO}${colors.reset} ${message}`);
+  out(`${colors.blue}${S.INFO}${colors.reset} ${message}`);
 }
 
 function skip(message) {
-  const bar = `${colors.gray}${S.BAR}${colors.reset}`;
   out(
-    `${bar} ${colors.gray}${S.SKIP}${colors.reset} ${colors.gray}${message}${colors.reset}`,
+    `${colors.gray}${S.SKIP}${colors.reset} ${colors.gray}${message}${colors.reset}`,
   );
 }
 
 function indent(message, level = 1) {
   if (message == null) return;
-  const bar = `${colors.gray}${S.BAR}${colors.reset}`;
-  const prefix = level > 0 ? `${bar}  ` : "";
-  out(`${prefix}${message}`);
+  
+  // 纯空格缩进，匹配 clack 风格
+  const spaces = "  ".repeat(level);
+  out(`${spaces}${message}`);
 }
 
 function separator(char = "─", length = 40) {
@@ -182,42 +199,42 @@ function groupEnd() {
 function nestedStep(title) {
   const bar = `${colors.gray}${S.BAR}${colors.reset}`;
   out(
-    `${bar}  ${colors.cyan}├─${colors.reset} ${colors.bold}${title}${colors.reset}`,
+    `${bar}  ${colors.gray}├─${colors.reset} ${colors.bold}${title}${colors.reset}`,
   );
 }
 
 function nestedContent(message) {
   const bar = `${colors.gray}${S.BAR}${colors.reset}`;
   out(
-    `${bar}  ${colors.cyan}│${colors.reset}   ${colors.dim}${message}${colors.reset}`,
+    `${bar}  ${colors.gray}│${colors.reset}   ${colors.dim}${message}${colors.reset}`,
   );
 }
 
 function nestedSuccess(message) {
   const bar = `${colors.gray}${S.BAR}${colors.reset}`;
   out(
-    `${bar}  ${colors.cyan}│${colors.reset}   ${colors.green}${S.SUCCESS}${colors.reset} ${message}`,
+    `${bar}  ${colors.gray}│${colors.reset}   ${colors.green}${S.SUCCESS}${colors.reset} ${message}`,
   );
 }
 
 function nestedWarn(message) {
   const bar = `${colors.gray}${S.BAR}${colors.reset}`;
   out(
-    `${bar}  ${colors.cyan}│${colors.reset}   ${colors.yellow}${S.WARN}${colors.reset} ${message}`,
+    `${bar}  ${colors.gray}│${colors.reset}   ${colors.yellow}${S.WARN}${colors.reset} ${message}`,
   );
 }
 
 function nestedError(message) {
   const bar = `${colors.gray}${S.BAR}${colors.reset}`;
   out(
-    `${bar}  ${colors.cyan}│${colors.reset}   ${colors.red}${S.ERROR}${colors.reset} ${message}`,
+    `${bar}  ${colors.gray}│${colors.reset}   ${colors.red}${S.ERROR}${colors.reset} ${message}`,
   );
 }
 
 function nestedKv(key, value) {
   const bar = `${colors.gray}${S.BAR}${colors.reset}`;
   out(
-    `${bar}  ${colors.cyan}│${colors.reset}   ${colors.dim}${key}${colors.reset}  ${value}`,
+    `${bar}  ${colors.gray}│${colors.reset}   ${colors.dim}${key}${colors.reset}  ${value}`,
   );
 }
 
@@ -229,7 +246,7 @@ function nestedFinal(message, type = "success") {
       : type === "warn"
         ? `${colors.yellow}${S.WARN}${colors.reset}`
         : `${colors.red}${S.ERROR}${colors.reset}`;
-  out(`${bar}  ${colors.cyan}└─${colors.reset} ${icon} ${message}`);
+  out(`${bar}  ${colors.gray}└─${colors.reset} ${icon} ${message}`);
 }
 
 const coloredLog = {
@@ -579,33 +596,37 @@ class Spinner {
   start(text) {
     if (text) this.text = text;
     this.current = 0;
+    this.isStopped = false;
 
     if (!process.stdout.isTTY) {
-      out(`${colors.gray}${S.BAR}${colors.reset}  ${this.text}...`);
+      out(`  ${this.text}...`);
       return this;
     }
 
     if (this.themeName === "opencode") {
       this.timer = setInterval(() => {
+        if (this.isStopped) return;
         const bar = this._renderKnightRiderBar(this.current);
         process.stdout.write(
-          `\r${colors.gray}${S.BAR}${colors.reset}  ${colors.dim}${this.text}${colors.reset} ${bar}   `,
+          `\r  ${colors.dim}${this.text}${colors.reset} ${bar}   `,
         );
         this.current = (this.current + 1) % this.krTotalFrames;
       }, 40);
     } else if (this.themeName === "gradient") {
       this.timer = setInterval(() => {
+        if (this.isStopped) return;
         const bar = this._renderGradientBar(this.current + 1);
         process.stdout.write(
-          `\r${colors.gray}${S.BAR}${colors.reset}  ${colors.dim}${this.text}${colors.reset} ${bar}   `,
+          `\r  ${colors.dim}${this.text}${colors.reset} ${bar}   `,
         );
         this.current = (this.current + 1) % (this.barLength + 1);
       }, 150);
     } else {
       this.timer = setInterval(() => {
+        if (this.isStopped) return;
         const frame = this.theme.frames[this.current];
         process.stdout.write(
-          `\r${colors.gray}${S.BAR}${colors.reset}  ${colors.dim}${this.text}${colors.reset} ${colors.cyan}${frame}${colors.reset}   `,
+          `\r  ${colors.dim}${this.text}${colors.reset} ${colors.cyan}${frame}${colors.reset}   `,
         );
         this.current = (this.current + 1) % this.theme.frames.length;
       }, 120);
@@ -619,6 +640,7 @@ class Spinner {
   }
 
   stop(finalText, isSuccess = true) {
+    this.isStopped = true;
     if (this.timer) {
       clearInterval(this.timer);
       this.timer = null;
@@ -628,9 +650,7 @@ class Spinner {
       if (finalText) {
         const icon = isSuccess ? "✓" : "✗";
         const iconColor = isSuccess ? colors.green : colors.red;
-        out(
-          `${colors.gray}${S.BAR}${colors.reset}  ${iconColor}${icon}${colors.reset} ${finalText}`,
-        );
+        out(`  ${iconColor}${icon}${colors.reset} ${finalText}`);
       }
       return this;
     }
@@ -656,23 +676,25 @@ class Spinner {
         ? `${colors.green}✓${colors.reset}`
         : `${colors.red}✗${colors.reset}`;
       const textColor = isSuccess ? colors.reset : colors.red;
+      // 完成后不显示进度条，用 \x1b[K 清除行尾残留
       process.stdout.write(
-        `\r${colors.gray}${S.BAR}${colors.reset}  ${icon} ${textColor}${finalText}${colors.reset} ${bar}        \n`,
+        `\r  ${icon} ${textColor}${finalText}${colors.reset}\x1b[K\n`,
       );
     } else if (this.themeName === "gradient") {
-      const successBar =
-        "\x1b[38;5;205m█\x1b[38;5;206m█\x1b[38;5;207m█\x1b[38;5;177m█\x1b[0m";
-      const failBar = `${colors.red}░░░░${colors.reset}`;
-      const bar = isSuccess ? successBar : failBar;
       const textColor = isSuccess ? colors.reset : colors.red;
+      const icon = isSuccess
+        ? `${colors.green}✓${colors.reset}`
+        : `${colors.red}✗${colors.reset}`;
+      // 完成后不显示进度条，用 \x1b[K 清除行尾残留
       process.stdout.write(
-        `\r${colors.gray}${S.BAR}${colors.reset}  ${colors.green}✓${colors.reset} ${textColor}${finalText}${colors.reset} ${bar}        \n`,
+        `\r  ${icon} ${textColor}${finalText}${colors.reset}\x1b[K\n`,
       );
     } else {
       const msg = isSuccess ? this.theme.success : this.theme.fail;
       const color = isSuccess ? colors.green : colors.red;
+      // 用 \x1b[K 清除行尾残留
       process.stdout.write(
-        `\r${colors.gray}${S.BAR}${colors.reset}  ${finalText} ${color}${msg}${colors.reset}        \n`,
+        `\r  ${finalText} ${color}${msg}${colors.reset}\x1b[K\n`,
       );
     }
     return this;
@@ -694,7 +716,7 @@ class Spinner {
     const bar = `${colors.gray}${S.BAR}${colors.reset}`;
     if (process.stdout.isTTY) {
       process.stdout.write(
-        `\r${bar}${colors.yellow}${S.WARN}${colors.reset} ${text}        \n`,
+        `\r${bar}${colors.yellow}${S.WARN}${colors.reset} ${text}\x1b[K\n`,
       );
     } else {
       out(`${bar}${colors.yellow}${S.WARN}${colors.reset} ${text}`);
@@ -795,6 +817,50 @@ function statusBadge(status) {
   }
 }
 
+/**
+ * 创建输出助手（根据 nested 模式返回对应函数）
+ * 用于减少 apply.js/verify.js 等文件中的重复代码
+ */
+function createOutputHelper(nested = false) {
+  return {
+    step: nested ? nestedStep : step,
+    success: nested ? nestedSuccess : success,
+    warn: nested ? nestedWarn : warn,
+    error: nested ? nestedError : error,
+    content: nested ? nestedContent : indent,
+    kv: nested ? nestedKv : kv,
+    final: nested ? nestedFinal : success,
+  };
+}
+
+/**
+ * 统一的确认对话框（TTY 用 clack，非 TTY 回退 readline）
+ */
+async function confirmAction(message) {
+  const p = require("@clack/prompts");
+  const readline = require("readline");
+
+  if (!process.stdout.isTTY) {
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
+    return new Promise((resolve) => {
+      rl.question(`${message} (y/n): `, (answer) => {
+        rl.close();
+        const ans = answer.toLowerCase().trim();
+        resolve(ans === "y" || ans === "yes");
+      });
+    });
+  }
+  const answer = await p.confirm({ message, initialValue: false });
+  if (p.isCancel(answer)) {
+    p.cancel("已取消");
+    return null;
+  }
+  return answer;
+}
+
 module.exports = {
   colors,
   isPlainMode: () => PLAIN_MODE,
@@ -825,9 +891,13 @@ module.exports = {
   createSpinner,
   Spinner,
   S,
+  INDENT,
+  getIndent,
   out,
   flushStream,
   stripAnsi,
   displayWidth,
+  createOutputHelper,
+  confirmAction,
   ...coloredLog,
 };

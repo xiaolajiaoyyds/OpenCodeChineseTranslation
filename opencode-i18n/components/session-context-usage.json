@@ -1,9 +1,0 @@
-{
-  "file": "src/components/session-context-usage.tsx",
-  "description": "会话上下文使用组件",
-  "deprecated": true,
-  "replacements": {
-    ">Context<": ">上下文 (Context)<",
-    ">tokens<": ">令牌 (tokens)<"
-  }
-}
