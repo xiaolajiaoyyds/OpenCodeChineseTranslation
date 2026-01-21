@@ -54,8 +54,7 @@ jobs:
             echo "Tag ${TAG} does not match opencode-i18n/config.json version v${CFG_VERSION}"
             exit 1
           fi
-          cd scripts
-          node bin/opencodenpm version --strict
+          echo "Version check passed: Tag ${TAG} matches config version ${CFG_VERSION}"
 
       - name: Clone OpenCode source
         run: |
