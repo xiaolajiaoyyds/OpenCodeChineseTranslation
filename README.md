@@ -1,8 +1,8 @@
-# OpenCode 中文汉化版 v1.1.28-zh
+# OpenCode 中文汉化版 v1.1.30-zh
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![OpenCode](https://img.shields.io/badge/OpenCode-v1.1.28-brightgreen)](https://github.com/anomalyco/opencode)
-[![汉化版](https://img.shields.io/badge/汉化版-1.1.28--zh-orange)](https://github.com/xiaolajiaoyyds/OpenCodeChineseTranslation)
+[![汉化版](https://img.shields.io/badge/汉化版-1.1.30--zh-orange)](https://github.com/xiaolajiaoyyds/OpenCodeChineseTranslation)
 
 > **OpenCode** 是由 [Anomaly Company](https://anomaly.company/) 开发的开源 AI 编程代理。
 > 本项目提供完整的中文本地化，通过 AI 辅助翻译和质量检查实现高质量汉化。
@@ -43,19 +43,29 @@
 
 ---
 
-## ✨ v1.1.28-zh 新特性
+## ✨ v1.1.30-zh 新特性
 
-### 🎨 TUI 视觉体验升级
+### 🎨 三层格式系统
 
-- **统一输出系统**：嵌套输出连接线青色统一，状态徽章 `●` 按颜色区分
+全新的输出架构，所有界面元素统一为三层结构：
+
+- **L1 主内容层**：`│` + 2 空格 - 主要信息展示
+- **L2 子步骤层**：`│` + 2 空格 + `├─` - 步骤分解
+- **L3 详情层**：`│` + 2 空格 + `│` + 3 空格 + `●` - 详细信息
+
+### 🎯 TUI 视觉体验升级
+
+- **部署信息优化**：部署步骤结果移至执行总结框内统一展示，流程更清晰
+- **AI 总结对齐**：修复 AI 总结首行缩进，多行文本完美对齐
 - **Knight Rider 流星动画**：AI 总结打字机效果带 14 格粉色渐变尾巴
-- **AI 总结格式化**：结构化要点（`▸` 青色）、`【重点】` 黄色高亮
 - **智能换行**：只在标点符号后断行，避免中文断字
+- **用户体验**：AI 语义质量检查添加可选确认（Yes/No），节省 API 消耗
 
 ### 🔧 工具改进
 
+- **静默模式支持**：deployer.js 添加 silent 参数，支持后台静默部署
 - **交互式菜单**：系统环境、运行状态、项目信息一目了然
-- **构建日志优化**：减少日志混乱，输出更加整洁
+- **输出风格统一**：全面匹配 @clack/prompts 视觉风格
 - **跨平台支持**：Node.js CLI 替代 PowerShell，macOS/Linux/Windows 通用
 
 ---
