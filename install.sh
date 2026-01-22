@@ -85,8 +85,8 @@ LATEST_JSON=$(curl -s --max-time 10 "https://api.github.com/repos/$REPO/releases
 TAG_NAME=$(echo "$LATEST_JSON" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
 
 if [ -z "$TAG_NAME" ]; then
-    echo -e "${YELLOW}警告: 无法获取最新版本，尝试使用默认版本 v7.3.1${NC}"
-    TAG_NAME="v7.3.1"
+    echo -e "${YELLOW}警告: 无法获取最新版本，尝试使用默认版本 v7.3.2${NC}"
+    TAG_NAME="v7.3.2"
 else
     echo -e "最新版本: ${GREEN}${TAG_NAME}${NC}"
 fi

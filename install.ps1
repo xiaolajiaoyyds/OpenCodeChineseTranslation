@@ -59,8 +59,8 @@ try {
     $tagName = $latest.tag_name
     Write-Color "最新版本: $tagName" "Green"
 } catch {
-    Write-Color "警告: 无法获取最新版本，尝试使用默认版本 v7.3.1" "Yellow"
-    $tagName = "v7.3.1"
+    Write-Color "警告: 无法获取最新版本，尝试使用默认版本 v7.3.2" "Yellow"
+    $tagName = "v7.3.2"
 }
 
 # 3. 下载

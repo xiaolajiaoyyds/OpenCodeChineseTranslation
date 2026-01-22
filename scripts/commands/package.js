@@ -44,7 +44,7 @@ function getI18nVersion() {
 function getOpencodeChangelog(limit = 10) {
   try {
     const opencodeDir = getOpencodeDir();
-    if (!fs.existsSync(opencodeDir)) return '';
+    if (!fs.existsSync(opencodeDir)) return '- 无法获取更新日志 (源码目录不存在)';
 
     // 获取最近的提交记录
     const logOutput = exec(`git log -n ${limit} --format="- %s ([%h](https://github.com/anomalyco/opencode/commit/%H))"`, { 
@@ -52,9 +52,9 @@ function getOpencodeChangelog(limit = 10) {
       stdio: 'pipe' 
     });
     
-    return logOutput.trim();
+    return logOutput.trim() || '- 暂无更新日志';
   } catch (e) {
-    return '- 无法获取更新日志';
+    return `- 无法获取更新日志: ${e.message}`;
   }
 }
 

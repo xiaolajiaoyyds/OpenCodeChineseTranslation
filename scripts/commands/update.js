@@ -33,7 +33,7 @@ async function run(options = {}) {
   const result = await cloneRepo(
     'https://github.com/anomalyco/opencode.git',
     opencodeDir,
-    { depth: 1 }
+    { depth: 20 }
   );
 
   return result;
