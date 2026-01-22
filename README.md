@@ -56,7 +56,7 @@ curl -fsSL https://cdn.jsdelivr.net/gh/1186258278/OpenCodeChineseTranslation@mai
 
 **Windows (PowerShell)**
 ```powershell
-irm https://cdn.jsdelivr.net/gh/1186258278/OpenCodeChineseTranslation@main/install.ps1 | iex
+irm https://cdn.jsdelivr.net/gh/1186258278/OpenCodeChineseTranslation@main/install.ps1 -OutFile install.ps1; .\install.ps1
 ```
 
 > 💡 **提示**: 以上命令使用了 jsDelivr CDN 加速，解决了 GitHub `raw.githubusercontent.com` 在国内访问不稳定的问题。

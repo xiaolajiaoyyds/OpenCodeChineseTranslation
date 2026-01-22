@@ -78,8 +78,17 @@ try {
     Invoke-WebRequest -Uri $zipUrl -OutFile $tempZip
     Write-Color "下载成功!" "Green"
 } catch {
-    Write-Color "下载失败! 请检查网络连接。" "Red"
-    exit 1
+    Write-Color "GitHub 直接下载失败，尝试使用加速镜像..." "Yellow"
+    try {
+        # 使用 ghproxy 镜像加速
+        $mirrorUrl = "https://mirror.ghproxy.com/" + $zipUrl
+        Invoke-WebRequest -Uri $mirrorUrl -OutFile $tempZip
+        Write-Color "镜像下载成功!" "Green"
+    } catch {
+        Write-Color "下载失败! 请检查网络连接或尝试手动下载。" "Red"
+        Write-Color "手动下载链接: $zipUrl" "Gray"
+        exit 1
+    }
 }
 
 # 4. 解压安装
