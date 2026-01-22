@@ -1,6 +1,8 @@
 name: Release
 
 on:
+  schedule:
+    - cron: '0 0 * * *' # 每天 UTC 0点 (北京时间 8:00) 自动检查更新
   push:
     tags:
       - "v*"
@@ -79,6 +81,7 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
+          name: OpenCode 中文汉化版 v${{ steps.release_info.outputs.version }}
           files: releases/v${{ steps.release_info.outputs.version }}/*
           body_path: ${{ steps.release_info.outputs.notes_file }}
           draft: false

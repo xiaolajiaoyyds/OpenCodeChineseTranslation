@@ -3,6 +3,9 @@
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/version-v7.0-green.svg)](scripts/package.json)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue.svg)](#)
+[![Release](https://img.shields.io/github/v/release/1186258278/OpenCodeChineseTranslation?label=最新汉化版)](https://github.com/1186258278/OpenCodeChineseTranslation/releases/latest)
+
+> 🚀 **想要直接使用？** [点击下载最新汉化工具 (opencode-i18n-tool.zip)](https://github.com/1186258278/OpenCodeChineseTranslation/releases/latest)
 
 [English Documentation](README_EN.md)
 
@@ -47,8 +50,19 @@
 
 ### 2. 安装管理工具
 
-推荐全局安装 `opencodenpm` 管理工具，以便在任意位置管理项目。
+推荐使用**一键安装脚本**，自动配置环境并安装 `opencodenpm` 管理工具。
 
+**Linux / macOS**
+```bash
+curl -fsSL https://raw.githubusercontent.com/1186258278/OpenCodeChineseTranslation/main/install.sh | bash
+```
+
+**Windows (PowerShell)**
+```powershell
+irm https://raw.githubusercontent.com/1186258278/OpenCodeChineseTranslation/main/install.ps1 | iex
+```
+
+或者手动安装：
 ```bash
 # 进入脚本目录
 cd scripts

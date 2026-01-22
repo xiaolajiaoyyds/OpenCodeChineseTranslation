@@ -38,6 +38,26 @@ function getI18nVersion() {
 /**
  * 获取 OpenCode 源码版本信息
  */
+/**
+ * 获取 OpenCode 官方更新日志
+ */
+function getOpencodeChangelog(limit = 10) {
+  try {
+    const opencodeDir = getOpencodeDir();
+    if (!fs.existsSync(opencodeDir)) return '';
+
+    // 获取最近的提交记录
+    const logOutput = exec(`git log -n ${limit} --format="- %s ([%h](https://github.com/anomalyco/opencode/commit/%H))"`, { 
+      cwd: opencodeDir, 
+      stdio: 'pipe' 
+    });
+    
+    return logOutput.trim();
+  } catch (e) {
+    return '- 无法获取更新日志';
+  }
+}
+
 function getOpencodeVersion() {
   try {
     const opencodeDir = getOpencodeDir();
@@ -90,6 +110,9 @@ function generateReleaseNotes(version, opencodeInfo, packages) {
   const now = new Date();
   const dateStr = now.toISOString().split('T')[0];
   const timeStr = now.toISOString().split('T')[1].split('.')[0];
+  
+  // 获取官方更新日志
+  const changelog = getOpencodeChangelog(15);
 
   let notes = `# OpenCode 中文汉化版 v${version}
 
@@ -113,21 +136,21 @@ function generateReleaseNotes(version, opencodeInfo, packages) {
 
 ---
 
-## ✨ 更新内容
+## 🚀 官方近期更新 (Upstream Changes)
 
-<!-- 请在此处填写本次更新的主要内容 -->
+以下是 OpenCode 官方仓库最近 15 次提交记录：
+
+${changelog}
+
+---
+
+## ✨ 汉化版更新内容
+
+<!-- 请在此处填写汉化脚本的更新内容 -->
 
 ### 🆕 新增功能
--
-
-### 🔧 改进优化
--
-
-### 🐛 问题修复
--
-
-### 📝 其他变更
--
+- 自动化构建与发布流程
+- 一键安装脚本 (install.sh / install.ps1)
 
 ---
 
