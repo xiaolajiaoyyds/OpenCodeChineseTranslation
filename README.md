@@ -272,6 +272,56 @@ OpenCodeChineseTranslation/
 
 ---
 
+## ❓ 常见问题
+
+### 编译错误：找不到模块或语法错误
+
+**问题现象：**
+```
+error: Could not resolve: "./dialog-session - 重命名"
+error: Unexpected token, expected ","
+```
+
+**原因：** 使用了旧版本或有问题的汉化配置文件。
+
+**解决方案：**
+```bash
+# 1. 更新到最新版本
+cd OpenCodeChineseTranslation
+git pull origin main
+
+# 2. 恢复官方源码纯净状态
+cd opencode-zh-CN/packages/opencode
+git checkout -- .
+
+# 3. 重新执行汉化
+cd ../../../
+node scripts/bin/opencodenpm sync
+node scripts/bin/opencodenpm full
+```
+
+**预防措施：**
+- 定期执行 `git pull origin main` 更新汉化工具
+- 不要手动修改 `opencode-i18n/` 目录中的配置文件
+- 使用 `sync` 命令确保源码和汉化同步
+
+---
+
+### 汉化工具版本检查
+
+```bash
+# 查看当前版本
+opencodenpm --version
+
+# 检查是否有更新
+cd OpenCodeChineseTranslation
+git log --oneline -1
+```
+
+如果本地版本低于 `v1.1.31-zh`，请立即更新。
+
+---
+
 ## 🔗 相关链接
 
 - **项目地址**: https://github.com/xiaolajiaoyyds/OpenCodeChineseTranslation
