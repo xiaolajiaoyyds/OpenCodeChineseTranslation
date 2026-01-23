@@ -142,7 +142,7 @@
         <div class="max-w-5xl mx-auto text-center">
             <a href="https://github.com/1186258278/OpenCodeChineseTranslation/releases/latest" target="_blank" class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/30 bg-primary/10 text-primary text-xs font-medium mb-8 hover:bg-primary/20 transition cursor-pointer">
                 <span class="flex h-2 w-2 rounded-full bg-primary animate-pulse"></span>
-                <span id="latest-version">v7.3.2</span> 已发布 · 每日构建
+                <span id="latest-version">v8.1.0</span> 已发布 · 每日构建
                 <i class="fa-solid fa-chevron-right text-[10px] opacity-50"></i>
             </a>
             
@@ -171,7 +171,7 @@
                     </div>
                     <div>
                         <h3 class="text-xl font-bold text-white flex items-center gap-2">
-                            <span id="dash-version">v7.3.2</span>
+                            <span id="dash-version">v8.1.0</span>
                             <span class="text-xs font-normal text-gray-400 bg-white/10 px-2 py-0.5 rounded" id="dash-date">...</span>
                         </h3>
                     </div>
@@ -216,7 +216,7 @@
                                 </div>
                             </div>
                             <div class="p-4 relative group">
-                                <code id="cmd-win" class="text-xs md:text-sm text-blue-200 font-mono break-all block pr-16 leading-relaxed">irm https://cdn.jsdelivr.net/gh/1186258278/OpenCodeChineseTranslation@main/install.ps1 -OutFile $env:TEMP\opencode-install.ps1; & $env:TEMP\opencode-install.ps1</code>
+                                <code id="cmd-win" class="text-xs md:text-sm text-blue-200 font-mono break-all block pr-16 leading-relaxed">irm https://raw.githubusercontent.com/1186258278/OpenCodeChineseTranslation/main/install.ps1 | iex</code>
                                 <button onclick="copyText('cmd-win', this)" class="absolute right-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition backdrop-blur-sm border border-white/5">
                                     <i class="fa-regular fa-copy"></i>
                                 </button>
@@ -235,7 +235,7 @@
                                 </div>
                             </div>
                             <div class="p-4 relative group">
-                                <code id="cmd-unix" class="text-xs md:text-sm text-yellow-200 font-mono break-all block pr-16 leading-relaxed">curl -fsSL https://cdn.jsdelivr.net/gh/1186258278/OpenCodeChineseTranslation@main/install.sh | bash</code>
+                                <code id="cmd-unix" class="text-xs md:text-sm text-yellow-200 font-mono break-all block pr-16 leading-relaxed">curl -fsSL https://raw.githubusercontent.com/1186258278/OpenCodeChineseTranslation/main/install.sh | bash</code>
                                 <button onclick="copyText('cmd-unix', this)" class="absolute right-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-yellow-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition backdrop-blur-sm border border-white/5">
                                     <i class="fa-regular fa-copy"></i>
                                 </button>
@@ -496,11 +496,11 @@
         // Command Templates
         const cmds = {
             github: {
-                win: `irm https://cdn.jsdelivr.net/gh/1186258278/OpenCodeChineseTranslation@main/install.ps1 -OutFile $env:TEMP\\opencode-install.ps1; & $env:TEMP\\opencode-install.ps1`,
-                unix: `curl -fsSL https://cdn.jsdelivr.net/gh/1186258278/OpenCodeChineseTranslation@main/install.sh | bash`
+                win: `irm https://raw.githubusercontent.com/1186258278/OpenCodeChineseTranslation/main/install.ps1 | iex`,
+                unix: `curl -fsSL https://raw.githubusercontent.com/1186258278/OpenCodeChineseTranslation/main/install.sh | bash`
             },
             gitee: {
-                win: `irm https://gitee.com/QtCodeCreators/OpenCodeChineseTranslation/raw/main/install.ps1 -OutFile $env:TEMP\\opencode-install.ps1; & $env:TEMP\\opencode-install.ps1`,
+                win: `irm https://gitee.com/QtCodeCreators/OpenCodeChineseTranslation/raw/main/install.ps1 | iex`,
                 unix: `curl -fsSL https://gitee.com/QtCodeCreators/OpenCodeChineseTranslation/raw/main/install.sh | bash`
             }
         };
@@ -592,13 +592,18 @@
             grid.innerHTML = '';
 
             const platforms = [
-                { id: 'windows-x64', icon: 'fa-windows', name: 'Windows x64', color: 'text-blue-400' },
-                { id: 'darwin-arm64', icon: 'fa-apple', name: 'macOS (Apple Silicon)', color: 'text-white' },
-                { id: 'linux-x64', icon: 'fa-linux', name: 'Linux x64', color: 'text-yellow-400' }
+                { id: 'windows-x64', matchId: 'windows-amd64', icon: 'fa-windows', name: 'Windows x64', color: 'text-blue-400' },
+                { id: 'darwin-arm64', matchId: 'darwin-arm64', icon: 'fa-apple', name: 'macOS (Apple Silicon)', color: 'text-white' },
+                { id: 'linux-x64', matchId: 'linux-amd64', icon: 'fa-linux', name: 'Linux x64', color: 'text-yellow-400' }
             ];
 
             platforms.forEach(p => {
-                const asset = releaseData.assets.find(a => a.name.includes(p.id) && a.name.endsWith('.zip'));
+                // 查找新的二进制文件 (如 opencode-cli-windows-amd64.exe) 或旧的 zip 包
+                const asset = releaseData.assets.find(a => 
+                    (a.name.includes('opencode-cli-') && a.name.includes(p.matchId)) || 
+                    (a.name.includes(p.id) && a.name.endsWith('.zip'))
+                );
+
                 if (asset) {
                     const sizeMB = (asset.size / 1024 / 1024).toFixed(1);
                     const html = `

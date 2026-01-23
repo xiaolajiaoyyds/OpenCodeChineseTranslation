@@ -1,130 +1,113 @@
-# OpenCode Chinese Translation Project
+# OpenCode Chinese Translation Distribution
 
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-v7.0-green.svg)](scripts/package.json)
-[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue.svg)](#)
+[![Release](https://img.shields.io/github/v/release/1186258278/OpenCodeChineseTranslation?label=Latest&style=flat-square&color=blue)](https://github.com/1186258278/OpenCodeChineseTranslation/releases/latest)
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg?style=flat-square)](#)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/1186258278/OpenCodeChineseTranslation/release.yml?label=Daily%20Build&style=flat-square)](https://github.com/1186258278/OpenCodeChineseTranslation/actions)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](LICENSE)
 
-[Chinese Documentation](README.md)
+[中文文档](README.md)
+
+> 🚀 **OpenCode Chinese Distribution | ⚡️ Daily Sync with Official | Automated Cross-Platform Builds (Win/Mac/Linux)**
 
 ---
 
-## Project Overview
+## Overview
 
-**OpenCode Chinese Translation** is a localized and enhanced distribution of the open-source AI coding agent [OpenCode](https://github.com/anomalyco/opencode). This project aims to lower the barrier for developers by providing full Chinese localization, automated build workflows, and optimizations for the domestic network environment.
+**OpenCode Chinese Translation** is a fully automated localization project for [OpenCode](https://github.com/anomalyco/opencode). We've built a complete CI/CD pipeline using GitHub Actions that **daily** pulls the latest source code, applies Chinese translation patches, and builds installation packages for Windows, macOS, and Linux.
 
-With the built-in `opencodenpm` management tool, you can easily update source code, apply translation patches, build binaries, and package releases for multiple platforms.
-
-### Key Features
-
-*   **Complete Localization**: Covers TUI, dialogs, messages, and core workflows.
-*   **Automated Workflow**: One-click script for updating, localizing, verifying, and building.
-*   **Multi-Platform Support**: Fully supports Windows, macOS, and Linux.
-*   **Plugin Integration**: Built-in setup wizards for Oh-My-OpenCode and Antigravity, unlocking multi-agent collaboration and local model support.
-*   **Professional CLI**: Provides an intuitive TUI interactive menu.
-
-## Screenshots
-
-<p align="center">
-  <img src="docs/0-1.png" alt="Management Tool Main Interface" width="800">
-</p>
-
-<p align="center">
-  <img src="docs/1-1.png" alt="MCP Server Localization" width="45%">
-  <img src="docs/2-2.png" alt="Status Dialog Localization" width="45%">
-</p>
+**Key Features:**
+*   ⚡️ **Daily Auto-Updates**: Stay up-to-date with the latest official features.
+*   📦 **Cross-Platform Support**: Provides Windows, macOS (Apple Silicon), and Linux binaries.
+*   🚀 **Zero-Dependency Installation**: New Go-based CLI tool, no Node.js or Bun required.
+*   🔧 **Complete Localization**: Covers TUI, dialogs, and core workflows.
 
 ---
 
 ## Quick Start
 
-### 1. Prerequisites
+### 1. One-Line Installation (Recommended)
 
-Before starting, ensure your environment meets the following requirements:
+The new installation scripts download the **Go-based CLI tool** directly, requiring no runtime dependencies.
 
-*   **Node.js**: >= 18.0.0
-*   **Bun**: >= 1.3.0 (for fast building)
-*   **Git**: Latest version
-
-### 2. Install Management Tool
-
-It is recommended to install `opencodenpm` globally.
-
-```bash
-# Go to scripts directory
-cd scripts
-
-# Install dependencies and link command
-npm install
-npm link
+**Windows (PowerShell)**
+```powershell
+powershell -c "irm https://raw.githubusercontent.com/1186258278/OpenCodeChineseTranslation/main/install.ps1 | iex"
 ```
 
-### 3. Run Interactive Menu
-
-After installation, run the following command in your terminal:
-
+**Linux / macOS**
 ```bash
-opencodenpm
+curl -fsSL https://raw.githubusercontent.com/1186258278/OpenCodeChineseTranslation/main/install.sh | bash
 ```
 
-You will see a grid-based interactive menu. Use arrow keys or number keys to select functions.
+### 2. Usage
+
+After installation, run in your terminal:
+
+```bash
+opencode-cli
+```
+
+This launches the interactive menu.
+
+### 3. Download Prebuilt Version (New in v8.1+)
+
+If you already have `opencode-cli` installed, use the built-in download feature:
+
+```bash
+opencode-cli download
+```
+
+This automatically downloads the latest prebuilt Chinese version from GitHub Releases, no local compilation needed.
+
+### 4. Manual Download
+
+You can also visit the [Releases page](https://github.com/1186258278/OpenCodeChineseTranslation/releases/latest) to download binaries directly.
+
+| Platform | CLI Tool | Chinese OpenCode |
+|----------|----------|------------------|
+| Windows x64 | `opencode-cli-windows-amd64.exe` | `opencode-zh-CN-windows-x64.zip` |
+| macOS Apple Silicon | `opencode-cli-darwin-arm64` | `opencode-zh-CN-darwin-arm64.zip` |
+| Linux x64 | `opencode-cli-linux-amd64` | `opencode-zh-CN-linux-x64.zip` |
 
 ---
 
-## Command Reference
+## CLI Commands
 
-Besides the interactive menu, `opencodenpm` supports rich CLI arguments for CI/CD integration.
+The CLI tool (v8.1.0) provides comprehensive management capabilities:
 
-| Command | Args | Description |
-|---------|------|-------------|
-| **full** | `-y, --auto` | Run full workflow (update->apply->build). `--auto` skips confirmation |
-| **update** | `-f, --force` | Update source code. `--force` to re-clone |
-| **apply** | `-b, --backup`<br>`-r, --report` | Apply translation. `-b` backup source, `-r` generate report |
-| **build** | `-p <platform>` | Build binary. Platforms: `windows-x64`, `linux-x64`, `darwin-arm64` |
-| **verify** | `-d, --detailed` | Verify coverage and config integrity |
-| **deploy** | - | Deploy `opencode` and `opencodenpm` to system PATH |
-| **rollback** | `-l, --list`<br>`-i <id>` | Rollback backup. `-l` list backups, `-i` rollback to specific ID |
-| **package** | `-a, --all`<br>`-p <platform>` | Package release ZIP. `-a` for all platforms |
-| **launch** | `-b, --background` | Launch OpenCode. `-b` run in background |
-| **antigravity** | - | Configure Antigravity local AI gateway |
-| **ohmyopencode** | - | Install Oh-My-OpenCode plugin |
-| **helper** | `-i, --install` | Install/Launch Coding Helper |
-| **env** | - | Check development environment |
-
-**Examples:**
-
-```bash
-# Force update source and apply translation
-opencodenpm update --force
-opencodenpm apply
-
-# Build for Linux
-opencodenpm build -p linux-x64
-
-# Deploy global commands
-opencodenpm deploy
-```
+| Command | Description |
+|---------|-------------|
+| `opencode-cli` | Launch interactive menu (default) |
+| `opencode-cli download` | 📦 **New**: Download prebuilt Chinese version |
+| `opencode-cli update` | Update OpenCode source code |
+| `opencode-cli apply` | Apply translation patches |
+| `opencode-cli verify` | Verify translation configuration |
+| `opencode-cli build` | Build OpenCode binary |
+| `opencode-cli deploy --shortcut` | Deploy and create desktop shortcut |
+| `opencode-cli antigravity` | Configure Antigravity local AI proxy |
+| `opencode-cli helper` | Install Zhipu Coding Helper (@z_ai/coding-helper) |
 
 ---
 
-## Documentation
+## Developer Guide
+
+If you want to contribute, please refer to the [Contributing Guide](CONTRIBUTING.md).
 
 *   [📅 Changelog](CHANGELOG.md)
 *   [🚀 Antigravity Integration Guide](docs/ANTIGRAVITY_INTEGRATION.md)
-*   [🛠️ AI Maintenance Guide](docs/AI_MAINTENANCE.md)
-*   [📦 Oh My OpenCode Guide](docs/OH_MY_OPENCODE_GUIDE.md)
 
 ---
 
 ## FAQ
 
 **Q: Build failed with "bun command not found"?**
-A: This project depends on Bun for fast builds. Please install it from [bun.sh](https://bun.sh) or run `npm install -g bun`.
+A: Bun is required for building OpenCode from source. Install it from [bun.sh](https://bun.sh). Alternatively, use `opencode-cli download` to get prebuilt binaries.
 
-**Q: Some interface text is still in English after localization?**
-A: OpenCode updates frequently, and some new features may not yet be covered by our translation config. Please submit an Issue to report missing translations.
+**Q: Some interface text is still in English?**
+A: OpenCode updates frequently, and some new features may not yet be covered. Please submit an Issue to report missing translations.
 
-**Q: How to use custom models?**
-A: We recommend using the `opencodenpm antigravity` command for one-click configuration, or manually editing the `provider` section in `~/.config/opencode/opencode.json`.
+**Q: How to use custom AI models?**
+A: Use `opencode-cli antigravity` for one-click configuration, or manually edit `~/.config/opencode/opencode.json`.
 
 ---
 

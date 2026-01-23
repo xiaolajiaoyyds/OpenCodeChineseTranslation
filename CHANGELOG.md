@@ -7,22 +7,93 @@
 
 ---
 
-## [7.3.0] - 2026-01-23
+## [8.1.0] - 2026-01-23
 
-### 🚀 自动化增强
+### 🚀 新增功能
 
-- **一键安装脚本** - 新增 `install.sh` (Linux/macOS) 和 `install.ps1` (Windows)，一行命令即可安装汉化工具
-- **Release 日志增强** - 自动抓取 OpenCode 官方仓库最近 15 次提交记录，填充到 Release Notes 中
-- **定时巡检** - GitHub Actions 增加定时任务 (每天 UTC 0点)，自动检查更新并构建，失败发送邮件报警
+- **下载预编译版** - 新增 `[D] 下载预编译版` 菜单项，无需本地编译环境即可安装汉化版
+  - 自动从 GitHub Releases 获取最新版本
+  - 智能检测当前平台（Windows/macOS/Linux）
+  - 自动解压、部署并配置 PATH 环境变量
+  - 适用于无法安装 Bun/Node.js 的用户
+  - **修复**: 支持新旧两种文件名格式 (`opencode-zh-CN-v8.1.0-windows-x64.zip`)
+- **智谱编码助手** - 修正助手安装功能，改为官方 `@z_ai/coding-helper` 包
+  - NPM 包：`@z_ai/coding-helper`
+  - 用于统一管理 Claude Code 等 CLI 工具
+  - 新增 Node.js >= v18.0.0 版本检测和安装指引
 
-## [7.3.2] - 2026-01-23
+### 🔄 CI/CD 工作流重构 (release.yml)
+
+- **Go CLI 驱动** - 弃用旧版 JS 脚本，改用 Go CLI 驱动全流程
+  - `./opencode-cli apply` - 应用汉化
+  - `./opencode-cli build --platform xxx` - 交叉编译
+- **多平台并行构建** - 使用 GitHub Actions Matrix 同时构建 Windows/macOS/Linux
+- **输出文件规范** - 统一命名格式 `opencode-zh-CN-{version}-{platform}.zip`
+- **手动触发支持** - 新增 `workflow_dispatch` 可指定版本号手动发布
+
+### 🛡️ 安全增强
+
+- **update.go 安全检查** - 更新源码时验证远程 URL，防止误操作覆盖汉化项目仓库
+  ```go
+  if strings.Contains(currentRemote, "OpenCodeChineseTranslation") {
+      // 中止操作，防止覆盖工作目录
+  }
+  ```
+
+### 🔧 代码质量改进
+
+- **消除函数重复定义** - 重构公共函数到 `utils.go`
+  - `FileExists()` / `DirExists()` - 文件/目录存在检测
+  - `Truncate()` - 字符串截断
+  - `DetectPlatform()` - 平台检测
+- **修复目录切换问题** - `git.go` 中不再使用 `os.Chdir()` 改变全局工作目录
+  - 新增 `ExecInDir()` 和 `ExecInDirQuiet()` 函数
+- **清理死代码** - 移除 `update.go` 中注释掉的代码
+- **版本号统一** - 所有安装脚本和文档默认版本号更新到 v8.1.0
+
+### 📝 文档更新
+
+- **install.ps1 / install.sh** - 默认版本号更新到 v8.1.0
+- **docs/index.html** - 官网默认版本号更新
+- **README.md** - 新增 `opencode-cli download` 命令说明
+
+---
+
+## [8.0.0] - 2026-01-23 🎉 架构重构
+
+### 🚀 全二进制分发架构
+
+- **Go 语言重写** - 核心管理工具 (`opencode-cli`) 使用 Go 语言完全重写，实现单文件运行。
+- **零依赖安装** - 彻底移除 Node.js/Bun 运行时依赖，用户下载即用 (文件大小仅约 7MB)。
+- **全平台支持** - 提供 Windows (exe)、macOS (Apple Silicon)、Linux 原生二进制文件。
+
+### 🛠️ 功能增强与规范
+
+- **命令更名** - 管理工具命令统一为 `opencode-cli`，避免与官方 `opencode` 软件命令冲突。
+- **桌面快捷方式** - `deploy` 命令支持创建 **"OpenCode CLI"** 桌面快捷方式，方便快速启动。
+- **自动更新检测** - 实时检测 CLI 自身及 OpenCode 源码的更新状态。
+- **更新日志查看** - 新增 `[L] 更新日志` 功能，可直接查看 OpenCode 官方提交记录。
+
+### 📦 安装脚本升级
+
+- **极速安装** - 新版安装脚本直接从 GitHub Release 下载二进制文件，秒级完成安装。
+- **环境隔离** - 安装到用户目录 (`~/.opencode-i18n`)，不污染系统环境。
+
+### 🧹 清理与精简
+
+- **移除冗余备份机制** - 删除 `.i18n-backup` 文件备份功能，完全依赖 Git 进行版本控制和回滚。
+  - 删除 `backup.go` 和 `rollback.go`
+  - 移除菜单中的"回滚备份"选项
+  - 使用 `git checkout/clean` (恢复源码功能) 替代文件系统备份
+- **Legacy 迁移** - 旧版 JavaScript 脚本 (`scripts/`) 已移入 `legacy/` 目录并停止维护。
+
+## [7.3.2] - 2026-01-23 (Legacy)
 
 ### 🚀 自动化与体验升级
 
-- **一键安装脚本** - 新增 `install.sh` (Linux/macOS) 和 `install.ps1` (Windows)，支持自动检测和安装 Node.js/Bun 环境
-- **Release 日志增强** - 自动抓取 OpenCode 官方仓库最近 15 次提交记录，填充到 Release Notes 中
-- **定时巡检** - GitHub Actions 增加定时任务，自动检查更新并构建
-- **文档优化** - README 新增下载徽章和一键安装命令
+- **一键安装脚本** - (旧版) 支持自动检测和安装 Node.js/Bun 环境
+- **Release 日志增强** - 自动抓取 OpenCode 官方仓库最近 15 次提交记录
+- **文档优化** - README 新增下载徽章
 
 ## [7.2.2] - 2026-01-22
 

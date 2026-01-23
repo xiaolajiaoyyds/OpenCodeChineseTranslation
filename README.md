@@ -4,13 +4,10 @@
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg?style=flat-square)](#)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/1186258278/OpenCodeChineseTranslation/release.yml?label=每日构建&style=flat-square)](https://github.com/1186258278/OpenCodeChineseTranslation/actions)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](LICENSE)
-[![Downloads](https://img.shields.io/github/downloads/1186258278/OpenCodeChineseTranslation/total?style=flat-square&color=orange)](https://github.com/1186258278/OpenCodeChineseTranslation/releases)
 
 > 🚀 **OpenCode 汉化发行版 | ⚡️ 每日自动同步官方最新版 | 全自动构建三端安装包 (Win/Mac/Linux)**
 > 
 > 🎉 **访问官方网站**：[https://1186258278.github.io/OpenCodeChineseTranslation/](https://1186258278.github.io/OpenCodeChineseTranslation/)
-
-[English Documentation](README_EN.md)
 
 ---
 
@@ -21,7 +18,7 @@
 **主要特性：**
 *   ⚡️ **每日自动更新**：紧跟官方节奏，第一时间体验新特性。
 *   📦 **全平台支持**：提供 Windows、macOS (Apple Silicon)、Linux 二进制包。
-*   🚀 **一键安装**：提供 CDN 加速的安装脚本，解决国内网络问题。
+*   🚀 **一键安装**：全新 Go 语言编写的管理工具，无需任何运行时依赖。
 *   🔧 **完整汉化**：覆盖 TUI、对话框及核心交互流程。
 
 ## 界面预览
@@ -30,96 +27,80 @@
   <img src="docs/0-1.png" alt="OpenCode 汉化管理工具主界面" width="800">
 </p>
 
-<p align="center">
-  <img src="docs/1-1.png" alt="MCP 服务器汉化" width="45%">
-  <img src="docs/2-2.png" alt="状态对话框汉化" width="45%">
-</p>
-
 ---
 
 ## 快速开始
 
-### 1. 环境准备
+### 1. 一键安装 (推荐)
 
-本发行版开箱即用，只需确保系统中安装了基础运行环境（如需使用源码管理工具）：
-*   **Node.js**: >= 18.0.0 (可选)
-*   **Git**: 最新版本 (可选)
-
-### 2. 一键安装 (推荐)
-
-使用我们提供的自动安装脚本，自动检测系统环境、配置加速镜像并安装最新汉化版。
-
-#### 方式 A：默认源 (GitHub / jsDelivr)
-适用于网络环境良好的用户。
+全新的安装脚本会自动下载 **Go 版本 CLI 工具**，无需安装 Node.js 或 Bun。
 
 **Windows (PowerShell)**
 ```powershell
-irm https://cdn.jsdelivr.net/gh/1186258278/OpenCodeChineseTranslation@main/install.ps1 -OutFile $env:TEMP\opencode-install.ps1; & $env:TEMP\opencode-install.ps1
+powershell -c "irm https://raw.githubusercontent.com/1186258278/OpenCodeChineseTranslation/main/install.ps1 | iex"
 ```
 
 **Linux / macOS**
 ```bash
-curl -fsSL https://cdn.jsdelivr.net/gh/1186258278/OpenCodeChineseTranslation@main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/1186258278/OpenCodeChineseTranslation/main/install.sh | bash
 ```
 
-#### 方式 B：国内镜像源 (Gitee) - 极速
-适用于 GitHub 访问受限或下载速度慢的用户。
+### 2. 使用方法
 
-**Windows (PowerShell)**
-```powershell
-irm https://gitee.com/QtCodeCreators/OpenCodeChineseTranslation/raw/master/install.ps1 -OutFile $env:TEMP\opencode-install.ps1; & $env:TEMP\opencode-install.ps1
-```
+安装完成后，直接在终端运行：
 
-**Linux / macOS**
 ```bash
-curl -fsSL https://gitee.com/QtCodeCreators/OpenCodeChineseTranslation/raw/master/install.sh | bash
+opencode interactive
 ```
 
-> 💡 **提示**: 安装脚本内置了下载加速逻辑。如果仍遇到网络问题，请访问 [项目官网](https://1186258278.github.io/OpenCodeChineseTranslation/) 直接下载离线安装包。
+或者使用快捷命令 `opencode` 启动交互式菜单。
 
-### 3. 手动下载
+### 3. 使用 CLI 下载预编译版 (新功能 v8.1+)
 
-您也可以直接访问 [Releases 页面](https://github.com/1186258278/OpenCodeChineseTranslation/releases/latest) 下载对应平台的压缩包，解压后即可直接运行。
+如果您已安装 `opencode-cli`，可以直接使用内置的下载功能：
+
+```bash
+opencode-cli download
+```
+
+此命令会自动从 GitHub Releases 下载最新的预编译汉化版 OpenCode，无需本地编译环境。
+
+### 4. 手动下载
+
+如果您无法使用脚本安装，也可以直接访问 [Releases 页面](https://github.com/1186258278/OpenCodeChineseTranslation/releases/latest) 下载对应平台的二进制文件。
+
+| 平台 | 管理工具 | 汉化版 OpenCode |
+|------|----------|-----------------|
+| Windows x64 | `opencode-cli-windows-amd64.exe` | `opencode-zh-CN-windows-x64.zip` |
+| macOS Apple Silicon | `opencode-cli-darwin-arm64` | `opencode-zh-CN-darwin-arm64.zip` |
+| Linux x64 | `opencode-cli-linux-amd64` | `opencode-zh-CN-linux-x64.zip` |
+
+---
+
+## 管理工具功能
+
+新的 CLI 工具 (v8.1.0) 提供了丰富的功能来管理您的 OpenCode 安装：
+
+| 命令 | 说明 |
+|------|------|
+| `opencode-cli` | 启动交互式管理菜单 (默认) |
+| `opencode-cli download` | 📦 **新功能**: 下载预编译汉化版，无需本地编译环境 |
+| `opencode-cli update` | 更新 OpenCode 源码 |
+| `opencode-cli apply` | 应用汉化补丁 |
+| `opencode-cli verify` | 验证汉化配置完整性 |
+| `opencode-cli build` | 编译构建 OpenCode |
+| `opencode-cli deploy --shortcut` | 部署并创建桌面快捷方式 |
+| `opencode-cli antigravity` | 配置 Antigravity 本地 AI 代理 |
+| `opencode-cli helper` | 安装智谱编码助手 (@z_ai/coding-helper) |
 
 ---
 
 ## 开发者指南
 
-如果您希望参与汉化贡献或自己构建版本，可以使用内置的 `opencodenpm` 管理工具。
-
-### 安装管理工具
-```bash
-cd scripts
-npm install
-npm link
-```
-
-### 常用命令
-| 命令 | 说明 |
-|------|------|
-| `opencodenpm` | 启动交互式管理菜单 |
-| `opencodenpm update` | 更新官方源码 |
-| `opencodenpm apply` | 应用汉化补丁 |
-| `opencodenpm build -p <platform>` | 编译指定平台版本 |
-
----
-
-## 进阶文档
+如果您希望参与贡献，请参考 [贡献指南](CONTRIBUTING.md)。
 
 *   [📅 更新日志 (CHANGELOG)](CHANGELOG.md)
 *   [🚀 Antigravity 集成指南](docs/ANTIGRAVITY_INTEGRATION.md)
-*   [🛠️ AI 维护指南](docs/AI_MAINTENANCE.md)
-*   [📦 Oh My OpenCode 指南](docs/OH_MY_OPENCODE_GUIDE.md)
-
----
-
-## 常见问题
-
-**Q: 汉化后部分界面仍显示英文？**
-A: OpenCode 更新较快，部分新功能可能尚未收录到汉化配置中。您可以提交 Issue 反馈缺失的翻译。
-
-**Q: 如何使用自定义模型？**
-A: 推荐使用 `opencodenpm antigravity` 命令一键配置，或手动修改 `~/.config/opencode/opencode.json` 文件中的 `provider` 配置。
 
 ---
 

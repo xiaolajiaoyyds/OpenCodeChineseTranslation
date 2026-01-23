@@ -1,229 +1,105 @@
 #!/bin/bash
 
-# OpenCode 汉化工具一键安装脚本 (v2.0)
-# 自动解决依赖，支持 Linux/macOS
+# OpenCode 汉化工具一键安装脚本 (Go CLI 版)
+# 无需 Node.js/Bun 依赖
 
 set -e
 
 # 颜色定义
-RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
+RED='\033[0;31m'
 NC='\033[0m'
+
+echo -e "${CYAN}==============================================${NC}"
+echo -e "${CYAN}   OpenCode 汉化管理工具安装脚本 (v8.1)   ${NC}"
+echo -e "${CYAN}==============================================${NC}"
+
+# 1. 检测系统架构
+echo -e "\n${YELLOW}[1/4] 检测系统架构...${NC}"
+
+OS="$(uname -s | tr '[:upper:]' '[:lower:]')"
+ARCH="$(uname -m)"
+
+if [ "$ARCH" == "x86_64" ]; then
+    ARCH="amd64"
+elif [ "$ARCH" == "aarch64" ] || [ "$ARCH" == "arm64" ]; then
+    ARCH="arm64"
+else
+    echo -e "${RED}不支持的架构: $ARCH${NC}"
+    exit 1
+fi
+
+if [ "$OS" != "linux" ] && [ "$OS" != "darwin" ]; then
+    echo -e "${RED}不支持的操作系统: $OS${NC}"
+    exit 1
+fi
+
+echo -e "系统: $OS $ARCH"
+
+# 2. 获取最新版本
+echo -e "\n${YELLOW}[2/4] 获取最新版本信息...${NC}"
+REPO="1186258278/OpenCodeChineseTranslation"
+TAG_NAME="v8.1.0" # 默认版本
+
+if command -v curl >/dev/null 2>&1; then
+    LATEST_JSON=$(curl -s --max-time 5 "https://api.github.com/repos/$REPO/releases/latest" || echo "")
+    if [ -n "$LATEST_JSON" ]; then
+        REMOTE_TAG=$(echo "$LATEST_JSON" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+        if [ -n "$REMOTE_TAG" ]; then
+            TAG_NAME="$REMOTE_TAG"
+        fi
+    fi
+fi
+
+echo -e "最新版本: ${GREEN}${TAG_NAME}${NC}"
+
+# 3. 下载
+echo -e "\n${YELLOW}[3/4] 下载管理工具...${NC}"
 
 INSTALL_DIR="$HOME/.opencode-i18n"
 BIN_DIR="$INSTALL_DIR/bin"
-WRAPPER_SCRIPT="$BIN_DIR/opencodenpm"
+EXE_PATH="$BIN_DIR/opencode-cli"
+FILE_NAME="opencode-cli-$OS-$ARCH"
+DOWNLOAD_URL="https://github.com/$REPO/releases/download/$TAG_NAME/$FILE_NAME"
 
-echo -e "${CYAN}==============================================${NC}"
-echo -e "${CYAN}   OpenCode 汉化管理工具一键安装脚本   ${NC}"
-echo -e "${CYAN}==============================================${NC}"
+# Gitee 镜像 (可选)
+# DOWNLOAD_URL="https://ghproxy.com/$DOWNLOAD_URL"
 
-# --- 1. 基础工具检查 ---
-echo -e "\n${YELLOW}[1/6] 检查系统工具...${NC}"
-
-has_cmd() {
-    command -v "$1" &> /dev/null
-}
-
-# 检查 glibc 版本 (防止在 CentOS 7 等老系统上尝试运行不兼容的 Node)
-check_glibc() {
-    if ldd --version >/dev/null 2>&1; then
-        GLIBC_VER=$(ldd --version | head -n1 | awk '{print $NF}')
-        # 简单的版本比较逻辑：需要 >= 2.28 才能运行官方 Node 18+
-        # 这是一个粗略检查，主要拦截 2.17 (CentOS 7)
-        if [[ "$GLIBC_VER" == "2.17" || "$GLIBC_VER" < "2.28" ]]; then
-            echo -e "${RED}错误: 检测到系统 glibc 版本过低 ($GLIBC_VER)。${NC}"
-            echo -e "${YELLOW}现代 Node.js (v18+) 需要 glibc 2.28 或更高版本。${NC}"
-            echo -e "${YELLOW}请升级您的操作系统 (推荐 Ubuntu 20.04+, CentOS 8+, Debian 10+)。${NC}"
-            echo -e "${YELLOW}或者使用 Docker 运行此工具。${NC}"
-            exit 1
-        fi
-    fi
-}
-
-check_glibc
-
-if ! has_cmd curl; then
-    echo -e "${RED}错误: 未找到 curl。请先安装: sudo apt install curl 或 brew install curl${NC}"
-    exit 1
-fi
-
-if ! has_cmd unzip; then
-    echo -e "${YELLOW}未找到 unzip，尝试自动安装...${NC}"
-    if has_cmd apt-get; then
-        sudo apt-get update && sudo apt-get install -y unzip
-    elif has_cmd yum; then
-        sudo yum install -y unzip
-    else
-        echo -e "${RED}错误: 无法自动安装 unzip。请手动安装后重试。${NC}"
-        exit 1
-    fi
-fi
-
-# --- 2. 运行时环境检查与安装 ---
-echo -e "\n${YELLOW}[2/6] 检查运行时环境 (Node.js / Bun)...${NC}"
-
-RUNTIME=""
-
-# 优先检查 Node.js
-if has_cmd node; then
-    echo -e "${GREEN}✓ 检测到 Node.js ($(node -v))${NC}"
-    RUNTIME="node"
-# 其次检查 Bun
-elif has_cmd bun; then
-    echo -e "${GREEN}✓ 检测到 Bun ($(bun -v))${NC}"
-    RUNTIME="bun"
-else
-    echo -e "${YELLOW}未检测到 Node.js 或 Bun。${NC}"
-    echo -e "${CYAN}正在为您自动安装 Bun 环境...${NC}"
-    
-    # 自动安装 Bun
-    echo -e "尝试安装 Bun..."
-    if curl -fsSL https://bun.sh/install | bash; then
-        export BUN_INSTALL="$HOME/.bun"
-        export PATH="$BUN_INSTALL/bin:$PATH"
-        
-        # 验证 Bun 是否可用 (检查 glibc 等问题)
-        if "$BUN_INSTALL/bin/bun" --version >/dev/null 2>&1; then
-            echo -e "${GREEN}✓ Bun 安装成功 ($("$BUN_INSTALL/bin/bun" --version))${NC}"
-            RUNTIME="bun"
-        else
-            echo -e "${YELLOW}Bun 安装成功但无法运行 (可能是系统 glibc 版本过低)。${NC}"
-            echo -e "${YELLOW}尝试回退安装 Node.js...${NC}"
-        fi
-    else
-        echo -e "${YELLOW}Bun 下载失败。尝试安装 Node.js...${NC}"
-    fi
-
-    # 如果 Bun 不可用，尝试安装 Node.js
-    if [ -z "$RUNTIME" ]; then
-        echo -e "正在安装 Node.js (v20)..."
-        # 使用 nvm 安装 node (更通用)
-        # 使用 Gitee 镜像加速 nvm 安装脚本 (可选，这里先用官方)
-        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-        export NVM_DIR="$HOME/.nvm"
-        [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-        
-        if command -v nvm >/dev/null 2>&1; then
-            # 锁定安装 Node 20 (兼容性较好)，而不是最新的 v24
-            nvm install 20
-            
-            # 再次验证 Node.js 是否可用
-            if node -v >/dev/null 2>&1; then
-                echo -e "${GREEN}✓ Node.js 安装成功 ($(node -v))${NC}"
-                RUNTIME="node"
-            else
-                echo -e "${RED}错误: Node.js 安装成功但无法运行。${NC}"
-                echo -e "${YELLOW}原因: 您的系统版本过旧（glibc/libstdc++ 版本不足），不支持现代 Node.js。${NC}"
-                echo -e "${YELLOW}解决方案: 建议使用较新的 Linux 发行版（如 Ubuntu 20.04+, CentOS 8+）。${NC}"
-                exit 1
-            fi
-        else
-            echo -e "${RED}错误: 无法自动安装运行时环境。${NC}"
-            echo -e "${YELLOW}请您的系统版本较旧，请手动安装 Node.js (v18+) 后重试。${NC}"
-            exit 1
-        fi
-    fi
-fi
-
-# --- 3. 获取最新版本 ---
-echo -e "\n${YELLOW}[3/6] 获取最新版本信息...${NC}"
-REPO="1186258278/OpenCodeChineseTranslation"
-# 使用 GitHub API 获取最新 release tag，如果失败则尝试 default (容错)
-LATEST_JSON=$(curl -s --max-time 10 "https://api.github.com/repos/$REPO/releases/latest")
-TAG_NAME=$(echo "$LATEST_JSON" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
-
-if [ -z "$TAG_NAME" ]; then
-    echo -e "${YELLOW}警告: 无法获取最新版本，尝试使用默认版本 v7.3.2${NC}"
-    TAG_NAME="v7.3.2"
-else
-    echo -e "最新版本: ${GREEN}${TAG_NAME}${NC}"
-fi
-
-# --- 4. 下载与解压 ---
-echo -e "\n${YELLOW}[4/6] 下载汉化工具...${NC}"
-ZIP_URL="https://github.com/$REPO/releases/download/$TAG_NAME/opencode-i18n-tool-$TAG_NAME.zip"
-TEMP_ZIP="/tmp/opencode-i18n.zip"
-
-echo -e "下载地址: $ZIP_URL"
-if curl -L --progress-bar -o "$TEMP_ZIP" "$ZIP_URL"; then
-    echo -e "${GREEN}下载成功!${NC}"
-else
-    echo -e "${RED}下载失败! 请检查网络连接。${NC}"
-    echo -e "${YELLOW}如果您在中国大陆，请尝试使用 Gitee 源安装脚本，或直接下载离线包。${NC}"
-    exit 1
-fi
-
-echo -e "安装到: $INSTALL_DIR"
-if [ -d "$INSTALL_DIR" ]; then
-    rm -rf "$INSTALL_DIR"
-fi
-mkdir -p "$INSTALL_DIR"
-unzip -q "$TEMP_ZIP" -d "$INSTALL_DIR"
-rm "$TEMP_ZIP"
-
-# --- 5. 安装依赖 ---
-echo -e "\n${YELLOW}[5/6] 安装项目依赖...${NC}"
-cd "$INSTALL_DIR/scripts"
-
-if [ "$RUNTIME" == "bun" ]; then
-    bun install --production
-else
-    npm install --production
-fi
-
-# --- 6. 创建启动脚本 ---
-echo -e "\n${YELLOW}[6/6] 配置全局命令...${NC}"
+echo -e "地址: $DOWNLOAD_URL"
 
 mkdir -p "$BIN_DIR"
 
-# 创建 wrapper 脚本
-cat > "$WRAPPER_SCRIPT" <<EOF
-#!/bin/bash
-export PATH="\$HOME/.bun/bin:\$PATH"
-if command -v node >/dev/null 2>&1; then
-    exec node "$INSTALL_DIR/scripts/bin/opencodenpm" "\$@"
-elif command -v bun >/dev/null 2>&1; then
-    exec bun "$INSTALL_DIR/scripts/bin/opencodenpm" "\$@"
+if curl -L --progress-bar -o "$EXE_PATH" "$DOWNLOAD_URL"; then
+    chmod +x "$EXE_PATH"
+    echo -e "${GREEN}下载成功!${NC}"
 else
-    echo "Error: Runtime not found. Please install Node.js or Bun."
+    echo -e "${RED}下载失败! 请检查网络连接。${NC}"
     exit 1
 fi
-EOF
 
-chmod +x "$WRAPPER_SCRIPT"
+# 4. 配置环境
+echo -e "\n${YELLOW}[4/4] 配置环境变量...${NC}"
 
-# 尝试链接到系统路径
-LINK_SUCCESS=false
-TARGET_LINK="/usr/local/bin/opencodenpm"
+SHELL_CONFIG=""
+case "$SHELL" in
+    */zsh) SHELL_CONFIG="$HOME/.zshrc" ;;
+    */bash) SHELL_CONFIG="$HOME/.bashrc" ;;
+    *) SHELL_CONFIG="$HOME/.profile" ;;
+esac
 
-if [ -w "/usr/local/bin" ]; then
-    ln -sf "$WRAPPER_SCRIPT" "$TARGET_LINK"
-    LINK_SUCCESS=true
+if [[ ":$PATH:" != *":$BIN_DIR:"* ]]; then
+    echo -e "\n# OpenCode CLI" >> "$SHELL_CONFIG"
+    echo -e "export PATH=\"\$PATH:$BIN_DIR\"" >> "$SHELL_CONFIG"
+    echo -e "${GREEN}已将 $BIN_DIR 添加到 $SHELL_CONFIG${NC}"
+    echo -e "${YELLOW}请执行 source $SHELL_CONFIG 或重启终端使配置生效${NC}"
 else
-    echo -e "${YELLOW}尝试使用 sudo 创建全局链接...${NC}"
-    if sudo ln -sf "$WRAPPER_SCRIPT" "$TARGET_LINK"; then
-        LINK_SUCCESS=true
-    fi
+    echo -e "${GREEN}环境变量已配置${NC}"
 fi
 
 echo -e "\n${GREEN}==============================================${NC}"
-if [ "$LINK_SUCCESS" = true ]; then
-    echo -e "${GREEN}   安装成功!   ${NC}"
-    echo -e "${GREEN}==============================================${NC}"
-    echo -e "\n现在你可以在任意位置运行: ${CYAN}opencodenpm${NC}"
-else
-    echo -e "${YELLOW}   安装完成 (未创建全局链接)   ${NC}"
-    echo -e "${GREEN}==============================================${NC}"
-    echo -e "\n请手动将以下路径添加到 PATH，或直接运行:"
-    echo -e "  ${CYAN}$WRAPPER_SCRIPT${NC}"
-fi
-
-# 提示 Bun 环境变量
-if [ "$RUNTIME" == "bun" ] && [[ ":$PATH:" != *":$HOME/.bun/bin:"* ]]; then
-    echo -e "\n${YELLOW}注意: 检测到您使用自动安装的 Bun。${NC}"
-    echo -e "请执行以下命令使其生效 (或重启终端):"
-    echo -e "  ${CYAN}export PATH=\"\$HOME/.bun/bin:\$PATH\"${NC}"
-fi
+echo -e "${GREEN}   安装完成!   ${NC}"
+echo -e "${GREEN}==============================================${NC}"
+echo -e "\n请重启终端，然后运行以下命令启动:"
+echo -e "  ${CYAN}opencode-cli interactive${NC}"
