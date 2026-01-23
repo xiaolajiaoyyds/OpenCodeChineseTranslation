@@ -92,16 +92,16 @@ chore: cleanup legacy scripts
 
 ## 版本管理
 
-版本号由 `cli-go/cmd/root.go` 中的常量管理：
+版本号由 `cli-go/internal/core/version.go` 中的 `VERSION` 常量统一管理：
 
 ```go
-const Version = "8.1.0"
+const VERSION = "8.2.0"
 ```
 
 发布新版本时：
-1. 更新 `cli-go/cmd/root.go` 中的 `Version` 常量
+1. 更新 `cli-go/internal/core/version.go` 中的 `VERSION` 常量
 2. 更新 `CHANGELOG.md` 添加版本说明
-3. 提交并打上对应的 git tag（如 `v8.1.0`）
+3. 提交并打上对应的 git tag（如 `v8.2.0`）
 4. GitHub Actions 会自动触发构建并发布 Release
 
 再次感谢你的贡献！

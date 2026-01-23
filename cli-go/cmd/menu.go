@@ -29,8 +29,9 @@ func RunMenu() {
 		status := getStatus()
 
 		// 运行菜单
+		title := fmt.Sprintf("OpenCode 汉化管理工具 v%s", core.VERSION)
 		result, err := tui.Run(
-			"OpenCode 汉化管理工具 v8.0",
+			title,
 			tui.MainMenuItems,
 			tui.Tutorials,
 			status,
@@ -77,7 +78,7 @@ func getStatus() tui.StatusInfo {
 	bunVersion := getBunVersion()
 
 	return tui.StatusInfo{
-		Version:       "v8.0",
+		Version:       "v" + core.VERSION,
 		Path:          opencodeDir,
 		SourceExists:  sourceExists,
 		I18nExists:    i18nExists,

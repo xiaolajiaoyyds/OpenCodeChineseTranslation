@@ -12,7 +12,7 @@
     <meta property="og:url" content="https://1186258278.github.io/OpenCodeChineseTranslation/">
     <meta property="og:title" content="OpenCode 汉化发行版">
     <meta property="og:description" content="每日自动构建，全平台一键安装，开箱即用的 AI 编程体验。">
-    <meta property="og:image" content="https://1186258278.github.io/OpenCodeChineseTranslation/docs/0-1.png">
+    <meta property="og:image" content="https://1186258278.github.io/OpenCodeChineseTranslation/docs/01.png">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -142,7 +142,7 @@
         <div class="max-w-5xl mx-auto text-center">
             <a href="https://github.com/1186258278/OpenCodeChineseTranslation/releases/latest" target="_blank" class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/30 bg-primary/10 text-primary text-xs font-medium mb-8 hover:bg-primary/20 transition cursor-pointer">
                 <span class="flex h-2 w-2 rounded-full bg-primary animate-pulse"></span>
-                <span id="latest-version">v8.1.0</span> 已发布 · 每日构建
+                <span id="latest-version">v8.2.0</span> 已发布 · 每日构建
                 <i class="fa-solid fa-chevron-right text-[10px] opacity-50"></i>
             </a>
             
@@ -171,7 +171,7 @@
                     </div>
                     <div>
                         <h3 class="text-xl font-bold text-white flex items-center gap-2">
-                            <span id="dash-version">v8.1.0</span>
+                            <span id="dash-version">v8.2.0</span>
                             <span class="text-xs font-normal text-gray-400 bg-white/10 px-2 py-0.5 rounded" id="dash-date">...</span>
                         </h3>
                     </div>
@@ -318,10 +318,10 @@
                     </div>
                 </div>
                 <div class="relative bg-slate-900 aspect-video md:aspect-[16/9] overflow-hidden group">
-                    <img id="preview-img" src="0-1.png" alt="Preview" class="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-[1.02]">
+                    <img id="preview-img" src="01.png" alt="Preview" class="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-[1.02]">
                     <div class="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent pointer-events-none"></div>
                     <div class="absolute bottom-6 left-6 pointer-events-none">
-                        <span id="preview-desc" class="text-white font-bold text-lg drop-shadow-md">沉浸式汉化体验</span>
+                        <span id="preview-desc" class="text-white font-bold text-lg drop-shadow-md">全功能管理工具 (CLI) · 一键部署</span>
                     </div>
                 </div>
             </div>
@@ -427,9 +427,9 @@
 
         // Image Gallery Logic
         const imageData = {
-            'main': { src: '0-1.png', desc: '沉浸式汉化体验 · 主界面' },
-            'dialog': { src: '2-2.png', desc: '无障碍交互 · 对话框' },
-            'mcp': { src: '1-1.png', desc: '全功能支持 · MCP 配置' }
+            'main': { src: '01.png', desc: '全功能管理工具 (CLI) · 一键部署' },
+            'dialog': { src: '02.png', desc: '沉浸式汉化体验 · 主编辑器' },
+            'mcp': { src: '05.png', desc: '无障碍交互 · 设置与对话框' }
         };
 
         function switchTab(tab) {
@@ -580,6 +580,32 @@
             }
         }
 
+        // Helper function for asset card creation
+        function createAssetCard(platform, asset, size, btnText, btnClass = 'bg-primary hover:bg-blue-600') {
+            return `
+                <div class="bg-black/30 rounded-xl border border-white/5 p-5 hover:border-primary/30 transition group relative glass-card">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center">
+                                <i class="fa-brands ${platform.icon} ${platform.color} text-xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-sm text-gray-200">${platform.name}</h4>
+                                <p class="text-xs text-gray-500">${size} MB</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col gap-2">
+                        <a href="${asset.browser_download_url}" onclick="startDownload(this)" class="w-full ${btnClass} text-white text-xs font-bold py-3 rounded-lg text-center transition shadow-lg shadow-primary/20 flex items-center justify-center gap-2 group-hover:scale-[1.02]">
+                            <i class="fa-solid fa-download"></i> <span>${btnText}</span>
+                        </a>
+                        <div class="text-[10px] text-gray-500 text-center font-mono">GitHub Official Source</div>
+                    </div>
+                </div>
+            `;
+        }
+
         // Render Assets
         function renderAssets() {
             if (!releaseData || !releaseData.assets) return;
@@ -597,38 +623,25 @@
                 { id: 'linux-x64', matchId: 'linux-amd64', icon: 'fa-linux', name: 'Linux x64', color: 'text-yellow-400' }
             ];
 
+            // 渲染汉化包
+            grid.innerHTML += `<div class="md:col-span-3 text-sm font-bold text-gray-400 mb-2 mt-2">汉化版 OpenCode (完整包)</div>`;
+            
             platforms.forEach(p => {
-                // 查找新的二进制文件 (如 opencode-cli-windows-amd64.exe) 或旧的 zip 包
-                const asset = releaseData.assets.find(a => 
-                    (a.name.includes('opencode-cli-') && a.name.includes(p.matchId)) || 
-                    (a.name.includes(p.id) && a.name.endsWith('.zip'))
-                );
-
+                const asset = releaseData.assets.find(a => a.name.includes(p.id) && a.name.endsWith('.zip'));
                 if (asset) {
                     const sizeMB = (asset.size / 1024 / 1024).toFixed(1);
-                    const html = `
-                        <div class="bg-black/30 rounded-xl border border-white/5 p-5 hover:border-primary/30 transition group relative glass-card">
-                            <div class="flex items-start justify-between mb-4">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center">
-                                        <i class="fa-brands ${p.icon} ${p.color} text-xl"></i>
-                                    </div>
-                                    <div>
-                                        <h4 class="font-bold text-sm text-gray-200">${p.name}</h4>
-                                        <p class="text-xs text-gray-500">${sizeMB} MB</p>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="flex flex-col gap-2">
-                                <a href="${asset.browser_download_url}" onclick="startDownload(this)" class="w-full bg-primary hover:bg-blue-600 text-white text-xs font-bold py-3 rounded-lg text-center transition shadow-lg shadow-primary/20 flex items-center justify-center gap-2 group-hover:scale-[1.02]">
-                                    <i class="fa-solid fa-download"></i> <span>立即下载</span>
-                                </a>
-                                <div class="text-[10px] text-gray-500 text-center font-mono">GitHub Official Source</div>
-                            </div>
-                        </div>
-                    `;
-                    grid.innerHTML += html;
+                    grid.innerHTML += createAssetCard(p, asset, sizeMB, '完整版下载');
+                }
+            });
+
+            // 渲染 CLI 工具
+            grid.innerHTML += `<div class="md:col-span-3 text-sm font-bold text-gray-400 mb-2 mt-6">管理工具 (CLI)</div>`;
+            
+            platforms.forEach(p => {
+                const asset = releaseData.assets.find(a => a.name.includes('opencode-cli-') && a.name.includes(p.matchId));
+                if (asset) {
+                    const sizeMB = (asset.size / 1024 / 1024).toFixed(1);
+                    grid.innerHTML += createAssetCard(p, asset, sizeMB, '下载工具', 'bg-slate-700 hover:bg-slate-600');
                 }
             });
             
@@ -678,15 +691,15 @@
 
         // 静态备用数据（API 限流时使用）
         const fallbackRelease = {
-            tag_name: 'v8.1.0',
-            published_at: '2026-01-23T22:00:00Z',
+            tag_name: 'v8.2.0',
+            published_at: '2026-01-23T22:30:00Z',
             assets: [
-                { name: 'opencode-zh-CN-v8.1.0-windows-x64.zip', browser_download_url: `https://github.com/${repo}/releases/download/v8.1.0/opencode-zh-CN-v8.1.0-windows-x64.zip`, size: 52428800 },
-                { name: 'opencode-zh-CN-v8.1.0-darwin-arm64.zip', browser_download_url: `https://github.com/${repo}/releases/download/v8.1.0/opencode-zh-CN-v8.1.0-darwin-arm64.zip`, size: 33554432 },
-                { name: 'opencode-zh-CN-v8.1.0-linux-x64.zip', browser_download_url: `https://github.com/${repo}/releases/download/v8.1.0/opencode-zh-CN-v8.1.0-linux-x64.zip`, size: 51380224 },
-                { name: 'opencode-cli-windows-amd64.exe', browser_download_url: `https://github.com/${repo}/releases/download/v8.1.0/opencode-cli-windows-amd64.exe`, size: 8200000 },
-                { name: 'opencode-cli-darwin-arm64', browser_download_url: `https://github.com/${repo}/releases/download/v8.1.0/opencode-cli-darwin-arm64`, size: 7500000 },
-                { name: 'opencode-cli-linux-amd64', browser_download_url: `https://github.com/${repo}/releases/download/v8.1.0/opencode-cli-linux-amd64`, size: 7900000 }
+                { name: 'opencode-zh-CN-v8.2.0-windows-x64.zip', browser_download_url: `https://github.com/${repo}/releases/download/v8.2.0/opencode-zh-CN-v8.2.0-windows-x64.zip`, size: 52428800 },
+                { name: 'opencode-zh-CN-v8.2.0-darwin-arm64.zip', browser_download_url: `https://github.com/${repo}/releases/download/v8.2.0/opencode-zh-CN-v8.2.0-darwin-arm64.zip`, size: 33554432 },
+                { name: 'opencode-zh-CN-v8.2.0-linux-x64.zip', browser_download_url: `https://github.com/${repo}/releases/download/v8.2.0/opencode-zh-CN-v8.2.0-linux-x64.zip`, size: 51380224 },
+                { name: 'opencode-cli-windows-amd64.exe', browser_download_url: `https://github.com/${repo}/releases/download/v8.2.0/opencode-cli-windows-amd64.exe`, size: 8200000 },
+                { name: 'opencode-cli-darwin-arm64', browser_download_url: `https://github.com/${repo}/releases/download/v8.2.0/opencode-cli-darwin-arm64`, size: 7500000 },
+                { name: 'opencode-cli-linux-amd64', browser_download_url: `https://github.com/${repo}/releases/download/v8.2.0/opencode-cli-linux-amd64`, size: 7900000 }
             ],
             body: '详见 [CHANGELOG.md](https://github.com/1186258278/OpenCodeChineseTranslation/blob/main/CHANGELOG.md)'
         };
