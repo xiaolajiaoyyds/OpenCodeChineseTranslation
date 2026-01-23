@@ -1,182 +1,101 @@
 # 功能演示 / Feature Showcase
 
-本文档展示 OpenCode 中文汉化工具的功能和界面。
-
-This document showcases the features and interface of the OpenCode Chinese Localization Tool.
+本文档展示 OpenCode 中文汉化工具的功能和界面截图。
 
 ---
 
-[中文](#中文文档) | [English](#english-documentation)
+## 📸 界面截图
+
+### 1. CLI 管理工具主界面 (01.png)
+
+![CLI主界面](01.png)
+
+**OpenCode 汉化管理工具** - 全功能 TUI 界面
+
+- 版本状态实时显示（源码/汉化/编译状态）
+- 一键完成：更新 → 汉化 → 编译 → 部署
+- 支持 Windows / macOS / Linux 三平台
+- 环境检测与 Bun 版本校准
 
 ---
 
-## 中文文档
+### 2. OpenCode 主编辑器界面 (02.png)
 
-### 主菜单界面
+![主编辑器](02.png)
 
-运行 `.\scripts\opencode.ps1` 后，您会看到主菜单：
+**汉化后的 OpenCode 主界面**
 
-```
-╔════════════════════════════════════╗
-║  OpenCode 中文汉化管理工具 v4.0    ║
-╚════════════════════════════════════╝
-
-  版本: 61aeb2a2 (feat: Polish dialog...)
-  编译: 刚刚
-
-  [1]  一键汉化+部署
-      → 自动拉取代码 → 应用汉化 → 编译 → 部署
-
-  [2]  验证汉化      [3]  调试工具
-      检查汉化效果          诊断问题
-
-  [4]  版本检测      [5]  备份版本      [L]  更新日志
-      检查更新状态          保存当前版本          查看提交记录
-
-  [6]  高级菜单
-      → 更多专业功能（拉取/编译/恢复/清理等）
-
-  [0]  退出
-```
-
-### 更新日志功能
-
-按 `[L]` 进入更新日志，查看最近15条提交记录：
-
-```
-   ┌────────────────────────────────────────────────────────────────────────
-   │  #  Hash      │ 作者    │ 时间     │ 变更   │ 消息
-   ├────────────────────────────────────────────────────────────────────────
-   │  1. [61aeb2a2] │ Amjad  │ (2小时前) │ +120/-5 │ feat: Polish dialog...
-   │  2. [4b0f7b82] │ bot    │ (5小时前) │ +3/-0   │ ignore: update stats...
-   └────────────────────────────────────────────────────────────────────────
-
-   操作:
-     [1-15] 查看提交详情
-     [O]    在浏览器中打开最新提交
-     [R]    刷新列表
-     [0]    返回主菜单
-```
-
-### 提交详情页面
-
-选择某个提交后，查看详细信息：
-
-```
-   提交详情
-   ────────────────────────────────────────────────────────────────
-
-   Commit: 61aeb2a2a
-   61aeb2a2a1234567890abcdef1234567890abcdef1234567890abcdef
-
-   作者: Amjad
-   时间: 01-09 23:02 (2小时前)
-
-   消息:
-   feat: Polish dialog, popover shadows & borders, and other styles
-
-   变更:
-   文件: 5 | +120行 | -5行
-
-   文件列表:
-     [修改] src/cli/cmd/tui/component/dialog-agent.tsx
-     [修改] src/cli/cmd/tui/component/popover.tsx
-     [新增] src/styles/shadows.css
-
-   操作:
-     [O] 在浏览器中打开
-         https://github.com/anomalyco/opencode/commit/61aeb2a2a
-     [H] 查看完整 diff
-     [0] 返回
-```
-
-### 汉化效果预览
-
-汉化后的 OpenCode 界面效果：
-
-| 功能区域 | 原文 | 译文 |
-|---------|------|------|
-| 命令面板 | "Select a session" | "选择一个会话" |
-| 智能体选择 | "Choose an agent" | "选择智能体" |
-| 上下文管理 | "Context" | "上下文" |
-| MCP 状态 | "MCP Servers" | "MCP 服务器" |
-| 权限请求 | "Allow file access?" | "允许访问文件？" |
+- 完整汉化的命令面板和侧边栏
+- 会话管理、上下文控制
+- 智能体选择与配置
+- 沉浸式中文编程体验
 
 ---
 
-## English Documentation
+### 3. 对话框与弹窗 (03.png)
 
-### Main Menu Interface
+![对话框](03.png)
 
-After running `.\scripts\opencode.ps1`, you will see the main menu:
+**对话框组件汉化效果**
 
-```
-╔════════════════════════════════════╗
-║  OpenCode 中文汉化管理工具 v4.0    ║
-╚════════════════════════════════════╝
-
-  [1]  One-Click Localization+Deploy
-      → Auto pull → Apply patches → Build → Deploy
-
-  [2]  Verify        [3]  Debug Tools
-      Check effects        Diagnose issues
-
-  [4]  Check Version [5]  Backup      [L]  Changelog
-      Update status        Save version        View commits
-
-  [6]  Advanced Menu
-      → More features (pull/build/restore/clean)
-
-  [0]  Exit
-```
-
-### Changelog Feature
-
-Press `[L]` to view changelog with recent 15 commits:
-
-```
-   ┌────────────────────────────────────────────────────────────────────────
-   │  #  Hash      │ Author  │ Time      │ Changes │ Message
-   ├────────────────────────────────────────────────────────────────────────
-   │  1. [61aeb2a2] │ Amjad   │ (2h ago)  │ +120/-5 │ feat: Polish dialog...
-   │  2. [4b0f7b82] │ bot     │ (5h ago)  │ +3/-0   │ ignore: update stats...
-   └────────────────────────────────────────────────────────────────────────
-
-   Actions:
-     [1-15] View commit details
-     [O]    Open latest commit in browser
-     [R]    Refresh list
-     [0]    Return to main menu
-```
-
-### Translation Preview
-
-| Area | Original | Translated |
-|------|----------|------------|
-| Command Panel | "Select a session" | "选择一个会话" |
-| Agent Selection | "Choose an agent" | "选择智能体" |
-| Context | "Context" | "上下文" |
-| MCP Status | "MCP Servers" | "MCP 服务器" |
-| Permission | "Allow file access?" | "允许访问文件？" |
+- 智能体选择对话框
+- 模型提供商配置
+- 权限请求提示
+- 确认与警告弹窗
 
 ---
 
-## 界面截图 / Screenshots
+### 4. 设置与配置界面 (04.png)
 
-### 主菜单 / Main Menu
+![设置界面](04.png)
 
-![主菜单](0.png)
+**设置页面汉化效果**
 
-运行 `.\scripts\opencode.ps1` 后的主界面，提供完整的功能导航。
+- 主题切换
+- 快捷键配置
+- 模型参数调整
+- 格式化器设置
 
-### 版本不匹配警告 / Version Mismatch Warning
+---
 
-![版本警告](1.png)
+### 5. MCP 服务器配置 (05.png)
 
-当语言包版本与代码不匹配时，会自动显示提示和建议方案。
+![MCP配置](05.png)
 
-### 汉化验证结果 / Verification Results
+**MCP (Model Context Protocol) 配置界面**
 
-![验证结果](2.png)
+- MCP 服务器状态监控
+- 服务添加与管理
+- 连接状态指示
+- 工具与资源列表
 
-验证功能会检查所有汉化模块，显示通过/失败状态和详细问题。
+---
+
+## 🎯 汉化覆盖范围
+
+| 模块 | 文件数 | 汉化内容 | 状态 |
+|------|--------|----------|------|
+| **对话框** | 20 | 所有弹窗、模态框 | ✅ 100% |
+| **路由页面** | 6 | 侧边栏、页头、页脚 | ✅ 100% |
+| **UI组件** | 6 | 按钮、输入框、提示 | ✅ 100% |
+| **通用文本** | 6 | 错误消息、Toast通知 | ✅ 100% |
+
+---
+
+## 📝 术语对照表
+
+| 英文 | 中文 | 说明 |
+|------|------|------|
+| Agent | 智能体 | AI 代理模式 |
+| Session | 会话 | 对话上下文 |
+| Provider | 提供商 | 模型服务商 |
+| MCP Server | MCP 服务器 | 模型上下文协议服务 |
+| Context | 上下文 | 对话历史 |
+| Prompt | 提示词 | 输入指令 |
+| Stash | 暂存 | 临时保存 |
+| Timeline | 时间线 | 操作历史 |
+
+---
+
+> **最后更新**: 2026-01-24  
+> **汉化版本**: v8.4.0
