@@ -38,8 +38,10 @@ jobs:
       - name: Get upstream version
         id: upstream
         run: |
-          LATEST=$(curl -s https://api.github.com/repos/anomalyco/opencode/tags | jq -r '.[0].name' | sed 's/^v//')
-          echo "version=$LATEST" >> $GITHUB_OUTPUT
+          LATEST_TAG=$(curl -s https://api.github.com/repos/anomalyco/opencode/tags | jq -r '.[0].name')
+          LATEST_VERSION="${LATEST_TAG#v}"
+          echo "version=$LATEST_VERSION" >> $GITHUB_OUTPUT
+          echo "tag=$LATEST_TAG" >> $GITHUB_OUTPUT
 
       - name: Compare versions
         id: compare
@@ -75,7 +77,11 @@ jobs:
 
       - name: Clone upstream
         if: steps.compare.outputs.needs_update == 'true'
-        run: git clone https://github.com/anomalyco/opencode.git opencode-zh-CN && cd opencode-zh-CN && bun install
+        run: |
+          git clone https://github.com/anomalyco/opencode.git opencode-zh-CN
+          cd opencode-zh-CN
+          git checkout "${{ steps.upstream.outputs.tag }}"
+          bun install
 
       - name: Install scripts deps
         if: steps.compare.outputs.needs_update == 'true'
@@ -83,12 +89,14 @@ jobs:
 
       - name: Update versions
         if: steps.compare.outputs.needs_update == 'true'
+        env:
+          NEW_VERSION: ${{ steps.newver.outputs.version }}
+          UPSTREAM_VERSION: ${{ steps.upstream.outputs.version }}
         run: |
-          NEW="${{ steps.newver.outputs.version }}"
-          UP="${{ steps.upstream.outputs.version }}"
-          node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json'));p.version='$NEW';fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n')"
-          node -e "const fs=require('fs');const c=JSON.parse(fs.readFileSync('opencode-i18n/config.json'));c.version='$NEW';c.opencodeVersion='$UP';fs.writeFileSync('opencode-i18n/config.json',JSON.stringify(c,null,2)+'\n')"
-          sed -i "s/v[0-9]*\.[0-9]*\.[0-9]*-zh-v[0-9.]*/v$NEW/g" README.md
+          node -e "const fs=require('fs');const path='opencode-i18n/config.json';const cfg=JSON.parse(fs.readFileSync(path));cfg.version=process.env.NEW_VERSION;cfg.opencodeVersion=process.env.UPSTREAM_VERSION;fs.writeFileSync(path,JSON.stringify(cfg,null,2)+'\n')"
+          node scripts/bin/opencodenpm version --sync
+          sed -i "s/v[0-9]*\.[0-9]*\.[0-9]*-zh-v[0-9.]*/v${NEW_VERSION}/g" README.md
+          node -e "const fs=require('fs');const path='CHANGELOG.md';const version=process.env.NEW_VERSION;const upstream=process.env.UPSTREAM_VERSION;const today=new Date().toISOString().slice(0,10);const entry=`## [${version}] - ${today}\n\n### 🔄 同步更新\n\n- 同步官方 OpenCode v${upstream}\n\n`;const content=fs.readFileSync(path,'utf8');if(content.includes(`## [${version}]`)){process.exit(0);}const marker='---\n\n';const idx=content.indexOf(marker);if(idx===-1){fs.writeFileSync(path,entry+content);process.exit(0);}const insertPos=idx+marker.length;const updated=content.slice(0,insertPos)+entry+content.slice(insertPos);fs.writeFileSync(path,updated);"
 
       - name: Apply translations
         if: steps.compare.outputs.needs_update == 'true'
@@ -99,7 +107,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add package.json opencode-i18n/config.json README.md
+          git add package.json scripts/package.json opencode-i18n/config.json README.md CHANGELOG.md
           git commit -m "chore: sync upstream v${{ steps.upstream.outputs.version }} -> ${{ steps.newver.outputs.version }}"
           git push origin main
           git tag "v${{ steps.newver.outputs.version }}"
