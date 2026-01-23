@@ -101,7 +101,7 @@ jobs:
 
       - name: Build OpenCode
         run: |
-          ./opencode-cli build --platform ${{ matrix.platform }}
+          ./opencode-cli build --platform ${{ matrix.platform }} --deploy=false
 
       - name: Package
         run: |
@@ -109,20 +109,41 @@ jobs:
           PLATFORM=${{ matrix.platform }}
           PACKAGE_NAME="opencode-zh-CN-${VERSION}-${PLATFORM}"
           
-          mkdir -p releases/${VERSION}
-          cd bin
+          echo "=== Packaging ${PACKAGE_NAME} ==="
           
+          # 构建产物的实际路径
+          # opencode-zh-CN/packages/opencode/dist/opencode-{platform}/bin/
+          BUILD_DIR="opencode-zh-CN/packages/opencode/dist/opencode-${PLATFORM}/bin"
+          
+          echo "Looking for build artifacts in: ${BUILD_DIR}"
+          ls -la ${BUILD_DIR}/ || echo "Build dir not found"
+          
+          # 确保输出目录存在
+          mkdir -p dist
+          
+          # 检查构建产物并打包
           if [ "$PLATFORM" == "windows-x64" ]; then
-            zip -r ../releases/${VERSION}/${PACKAGE_NAME}.zip opencode.exe
+            BINARY="${BUILD_DIR}/opencode.exe"
           else
-            zip -r ../releases/${VERSION}/${PACKAGE_NAME}.zip opencode
+            BINARY="${BUILD_DIR}/opencode"
+          fi
+          
+          if [ -f "$BINARY" ]; then
+            zip -j dist/${PACKAGE_NAME}.zip "$BINARY"
+            echo "✓ Created dist/${PACKAGE_NAME}.zip"
+            ls -la dist/
+          else
+            echo "❌ Binary not found: $BINARY"
+            echo "=== Searching for opencode binaries ==="
+            find opencode-zh-CN -name "opencode*" -type f 2>/dev/null | head -20
+            exit 1
           fi
 
       - name: Upload OpenCode Artifact
         uses: actions/upload-artifact@v4
         with:
           name: opencode-${{ matrix.platform }}
-          path: releases/**/*.zip
+          path: dist/*.zip
 
   release:
     name: Create GitHub Release
