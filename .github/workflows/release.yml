@@ -61,6 +61,10 @@ jobs:
           GOARCH: ${{ matrix.arch }}
           CGO_ENABLED: 0  # 禁用 CGO 以实现静态链接，解决 GLIBC 兼容性问题
         run: |
+          # Copy assets FIRST
+          mkdir -p cli-go/internal/core/assets/opencode-i18n
+          cp -r opencode-i18n/* cli-go/internal/core/assets/opencode-i18n/
+
           cd cli-go
           go build -ldflags="-s -w" -o ../dist/opencode-cli-${{ matrix.os }}-${{ matrix.arch }}${{ matrix.ext }} .
 
