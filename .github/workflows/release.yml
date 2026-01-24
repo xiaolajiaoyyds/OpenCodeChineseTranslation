@@ -80,8 +80,6 @@ jobs:
         include:
           - platform: windows-x64
             bun_target: bun-windows-x64
-          - platform: windows-arm64
-            bun_target: bun-windows-x64  # Bun doesn't have official stable windows-arm64 builds yet, using x64 via emulation or cross-compilation if supported by tooling
           - platform: linux-x64
             bun_target: bun-linux-x64
           - platform: linux-arm64
@@ -225,11 +223,12 @@ jobs:
           | 平台 | 管理工具 (CLI) | 汉化版 OpenCode |
           |------|----------------|-----------------|
           | Windows x64 | \`opencode-cli-windows-amd64.exe\` | \`opencode-zh-CN-${VERSION}-windows-x64.zip\` |
-          | Windows ARM64 | \`opencode-cli-windows-arm64.exe\` | \`opencode-zh-CN-${VERSION}-windows-arm64.zip\` |
           | macOS Apple Silicon | \`opencode-cli-darwin-arm64\` | \`opencode-zh-CN-${VERSION}-darwin-arm64.zip\` |
           | macOS Intel | \`opencode-cli-darwin-amd64\` | \`opencode-zh-CN-${VERSION}-darwin-x64.zip\` |
           | Linux x64 | \`opencode-cli-linux-amd64\` | \`opencode-zh-CN-${VERSION}-linux-x64.zip\` |
           | Linux ARM64 | \`opencode-cli-linux-arm64\` | \`opencode-zh-CN-${VERSION}-linux-arm64.zip\` |
+          
+          > ⚠️ **注意**: Windows ARM64 暂不支持（Bun 尚未提供官方 Windows ARM64 构建）
           
           ### 🚀 快速安装
           
