@@ -53,8 +53,8 @@ jobs:
           UPSTREAM_SHA=$(git ls-remote https://github.com/${{ env.UPSTREAM_REPO }}.git refs/heads/${{ env.UPSTREAM_BRANCH }} | cut -f1)
           echo "Upstream SHA: $UPSTREAM_SHA"
           
-          # 获取当前日期
-          UPSTREAM_DATE=$(date -u +"%Y%m%d-%H%M")
+          # 获取当前日期（CST）
+          UPSTREAM_DATE=$(TZ='Asia/Shanghai' date +"%Y%m%d-%H%M")
           echo "Build timestamp: $UPSTREAM_DATE"
           
           # 读取上次构建的 commit SHA
@@ -187,6 +187,10 @@ jobs:
             bun_target: bun-windows-x64
           - platform: linux-x64
             bun_target: bun-linux-x64
+          - platform: linux-arm64
+            bun_target: bun-linux-aarch64
+          - platform: darwin-x64
+            bun_target: bun-darwin-x64
           - platform: darwin-arm64
             bun_target: bun-darwin-arm64
     steps:
@@ -295,7 +299,6 @@ jobs:
       - name: Package i18n tool
         run: |
           zip -r dist/opencode-i18n-tool-nightly.zip \
-            opencode-i18n/ \
             cli-go/ \
             install.ps1 \
             install.sh \
@@ -328,7 +331,7 @@ jobs:
           echo "| 上游分支 | \`${{ env.UPSTREAM_BRANCH }}\` |" >> release_notes.md
           echo "| 上游 Commit | [\`${UPSTREAM_SHA:0:8}\`](https://github.com/${{ env.UPSTREAM_REPO }}/commit/$UPSTREAM_SHA) |" >> release_notes.md
           echo "| 本次包含 Commits | ${COMMIT_COUNT:-unknown} |" >> release_notes.md
-          echo "| 构建时间 | $(date -u +"%Y-%m-%d %H:%M UTC") |" >> release_notes.md
+          echo "| 构建时间 | $(TZ='Asia/Shanghai' date +"%Y-%m-%d %H:%M CST") |" >> release_notes.md
           
           cat >> release_notes.md << 'EOF'
           
@@ -340,7 +343,11 @@ jobs:
           |------|----------------|-----------------|
           | Windows x64 | `opencode-cli-windows-amd64.exe` | `opencode-zh-CN-nightly-windows-x64.zip` |
           | macOS Apple Silicon | `opencode-cli-darwin-arm64` | `opencode-zh-CN-nightly-darwin-arm64.zip` |
+          | macOS Intel | `opencode-cli-darwin-amd64` | `opencode-zh-CN-nightly-darwin-x64.zip` |
           | Linux x64 | `opencode-cli-linux-amd64` | `opencode-zh-CN-nightly-linux-x64.zip` |
+          | Linux ARM64 | `opencode-cli-linux-arm64` | `opencode-zh-CN-nightly-linux-arm64.zip` |
+          
+          > ⚠️ **注意**: Windows ARM64 暂不支持（Bun 尚未提供官方 Windows ARM64 构建）
           
           ---
           
