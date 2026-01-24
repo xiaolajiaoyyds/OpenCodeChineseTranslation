@@ -1,52 +1,97 @@
-# OpenCode 发版脚本
-# 用法: .\release.ps1 -Version 8.3.0
+# OpenCode 发版脚本 (PowerShell)
+# 用法: .\release.ps1 -Version 8.5.0 -Message "发布说明"
 
 param(
     [Parameter(Mandatory=$true)]
-    [string]$Version
+    [string]$Version,
+    
+    [Parameter(Mandatory=$false)]
+    [string]$Message = "Release v$Version"
 )
 
-# 验证版本格式
+# 验证版本格式 (x.y.z)
 if ($Version -notmatch '^\d+\.\d+\.\d+$') {
-    Write-Error "版本号格式错误! 请使用 x.y.z 格式 (例如 8.3.0)"
+    Write-Error "❌ 版本号格式错误! 请使用 x.y.z 格式 (例如 8.5.0)"
     exit 1
 }
 
 $FullVersion = "v$Version"
-Write-Host "🚀 开始准备发布 $FullVersion ..." -ForegroundColor Cyan
+Write-Host "`n🚀 开始准备发布 $FullVersion ..." -ForegroundColor Cyan
 
-# 1. 更新 cli-go/internal/core/version.go
-$VersionFile = "cli-go/internal/core/version.go"
-Write-Host "Updating $VersionFile..."
-(Get-Content $VersionFile) -replace 'VERSION = ".*?"', "VERSION = `"$Version`"" | Set-Content $VersionFile
+# 1. 更新版本文件
+function Update-FileContent {
+    param ($Path, $Regex, $Replacement, $Description)
+    Write-Host "  → 更新 $Description ($Path)..." -ForegroundColor Yellow
+    if (Test-Path $Path) {
+        (Get-Content $Path) -replace $Regex, $Replacement | Set-Content $Path
+    } else {
+        Write-Warning "    ⚠️ 文件不存在: $Path"
+    }
+}
 
-# 2. 更新 install.ps1
-$InstallPs1 = "install.ps1"
-Write-Host "Updating $InstallPs1..."
-(Get-Content $InstallPs1) -replace 'v\d+\.\d+\.\d+', "$FullVersion" | Set-Content $InstallPs1
+# 1.1 cli-go/internal/core/version.go
+Update-FileContent `
+    -Path "cli-go/internal/core/version.go" `
+    -Regex 'VERSION = ".*?"' `
+    -Replacement "VERSION = `"$Version`"" `
+    -Description "CLI 版本常量"
 
-# 3. 更新 install.sh
-$InstallSh = "install.sh"
-Write-Host "Updating $InstallSh..."
-(Get-Content $InstallSh) -replace 'v\d+\.\d+\.\d+', "$FullVersion" | Set-Content $InstallSh
+# 1.2 install.ps1
+Update-FileContent `
+    -Path "install.ps1" `
+    -Regex 'v\d+\.\d+\.\d+' `
+    -Replacement "$FullVersion" `
+    -Description "PowerShell 安装脚本"
 
-# 4. 更新 docs/index.html
-$DocsFile = "docs/index.html"
-Write-Host "Updating $DocsFile..."
-# 更新显示的版本号
-$Content = Get-Content $DocsFile
-$Content = $Content -replace 'id="latest-version">v.*?<', "id=`"latest-version`">$FullVersion<"
-$Content = $Content -replace 'id="dash-version">v.*?<', "id=`"dash-version`">$FullVersion<"
-# 更新 fallback 数据中的版本号
-$Content = $Content -replace "tag_name: 'v.*?'", "tag_name: '$FullVersion'"
-# 更新 fallback 数据中的下载链接
-$Content = $Content -replace "download/v.*?/", "download/$FullVersion/"
-$Content | Set-Content $DocsFile
+# 1.3 install.sh
+Update-FileContent `
+    -Path "install.sh" `
+    -Regex 'v\d+\.\d+\.\d+' `
+    -Replacement "$FullVersion" `
+    -Description "Shell 安装脚本"
 
-Write-Host "`n✅ 版本号替换完成!" -ForegroundColor Green
-Write-Host "请执行以下后续步骤:" -ForegroundColor Yellow
-Write-Host "1. 手动更新 CHANGELOG.md"
-Write-Host "2. 运行: git add ."
-Write-Host "3. 运行: git commit -m `"chore: release $FullVersion`""
-Write-Host "4. 运行: git tag $FullVersion"
-Write-Host "5. 运行: git push origin main --tags"
+# 1.4 cli-go/build.sh
+Update-FileContent `
+    -Path "cli-go/build.sh" `
+    -Regex 'VERSION=".*?"' `
+    -Replacement "VERSION=`"$Version`"" `
+    -Description "Build Shell 脚本"
+
+# 1.5 cli-go/build.ps1
+Update-FileContent `
+    -Path "cli-go/build.ps1" `
+    -Regex '\$VERSION = ".*?"' `
+    -Replacement "`$VERSION = `"$Version`"" `
+    -Description "Build PowerShell 脚本"
+
+Write-Host "`n✅ 版本号更新完成!" -ForegroundColor Green
+
+# 2. 交互式确认
+Write-Host "`n即将执行 Git 操作:" -ForegroundColor Cyan
+Write-Host "  1. git add ."
+Write-Host "  2. git commit -m `"chore: release $FullVersion`""
+Write-Host "  3. git tag $FullVersion -m `"$Message`""
+Write-Host "  4. git push origin main --tags"
+
+$confirmation = Read-Host "`n确认执行? [Y/n]"
+if ($confirmation -match "^[Yy]") {
+    try {
+        Write-Host "`n📦 执行 Git 提交..." -ForegroundColor Yellow
+        git add .
+        git commit -m "chore: release $FullVersion"
+        
+        Write-Host "🏷️ 打 Tag..." -ForegroundColor Yellow
+        git tag -a $FullVersion -m "$Message"
+        
+        Write-Host "⬆️ 推送代码和 Tags..." -ForegroundColor Yellow
+        git push origin main --tags
+        
+        Write-Host "`n🎉 发布流程触发成功! 请检查 GitHub Actions 状态。" -ForegroundColor Green
+    } catch {
+        Write-Error "❌ Git 操作失败: $_"
+        exit 1
+    }
+} else {
+    Write-Host "操作已取消。" -ForegroundColor Yellow
+}
+

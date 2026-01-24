@@ -1,407 +1,179 @@
-# Oh My OpenCode 完整使用指南
+# Oh My OpenCode (Sisyphus) 终极实战指南
 
 [![oh-my-opencode](https://img.shields.io/badge/oh--my--opencode-v3.0-blue.svg)](https://github.com/code-yeongyu/oh-my-opencode)
 [![OpenCode](https://img.shields.io/badge/OpenCode-中文版-green.svg)](https://github.com/1186258278/OpenCodeChineseTranslation)
 
-> **Oh My OpenCode** 是 OpenCode 的终极增强插件，提供多模型协作、专业 Agent 团队、后台并行任务等强大功能。
+> **"Sisyphus 是像你的团队一样编码的智能体。"**
+> 
+> Oh My OpenCode 将 OpenCode 升级为拥有完整工程团队能力的智能体编排系统。你不再是单纯的 Coder，而是 AI 研发团队的 Tech Lead。
 
 ---
 
-## 📌 什么是 Oh My OpenCode？
+## 📦 第一章：安装指南 (Installation)
 
-**Oh My OpenCode** 将你的 AI 编码助手从单一模型升级为**完整的 AI 开发团队**：
-
-| 特性 | 说明 |
-|------|------|
-| 🤖 **多 Agent 协作** | Sisyphus 作为主管，协调 Oracle、Librarian、Frontend 等专业 Agent |
-| ⚡ **后台并行任务** | 多个 Agent 同时工作，大幅提升效率 |
-| 🔧 **LSP/AST 工具** | 给 Agent 提供 IDE 级别的代码分析能力 |
-| 📚 **内置 MCP** | Exa 搜索、Context7 文档、grep.app 代码搜索 |
-| 🔄 **Claude Code 兼容** | 完整支持 Claude Code 的 Hooks、Commands、Skills |
-
-**项目地址**: https://github.com/code-yeongyu/oh-my-opencode
-
----
-
-## 🎭 Agent 团队介绍
-
-### 核心 Agent
-
-| Agent | 默认模型 | 专长 |
-|-------|---------|------|
-| **Sisyphus** | `claude-opus-4-5` | 主协调者，规划和委派任务 |
-| **Oracle** | `gpt-5.2` | 架构设计、代码审查、战略分析 |
-| **Librarian** | `glm-4.7-free` | 文档查询、开源实现研究 |
-| **Explore** | `grok-code` / `gemini-3-flash` | 快速代码探索 |
-| **Frontend UI/UX** | `gemini-3-pro` | 前端开发、UI 设计 |
-| **Document Writer** | `gemini-3-flash` | 技术文档撰写 |
-| **Multimodal Looker** | `gemini-3-flash` | 图片/PDF 分析 |
-
-### 工作流程
-
-```
-你的请求 → Sisyphus (主管)
-              ├── 派发给 Oracle (架构问题)
-              ├── 派发给 Frontend (UI 任务)
-              ├── 派发给 Librarian (查文档)
-              └── 后台并行执行 Explore (代码搜索)
-```
-
----
-
-## 🚀 安装指南
-
-### 前置条件
-
-- OpenCode 已安装（v1.0.150+）
-- Node.js 或 Bun 运行时
-
-### 方式一：交互式安装（推荐）
+### 1. 交互式安装（推荐）
+这是最简单的方式，安装脚本会自动检测环境并生成最优配置。
 
 ```bash
-# 使用 bunx
+# 使用 bun (推荐)
 bunx oh-my-opencode install
 
-# 或使用 npx
+# 或使用 npm
 npx oh-my-opencode install
 ```
 
-按提示选择你拥有的订阅：
-- Claude Pro/Max 订阅
-- ChatGPT Plus/Pro 订阅
-- Gemini 订阅
+安装过程中会询问你拥有的订阅类型（Claude/ChatGPT/Gemini），请如实选择，脚本会根据你的回答配置最佳的模型组合。
 
-### 方式二：命令行安装
+### 2. 命令行快速安装
+如果你喜欢自动化脚本，可以使用参数直接安装：
 
 ```bash
-# 示例：有 Claude Max20 + ChatGPT + Gemini
-bunx oh-my-opencode install --no-tui --claude=max20 --chatgpt=yes --gemini=yes
-
-# 示例：只有 Claude Pro
-bunx oh-my-opencode install --no-tui --claude=yes --chatgpt=no --gemini=no
+# 示例：我有 Claude Max20 和 Gemini 订阅
+bunx oh-my-opencode install --no-tui --claude=max20 --gemini=yes --chatgpt=no
 ```
 
-### 方式三：让 AI 帮你安装
-
-在 OpenCode 中输入：
-```
-Install and configure by following the instructions here https://raw.githubusercontent.com/code-yeongyu/oh-my-opencode/refs/heads/master/README.md
-```
+### 3. AI 辅助安装
+如果你懒得动手，直接把下面这句话发给 OpenCode：
+> "Install and configure oh-my-opencode by following the instructions from https://github.com/code-yeongyu/oh-my-opencode"
 
 ---
 
-## 🔐 认证配置
+## 🔐 第二章：认证与配置 (Auth & Config)
 
-### Anthropic (Claude)
-
-```bash
-opencode auth login
-# 选择 Provider: Anthropic
-# 选择 Login method: Claude Pro/Max
-# 在浏览器中完成 OAuth 授权
-```
-
-### Google Gemini (通过 Antigravity)
-
-1. **添加插件**到 `opencode.json`:
-
-```json
-{
-  "plugin": [
-    "oh-my-opencode",
-    "opencode-antigravity-auth@1.2.8"
-  ]
-}
-```
-
-2. **配置 Agent 模型**在 `oh-my-opencode.json`:
-
-```json
-{
-  "google_auth": false,
-  "agents": {
-    "frontend-ui-ux-engineer": { "model": "google/antigravity-gemini-3-pro-high" },
-    "document-writer": { "model": "google/antigravity-gemini-3-flash" },
-    "multimodal-looker": { "model": "google/antigravity-gemini-3-flash" }
-  }
-}
-```
-
-3. **认证**:
+### 1. 基础认证 (必须)
+无论你使用什么模式，必须先登录 OpenCode 才能解锁后台并行任务能力。
 
 ```bash
 opencode auth login
-# 选择 Provider: Google
-# 选择 Login method: OAuth with Google (Antigravity)
 ```
+*   如果不登录，后台任务 (Background Agents) 将无法启动，你会收到 `Unauthorized` 错误。
 
-### OpenAI (ChatGPT)
+### 2. 配置文件
+配置文件支持 `.jsonc` (带注释的 JSON)，位置优先级如下：
+1.  **项目级** (最高优先级): `.opencode/oh-my-opencode.json`
+2.  **用户级**: `~/.config/opencode/oh-my-opencode.json` (Windows下在 `%APPDATA%` 或 User Home)
 
-1. **添加插件**:
-
-```json
-{
-  "plugin": [
-    "oh-my-opencode",
-    "opencode-openai-codex-auth@4.3.0"
-  ]
-}
-```
-
-2. **认证**:
-
-```bash
-opencode auth login
-# 选择 Provider: OpenAI
-# 选择 Login method: ChatGPT Plus/Pro (Codex Subscription)
-```
-
----
-
-## ⚡ 魔法关键词
-
-### ultrawork / ulw
-
-在提示词中包含 `ultrawork` 或 `ulw`，自动启用所有增强功能：
-
-```
-ulw 帮我重构这个项目的认证系统
-```
-
-效果：
-- ✅ 并行 Agent 协作
-- ✅ 后台任务执行
-- ✅ 深度代码探索
-- ✅ 持续执行直到完成
-
-### 其他关键词
-
-| 关键词 | 效果 |
-|-------|------|
-| `ultrawork` / `ulw` | 最大性能模式 |
-| `search` / `find` / `찾아` / `検索` | 最大化搜索，并行 Explore + Librarian |
-| `analyze` / `investigate` / `分析` / `調査` | 深度分析模式 |
-| `ultrathink` | 深度思考模式 |
-
----
-
-## 📋 配置文件
-
-### 配置文件位置
-
-| 优先级 | 位置 |
-|--------|------|
-| 1 (最高) | `.opencode/oh-my-opencode.json` (项目级) |
-| 2 | `~/.config/opencode/oh-my-opencode.json` (用户级) |
-
-### 完整配置示例
-
+**推荐配置结构：**
 ```jsonc
 {
   "$schema": "https://raw.githubusercontent.com/code-yeongyu/oh-my-opencode/master/assets/oh-my-opencode.schema.json",
-
-  // Google 认证（使用 Antigravity 插件时设为 false）
+  
+  // 1. 认证模式：如果使用了 Antigravity 插件，设为 false
   "google_auth": false,
 
-  // Sisyphus 主协调者配置
-  "sisyphus_agent": {
-    "disabled": false,
-    "planner_enabled": true
-  },
-
-  // Agent 模型覆盖
+  // 2. Agent 模型自定义 (根据你的财力调整)
   "agents": {
-    "Sisyphus": {
-      "model": "anthropic/claude-opus-4-5",
-      "temperature": 0.3
+    "Sisyphus": { 
+      "model": "anthropic/claude-opus-4-5", // 主管用最好的
+      "temperature": 0.3 
     },
-    "oracle": {
-      "model": "openai/gpt-5.2"
-    },
-    "librarian": {
-      "model": "opencode/glm-4.7-free"
-    },
-    "explore": {
-      "model": "google/antigravity-gemini-3-flash"
-    },
-    "frontend-ui-ux-engineer": {
-      "model": "google/antigravity-gemini-3-pro-high"
-    }
+    "oracle": { "model": "openai/gpt-5.2" }, // 军师用逻辑最强的
+    "explore": { "model": "google/gemini-3-flash" } // 跑腿用最快最便宜的
   },
 
-  // 后台任务并发配置
+  // 3. 后台并发控制
   "background_task": {
-    "defaultConcurrency": 5,
+    "defaultConcurrency": 5, // 默认同时跑5个
     "providerConcurrency": {
-      "anthropic": 3,
-      "google": 10
-    }
-  },
-
-  // 任务分类配置
-  "categories": {
-    "visual": {
-      "model": "google/antigravity-gemini-3-pro-high",
-      "temperature": 0.7
-    },
-    "business-logic": {
-      "model": "openai/gpt-5.2",
-      "temperature": 0.1
+      "google": 10, // Gemini 支持高并发
+      "anthropic": 3 // Claude 并发较低
     }
   }
 }
 ```
 
----
-
-## 🔧 与 Antigravity Tools 集成
-
-Oh My OpenCode 原生支持 Antigravity Tools！
-
-### 配置方法
-
-1. **安装 Antigravity 插件**:
-
-```json
-{
-  "plugin": [
-    "oh-my-opencode",
-    "opencode-antigravity-auth@1.2.8"
-  ]
-}
-```
-
-2. **配置 oh-my-opencode.json**:
-
-```json
-{
-  "google_auth": false,
-  "agents": {
-    "Sisyphus": {
-      "model": "google/antigravity-claude-opus-4-5-thinking-high"
-    },
-    "oracle": {
-      "model": "google/antigravity-claude-sonnet-4-5-thinking-medium"
-    },
-    "frontend-ui-ux-engineer": {
-      "model": "google/antigravity-gemini-3-pro-high"
-    },
-    "explore": {
-      "model": "google/antigravity-gemini-3-flash"
-    },
-    "librarian": {
-      "model": "google/antigravity-gemini-3-flash"
-    },
-    "document-writer": {
-      "model": "google/antigravity-gemini-3-flash"
-    }
-  }
-}
-```
-
-### 可用的 Antigravity 模型
-
-| 模型名称 | 说明 |
-|---------|------|
-| `google/antigravity-gemini-3-pro-high` | Gemini 3 Pro 高性能 |
-| `google/antigravity-gemini-3-pro-low` | Gemini 3 Pro 低延迟 |
-| `google/antigravity-gemini-3-flash` | Gemini 3 Flash 快速 |
-| `google/antigravity-claude-sonnet-4-5` | Claude Sonnet 4.5 |
-| `google/antigravity-claude-sonnet-4-5-thinking-*` | Claude Sonnet 思考模式 |
-| `google/antigravity-claude-opus-4-5-thinking-*` | Claude Opus 思考模式 |
+### 3. 进阶：Antigravity 认证 (Google 账号)
+如果你需要极致的并发性能（同时跑 10+ 后台任务），建议安装 `opencode-antigravity-auth` 插件并配置 Google 账号。这能解锁 Gemini 的高并发能力。
 
 ---
 
-## 🛠️ 内置工具
+## ⚡️ 第三章：核心模式 Ultrawork
 
-### LSP 工具
+这是该插件的灵魂。当你需要处理复杂任务，不想一步步确认时使用。
 
-| 工具 | 功能 |
-|------|------|
-| `lsp_hover` | 获取类型信息和文档 |
-| `lsp_goto_definition` | 跳转到定义 |
-| `lsp_find_references` | 查找所有引用 |
-| `lsp_rename` | 重命名符号 |
-| `lsp_code_actions` | 获取快速修复建议 |
-| `ast_grep_search` | AST 感知的代码搜索 |
-| `ast_grep_replace` | AST 感知的代码替换 |
+### 触发方式
+在提示词中包含 `ultrawork` 或简写 `ulw`。
 
-### 内置 MCP
+### 效果
+Sisyphus 会自动进入"推石头"模式：
+1.  **自动拆解**：分析需求，拆解为子任务。
+2.  **后台并行**：启动多个后台线程 (Explore/Librarian) 并行搜索代码和文档。
+3.  **循环执行**：执行 -> 检查 -> 修正 -> 下一步，直到任务 100% 完成。
 
-| MCP | 功能 |
-|-----|------|
-| `websearch` | Exa AI 网络搜索 |
-| `context7` | 官方文档查询 |
-| `grep_app` | GitHub 代码搜索 |
-
-### 内置 Skills
-
-| Skill | 功能 |
-|-------|------|
-| `playwright` | 浏览器自动化 |
-| `git-master` | Git 专家操作 |
+### 示例
+> "ulw 重构现在的登录逻辑，改用 NextAuth.js，并确保所有测试通过。"
+> "ulw analyze 为什么这个 API 响应这么慢，给我出个优化方案。"
 
 ---
 
-## 🎯 使用示例
+## 🎭 第四章：指挥你的“AI 团队” (Agents)
 
-### 调用特定 Agent
+你不需要自己干所有的活，学会“点名”让专家上。
 
-```
-Ask @oracle to review this design and propose an architecture
-Ask @librarian how this is implemented
-Ask @explore for the policy on this feature
-```
-
-### 后台任务
-
-```
-让 explore 在后台搜索所有使用 useState 的组件，同时我继续编写逻辑
-```
-
-### 任务分类
-
-```javascript
-// 使用 sisyphus_task 工具
-sisyphus_task(category="visual", prompt="创建一个响应式仪表板组件")
-sisyphus_task(category="business-logic", prompt="设计支付处理流程")
-sisyphus_task(agent="oracle", prompt="审查这个架构")
-```
-
-### Ralph Loop（持续执行）
-
-```
-/ralph-loop "Build a REST API"
-```
-
-Agent 会持续工作直到任务完成，或达到最大迭代次数。
+| 专家代号 | 擅长领域 | 最佳调用场景 | 话术示例 |
+| :--- | :--- | :--- | :--- |
+| **@oracle** | **架构/深思/调试** | 遇到死胡同、设计难题、需要“高智商”决策时 | "Ask @oracle 分析为什么这个死锁问题频繁发生" |
+| **@librarian** | **文档/调研** | 不懂 API、不知道最佳实践、查阅开源实现 | "Ask @librarian 查一下 Stripe 最新 API 的退款流程" |
+| **@explore** | **代码考古/搜索** | 想知道某个功能在哪定义的、理清复杂的依赖关系 | "Ask @explore 找出项目中所有用到 UserContext 的地方" |
+| **@frontend-ui-ux-engineer** | **界面/CSS/设计** | 调整样式、动画、布局、Tailwind 类名 | "让 @frontend-ui-ux-engineer 把这个按钮改成类似 Vercel 的风格" |
 
 ---
 
-## ⚠️ 注意事项
+## 🚨 第五章：迁移用户避坑指南 (Claude Code -> OpenCode)
 
-1. **Librarian 模型选择**：不要为 Librarian 使用昂贵模型，推荐 Haiku、Flash、GLM 等
+**如果你是从 Claude Code 迁移过来的用户，请务必阅读本节！**
 
-2. **后台任务并发**：根据你的订阅配额调整 `background_task.providerConcurrency`
+### 1. 路径优先级陷阱
+Oh My OpenCode 会按照以下优先级加载配置：
+1.  `.opencode/` (项目级)
+2.  `.claude/` (兼容层)
 
-3. **Claude Code 兼容**：如果同时使用 Claude Code，所有配置都兼容
+**⚠️ 警告**：如果你在 `.opencode/skills` 和 `.claude/skills` 中存放了同名 Skill，系统可能会混淆或加载失败。
+**✅ 建议**：删除 `.opencode` 下的重复内容，直接保留你的 `.claude` 目录。插件完美兼容 Claude Code 的目录结构。
 
-4. **模型成本**：Opus 模型成本较高，建议仅在 Sisyphus 主 Agent 使用
+### 2. MCP 重复配置
+插件内置了以下 MCP 服务，请**不要**在你的 `.claude/.mcp.json` 中重复配置，否则会发生冲突：
+*   `websearch` (Exa)
+*   `context7` (文档查询)
+*   `grep_app` (GitHub 代码搜索)
+
+其他自定义 MCP (如 Postgres, Github, Filesystem) 可以放心保留。
+
+### 3. Hook 调试
+你的 `.claude/hooks` 自定义脚本按**文件名顺序**执行。如果发现 Hook 未触发：
+*   检查文件名排序（建议加数字前缀，如 `01_init.js`）。
+*   在 OpenCode 中运行 `opencode --debug` 查看加载日志。
 
 ---
 
-## 🔗 相关链接
+## 🛠️ 第六章：常用增强命令
 
-| 链接 | 说明 |
-|------|------|
-| [oh-my-opencode](https://github.com/code-yeongyu/oh-my-opencode) | 官方仓库 |
-| [opencode-antigravity-auth](https://github.com/NoeFabris/opencode-antigravity-auth) | Antigravity 认证插件 |
-| [opencode-openai-codex-auth](https://github.com/numman-ali/opencode-openai-codex-auth) | OpenAI Codex 认证插件 |
-| [Antigravity Tools](https://github.com/lbjlaq/Antigravity-Manager) | 本地 AI 网关 |
-| [OpenCode 中文版](https://github.com/1186258278/OpenCodeChineseTranslation) | 本项目 |
+除了你的自定义 Commands，插件自带了几个神器：
+
+*   **`/git-master`**：Git 专家。
+    *   *commit*: 自动生成极高质量的原子提交信息。
+    *   *squash*: 智能压缩提交。
+    *   *blame*: "Who wrote this crap?"
+*   **`/refactor`**：安全重构。
+    *   先分析 AST -> 调用 LSP 重命名 -> 运行测试。
+    *   *用法*：`/refactor 用户服务模块`
+*   **`/playwright`**：浏览器自动化。
+    *   *用法*：`/playwright 打开 localhost:3000 并截图` (前端验收神器)。
+*   **`/init-deep`**：生成项目上下文。
+    *   在各级目录生成 `AGENTS.md`，让 AI 更懂你的项目结构。
 
 ---
 
-## 📝 更新日志
+## ❓ 常见问题 (FAQ)
 
-- **2025-01-18**: 初始版本，完整 oh-my-opencode 使用指南
+**Q: Sisyphus 和 Planner 模式有什么区别？**
+A: **Sisyphus (默认)** 是敏捷模式，边干边想，适合调试和重构。**Planner** 是规划模式，会先生成详细的 `PLAN.md` 待你审批后再执行，适合大型功能开发。说 "先帮我做一个 Plan" 即可触发 Planner。
+
+**Q: 后台任务报错 `Unauthorized`？**
+A: 你的 OpenCode 认证过期了。运行 `opencode auth login` 重新登录。
+
+**Q: 怎么让 AI 知道我的代码规范？**
+A: 在项目根目录或子目录创建 `AGENTS.md`。Sisyphus 在编辑文件时会自动读取当前路径一直到根目录的所有 `AGENTS.md` 文件。
+
+**Q: `ulw` 卡住了怎么办？**
+A: 输入 `stop` 或 `/cancel-ralph` 强制停止。

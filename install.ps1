@@ -8,7 +8,7 @@ function Write-Color($text, $color) {
 }
 
 Write-Color "==============================================" "Cyan"
-Write-Color "   OpenCode 汉化管理工具安装脚本 (v8.4.1)   " "Cyan"
+Write-Color "   OpenCode 汉化管理工具安装脚本 (v8.5.0)   " "Cyan"
 Write-Color "==============================================" "Cyan"
 
 # 1. 检测架构
@@ -40,7 +40,7 @@ if (Test-Path $localFile) {
     # 4. 在线下载
     Write-Color "`n[2/4] 获取最新版本信息..." "Yellow"
     $repo = "1186258278/OpenCodeChineseTranslation"
-    $tagName = "v8.4.1" # 默认版本作为后备
+    $tagName = "v8.5.0" # 默认版本作为后备
 
     try {
         $latest = Invoke-RestMethod -Uri "https://api.github.com/repos/$repo/releases/latest" -ErrorAction Stop

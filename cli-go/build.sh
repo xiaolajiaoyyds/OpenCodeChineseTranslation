@@ -4,7 +4,7 @@
 set -e
 
 APP_NAME="opencode-cli"
-VERSION="8.4.1"
+VERSION="8.5.0"
 ASSETS_SRC="../opencode-i18n"
 ASSETS_DEST="internal/core/assets/opencode-i18n"
 

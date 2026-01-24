@@ -3,7 +3,7 @@
 $ErrorActionPreference = "Stop"
 
 $APP_NAME = "opencode-cli"
-$VERSION = "8.4.1"
+$VERSION = "8.5.0"
 $OUTPUT_DIR = "dist"
 $ASSETS_SRC = "../opencode-i18n"
 $ASSETS_DEST = "internal/core/assets/opencode-i18n"

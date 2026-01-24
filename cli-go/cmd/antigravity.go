@@ -29,14 +29,6 @@ func init() {
 	rootCmd.AddCommand(antigravityCmd)
 }
 
-// OpencodeConfig OpenCode 配置结构
-type OpencodeConfig struct {
-	Schema     string                            `json:"$schema,omitempty"`
-	Provider   map[string]interface{}            `json:"provider,omitempty"`
-	Model      string                            `json:"model,omitempty"`
-	McpServers map[string]map[string]interface{} `json:"mcpServers,omitempty"`
-}
-
 func runAntigravity() {
 	fmt.Println("")
 	fmt.Println("══════════════════════════════════════════════════")
@@ -50,7 +42,7 @@ func runAntigravity() {
 
 	reader := bufio.NewReader(os.Stdin)
 
-	// 1. 输入端点地址
+	// 1. Enter endpoint address
 	fmt.Println("▶ 步骤 1/3: 配置端点地址")
 	fmt.Println("  直接回车使用默认端点，或输入自定义地址")
 	fmt.Printf("  端点地址 [%s]: ", DefaultAntigravityEndpoint)
@@ -64,7 +56,7 @@ func runAntigravity() {
 	fmt.Printf("✓ 端点地址: %s\n", endpoint)
 	fmt.Println("")
 
-	// 2. 测试连接
+	// 2. Test connection
 	fmt.Println("▶ 步骤 2/3: 测试端点连接")
 	fmt.Printf("  正在连接 %s...\n", endpoint)
 
@@ -89,7 +81,7 @@ func runAntigravity() {
 	}
 	fmt.Println("")
 
-	// 3. 可选 API Key
+	// 3. Optional API Key
 	fmt.Println("▶ 步骤 3/3: 配置 API Key (可选)")
 	fmt.Println("  本地服务通常无需 API Key，直接回车跳过")
 	fmt.Print("  API Key: ")
@@ -97,7 +89,7 @@ func runAntigravity() {
 	apiKey, _ := reader.ReadString('\n')
 	apiKey = strings.TrimSpace(apiKey)
 
-	// 确认配置
+	// Confirm configuration
 	fmt.Println("")
 	fmt.Println("──────────────────────────────────────────────────")
 	fmt.Println("  配置预览:")
@@ -118,30 +110,38 @@ func runAntigravity() {
 		return
 	}
 
-	// 写入配置
+	// Write configuration
 	fmt.Println("")
 	fmt.Println("▶ 保存配置")
 
 	configPath := getOpencodeConfigPath()
-	config := readOpencodeConfig(configPath)
 
-	if config.Provider == nil {
-		config.Provider = make(map[string]interface{})
+	// Use map[string]interface{} instead of Struct to ensure non-destructive updates
+	config := readOpencodeConfigMap(configPath)
+
+	if config["provider"] == nil {
+		config["provider"] = make(map[string]interface{})
 	}
 
-	// 配置 Antigravity Tools (Gemini)
-	// 使用 v1beta 接口
-	geminiBaseURL := fmt.Sprintf("%s/v1beta", endpoint)
+	// Safely get provider map
+	var providers map[string]interface{}
+	if p, ok := config["provider"].(map[string]interface{}); ok {
+		providers = p
+	} else {
+		providers = make(map[string]interface{})
+	}
 
+	// Configure Antigravity Tools (Gemini)
+	geminiBaseURL := fmt.Sprintf("%s/v1beta", endpoint)
 	geminiOptions := map[string]interface{}{
 		"baseURL": geminiBaseURL,
-		"apiKey":  "1", // 本地网关通常不需要真实 Key，但 SDK 可能校验非空
+		"apiKey":  "1",
 	}
 	if apiKey != "" {
 		geminiOptions["apiKey"] = apiKey
 	}
 
-	config.Provider["AntigravityToolsGemini"] = map[string]interface{}{
+	providers["AntigravityToolsGemini"] = map[string]interface{}{
 		"npm":     "@ai-sdk/google",
 		"name":    "Antigravity (Gemini)",
 		"options": geminiOptions,
@@ -153,6 +153,11 @@ func runAntigravity() {
 					"context": 1000000,
 					"output":  20000,
 				},
+				"attachment": true,
+				"modalities": map[string]interface{}{
+					"input":  []string{"text", "image"},
+					"output": []string{"text"},
+				},
 			},
 			"gemini-3-pro-low": map[string]interface{}{
 				"id":   "gemini-3-pro-low",
@@ -161,21 +166,25 @@ func runAntigravity() {
 					"context": 1000000,
 					"output":  20000,
 				},
+				"attachment": true,
+				"modalities": map[string]interface{}{
+					"input":  []string{"text", "image"},
+					"output": []string{"text"},
+				},
 			},
 		},
 	}
 
-	// 配置 Antigravity Tools (Claude)
-	// 假设 Antigravity 提供了标准 Anthropic 兼容接口
+	// Configure Antigravity Tools (Claude)
 	claudeOptions := map[string]interface{}{
-		"baseURL": fmt.Sprintf("%s/v1", endpoint), // 通常映射到 /v1
+		"baseURL": fmt.Sprintf("%s/v1", endpoint),
 		"apiKey":  "1",
 	}
 	if apiKey != "" {
 		claudeOptions["apiKey"] = apiKey
 	}
 
-	config.Provider["AntigravityToolsClaude"] = map[string]interface{}{
+	providers["AntigravityToolsClaude"] = map[string]interface{}{
 		"npm":     "@ai-sdk/anthropic",
 		"name":    "Antigravity (Claude)",
 		"options": claudeOptions,
@@ -187,17 +196,26 @@ func runAntigravity() {
 					"context": 200000,
 					"output":  20000,
 				},
+				"attachment": true,
+				"modalities": map[string]interface{}{
+					"input":  []string{"text", "image"},
+					"output": []string{"text"},
+				},
 			},
 		},
 	}
 
-	// 设置默认模型
-	// 如果用户没有设置过模型，或者原模型是旧的 antigravity 配置，则更新
-	if config.Model == "" || strings.HasPrefix(config.Model, "antigravity/") {
-		config.Model = "AntigravityToolsGemini/gemini-3-pro-high"
+	// Update provider
+	config["provider"] = providers
+
+	// Set default model
+	// If the user has not set a model, or the original model is the old antigravity configuration, update it
+	currentModel, _ := config["model"].(string)
+	if currentModel == "" || strings.HasPrefix(currentModel, "antigravity/") {
+		config["model"] = "AntigravityToolsGemini/gemini-3-pro-high"
 	}
 
-	if err := writeOpencodeConfig(configPath, config); err != nil {
+	if err := writeOpencodeConfigMap(configPath, config); err != nil {
 		fmt.Printf("✗ 保存配置失败: %v\n", err)
 		return
 	}
@@ -214,7 +232,7 @@ func runAntigravity() {
 	fmt.Println("    1. AntigravityToolsGemini (推荐)")
 	fmt.Println("    2. AntigravityToolsClaude")
 	fmt.Println("")
-	fmt.Printf("  当前默认模型: %s\n", config.Model)
+	fmt.Printf("  当前默认模型: %s\n", config["model"])
 	fmt.Println("")
 	fmt.Println("  下一步操作:")
 	fmt.Println("    1. 启动 OpenCode: opencode")
@@ -251,15 +269,16 @@ func getOpencodeConfigPath() string {
 	return filepath.Join(configDir, "opencode.json")
 }
 
-func readOpencodeConfig(path string) OpencodeConfig {
-	config := OpencodeConfig{}
+// readOpencodeConfigMap reads config as a map to preserve unknown fields
+func readOpencodeConfigMap(path string) map[string]interface{} {
+	config := make(map[string]interface{})
 
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return config
 	}
 
-	// 简单移除注释
+	// Remove comments simply
 	content := string(data)
 	lines := strings.Split(content, "\n")
 	var cleaned []string
@@ -274,13 +293,18 @@ func readOpencodeConfig(path string) OpencodeConfig {
 	return config
 }
 
-func writeOpencodeConfig(path string, config OpencodeConfig) error {
+// writeOpencodeConfigMap writes map config
+func writeOpencodeConfigMap(path string, config map[string]interface{}) error {
 	configDir := filepath.Dir(path)
 	if err := os.MkdirAll(configDir, 0755); err != nil {
 		return err
 	}
 
-	config.Schema = "https://opencode.ai/config.json"
+	// Ensure schema exists
+	if _, ok := config["$schema"]; !ok {
+		config["$schema"] = "https://opencode.ai/config.json"
+	}
+
 	data, err := json.MarshalIndent(config, "", "  ")
 	if err != nil {
 		return err

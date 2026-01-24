@@ -7,6 +7,28 @@
 
 ---
 
+## [8.5.0] - 2026-01-25
+
+### 🚀 全平台与视觉增强
+
+- **全平台构建支持** - 新增对 Windows ARM64、macOS Intel (x64) 和 Linux ARM64 的官方构建支持
+  - 现在覆盖了 Windows (x64/ARM64)、macOS (Apple Silicon/Intel)、Linux (x64/ARM64)
+- **视觉模型配置修复** - 修复 Antigravity Tools 配置生成逻辑
+  - 正确启用 Gemini/Claude 的 `attachment` 和 `modalities` 属性
+  - 修复 OpenCode 中回形针图标不显示/无法识别图片的问题
+- **Windows 部署修复** - 彻底解决 Windows 下部署时版本回退的问题
+  - 实现“自我复制”更新机制，确保部署的是当前运行的最新二进制文件
+  - 自动清理 `npm`/`bun` 残留的全局冲突脚本 (shim files)
+- **配置安全性增强** - 重构配置写入逻辑，实现非破坏性更新
+  - 在更新 Antigravity 配置时，不再覆盖用户的自定义插件和其他 Provider 配置
+
+### 🛠️ 开发者体验
+
+- **文档更新** - 重写 `CONTRIBUTING.md`，适配最新的 Go CLI 工作流
+- **发布脚本升级** - `release.ps1` 支持自动更新官网版本号和多平台下载链接
+
+---
+
 ## [8.4.0] - 2026-01-24
 
 ### 🤖 自动化构建增强

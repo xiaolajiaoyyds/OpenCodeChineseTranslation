@@ -142,7 +142,7 @@
         <div class="max-w-5xl mx-auto text-center">
             <a href="https://github.com/1186258278/OpenCodeChineseTranslation/releases/latest" target="_blank" class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/30 bg-primary/10 text-primary text-xs font-medium mb-8 hover:bg-primary/20 transition cursor-pointer">
                 <span class="flex h-2 w-2 rounded-full bg-primary animate-pulse"></span>
-                <span id="latest-version">v8.4.1</span> 已发布 · 每日构建
+                <span id="latest-version">v8.5.0</span> 已发布 · 每日构建
                 <i class="fa-solid fa-chevron-right text-[10px] opacity-50"></i>
             </a>
             
@@ -171,7 +171,7 @@
                     </div>
                     <div>
                         <h3 class="text-xl font-bold text-white flex items-center gap-2">
-                            <span id="dash-version">v8.4.1</span>
+                            <span id="dash-version">v8.5.0</span>
                             <span class="text-xs font-normal text-gray-400 bg-white/10 px-2 py-0.5 rounded" id="dash-date">...</span>
                         </h3>
                     </div>
@@ -619,8 +619,11 @@
 
             const platforms = [
                 { id: 'windows-x64', matchId: 'windows-amd64', icon: 'fa-windows', name: 'Windows x64', color: 'text-blue-400' },
+                { id: 'windows-arm64', matchId: 'windows-arm64', icon: 'fa-windows', name: 'Windows ARM64', color: 'text-purple-400' },
+                { id: 'darwin-amd64', matchId: 'darwin-amd64', icon: 'fa-apple', name: 'macOS (Intel)', color: 'text-gray-300' },
                 { id: 'darwin-arm64', matchId: 'darwin-arm64', icon: 'fa-apple', name: 'macOS (Apple Silicon)', color: 'text-white' },
-                { id: 'linux-x64', matchId: 'linux-amd64', icon: 'fa-linux', name: 'Linux x64', color: 'text-yellow-400' }
+                { id: 'linux-x64', matchId: 'linux-amd64', icon: 'fa-linux', name: 'Linux x64', color: 'text-yellow-400' },
+                { id: 'linux-arm64', matchId: 'linux-arm64', icon: 'fa-linux', name: 'Linux ARM64', color: 'text-orange-400' }
             ];
 
             // 渲染汉化包
@@ -691,15 +694,21 @@
 
         // 静态备用数据（API 限流时使用）
         const fallbackRelease = {
-            tag_name: 'v8.4.1',
-            published_at: '2026-01-23T22:30:00Z',
+            tag_name: 'v8.5.0',
+            published_at: '2026-01-25T00:00:00Z',
             assets: [
-                { name: 'opencode-zh-CN-v8.4.1-windows-x64.zip', browser_download_url: `https://github.com/${repo}/releases/download/v8.4.1/opencode-zh-CN-v8.4.1-windows-x64.zip`, size: 52428800 },
-                { name: 'opencode-zh-CN-v8.4.1-darwin-arm64.zip', browser_download_url: `https://github.com/${repo}/releases/download/v8.4.1/opencode-zh-CN-v8.4.1-darwin-arm64.zip`, size: 33554432 },
-                { name: 'opencode-zh-CN-v8.4.1-linux-x64.zip', browser_download_url: `https://github.com/${repo}/releases/download/v8.4.1/opencode-zh-CN-v8.4.1-linux-x64.zip`, size: 51380224 },
-                { name: 'opencode-cli-windows-amd64.exe', browser_download_url: `https://github.com/${repo}/releases/download/v8.4.1/opencode-cli-windows-amd64.exe`, size: 8200000 },
-                { name: 'opencode-cli-darwin-arm64', browser_download_url: `https://github.com/${repo}/releases/download/v8.4.1/opencode-cli-darwin-arm64`, size: 7500000 },
-                { name: 'opencode-cli-linux-amd64', browser_download_url: `https://github.com/${repo}/releases/download/v8.4.1/opencode-cli-linux-amd64`, size: 7900000 }
+                { name: 'opencode-zh-CN-v8.5.0-windows-x64.zip', browser_download_url: `https://github.com/${repo}/releases/download/v8.5.0/opencode-zh-CN-v8.5.0-windows-x64.zip`, size: 52428800 },
+                { name: 'opencode-zh-CN-v8.5.0-windows-arm64.zip', browser_download_url: `https://github.com/${repo}/releases/download/v8.5.0/opencode-zh-CN-v8.5.0-windows-arm64.zip`, size: 52428800 },
+                { name: 'opencode-zh-CN-v8.5.0-darwin-x64.zip', browser_download_url: `https://github.com/${repo}/releases/download/v8.5.0/opencode-zh-CN-v8.5.0-darwin-x64.zip`, size: 33554432 },
+                { name: 'opencode-zh-CN-v8.5.0-darwin-arm64.zip', browser_download_url: `https://github.com/${repo}/releases/download/v8.5.0/opencode-zh-CN-v8.5.0-darwin-arm64.zip`, size: 33554432 },
+                { name: 'opencode-zh-CN-v8.5.0-linux-x64.zip', browser_download_url: `https://github.com/${repo}/releases/download/v8.5.0/opencode-zh-CN-v8.5.0-linux-x64.zip`, size: 51380224 },
+                { name: 'opencode-zh-CN-v8.5.0-linux-arm64.zip', browser_download_url: `https://github.com/${repo}/releases/download/v8.5.0/opencode-zh-CN-v8.5.0-linux-arm64.zip`, size: 51380224 },
+                { name: 'opencode-cli-windows-amd64.exe', browser_download_url: `https://github.com/${repo}/releases/download/v8.5.0/opencode-cli-windows-amd64.exe`, size: 8200000 },
+                { name: 'opencode-cli-windows-arm64.exe', browser_download_url: `https://github.com/${repo}/releases/download/v8.5.0/opencode-cli-windows-arm64.exe`, size: 8200000 },
+                { name: 'opencode-cli-darwin-amd64', browser_download_url: `https://github.com/${repo}/releases/download/v8.5.0/opencode-cli-darwin-amd64`, size: 7500000 },
+                { name: 'opencode-cli-darwin-arm64', browser_download_url: `https://github.com/${repo}/releases/download/v8.5.0/opencode-cli-darwin-arm64`, size: 7500000 },
+                { name: 'opencode-cli-linux-amd64', browser_download_url: `https://github.com/${repo}/releases/download/v8.5.0/opencode-cli-linux-amd64`, size: 7900000 },
+                { name: 'opencode-cli-linux-arm64', browser_download_url: `https://github.com/${repo}/releases/download/v8.5.0/opencode-cli-linux-arm64`, size: 7900000 }
             ],
             body: '详见 [CHANGELOG.md](https://github.com/1186258278/OpenCodeChineseTranslation/blob/main/CHANGELOG.md)'
         };

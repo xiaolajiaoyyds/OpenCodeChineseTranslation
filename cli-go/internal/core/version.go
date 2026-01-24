@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	VERSION = "8.4.1"
+	VERSION  = "8.5.0"
 	APP_NAME = "OpenCode 汉化管理工具"
 )
 
@@ -92,7 +92,7 @@ func GetOpencodeChangelog(limit int) string {
 	if strings.TrimSpace(out) == "" {
 		return "- 暂无更新日志"
 	}
-	
+
 	header := fmt.Sprintf("显示 %s 分支的最近更新:\n", target)
 	return header + out
 }

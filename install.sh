@@ -9,7 +9,7 @@ CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 echo -e "${CYAN}==============================================${NC}"
-echo -e "${CYAN}   OpenCode 汉化管理工具安装脚本 (v8.4.1)   ${NC}"
+echo -e "${CYAN}   OpenCode 汉化管理工具安装脚本 (v8.5.0)   ${NC}"
 echo -e "${CYAN}==============================================${NC}"
 
 # 1. 检测架构
@@ -50,7 +50,7 @@ else
     # 4. 在线下载
     echo -e "\n${YELLOW}[2/4] 获取最新版本信息...${NC}"
     REPO="1186258278/OpenCodeChineseTranslation"
-    VERSION="v8.4.1" # 默认版本
+    VERSION="v8.5.0" # 默认版本
 
     # 尝试获取最新版本
     if command -v curl >/dev/null 2>&1; then

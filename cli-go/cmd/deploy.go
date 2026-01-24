@@ -54,7 +54,25 @@ func runDeploy(createShortcut bool) {
 		}
 	}
 
-	sourcePath := filepath.Join(binDir, exeName)
+	// 获取当前执行文件路径作为源文件
+	// 修复：不再从 bin 目录查找，而是直接使用当前运行的程序
+	// 这样可以确保部署的是当前这个新版本
+	sourcePath, err := os.Executable()
+	if err != nil {
+		fmt.Printf("✗ 获取当前程序路径失败: %v\n", err)
+		// 降级：尝试从 bin 目录获取
+		binDir, err := core.GetBinDir()
+		if err == nil {
+			sourcePath = filepath.Join(binDir, exeName)
+		}
+	} else {
+		// 解析符号链接（如果有）
+		realSource, err := filepath.EvalSymlinks(sourcePath)
+		if err == nil {
+			sourcePath = realSource
+		}
+	}
+
 	if !core.Exists(sourcePath) {
 		fmt.Println("✗ 未找到 opencode-cli 编译产物")
 		fmt.Println("")
@@ -65,10 +83,28 @@ func runDeploy(createShortcut bool) {
 	}
 
 	// 获取部署目标目录
-	deployDir, err := getDeployDir()
-	if err != nil {
-		fmt.Printf("✗ 获取部署目录失败: %v\n", err)
-		return
+	// 策略变更：优先检测系统 PATH 中是否已存在 opencode-cli
+	// 如果存在，直接覆盖该位置（原地升级），而不是盲目安装到默认目录
+	// 这样可以兼容各种奇怪的安装路径 (npm, bun, scoop, choco, etc.)
+	var deployDir string
+	existingPath, err := exec.LookPath(exeName)
+	if err == nil && existingPath != "" {
+		// 解析符号链接，找到真实路径
+		realPath, _ := filepath.EvalSymlinks(existingPath)
+		if realPath != "" {
+			deployDir = filepath.Dir(realPath)
+			fmt.Printf("✓ 检测到已安装版本: %s\n", realPath)
+			fmt.Println("  将在该位置进行原地升级...")
+		}
+	}
+
+	// 如果未找到旧版本，或者解析失败，则使用默认推荐目录
+	if deployDir == "" {
+		deployDir, err = getDeployDir()
+		if err != nil {
+			fmt.Printf("✗ 获取部署目录失败: %v\n", err)
+			return
+		}
 	}
 
 	// 确保部署目录存在
@@ -85,6 +121,15 @@ func runDeploy(createShortcut bool) {
 	if err := copyFileDeploy(sourcePath, targetPath); err != nil {
 		fmt.Printf("✗ 部署 opencode-cli 失败: %v\n", err)
 		return
+	}
+
+	// Windows: 强制清理可能存在的同名无后缀文件 (避免 "打开方式" 弹窗冲突)
+	if runtime.GOOS == "windows" {
+		noExtName := strings.TrimSuffix(exeName, filepath.Ext(exeName))
+		noExtPath := filepath.Join(deployDir, noExtName)
+		if core.Exists(noExtPath) {
+			_ = os.Remove(noExtPath)
+		}
 	}
 
 	// Windows 创建 CMD 包装器（如果是 opencode-cli.exe）
@@ -121,11 +166,20 @@ func runDeploy(createShortcut bool) {
 		} else {
 			fmt.Printf("✓ 已部署 opencode: %s\n", appTargetPath)
 
+			// Windows: 强制清理可能存在的同名无后缀文件 (避免 "打开方式" 弹窗冲突)
+			if runtime.GOOS == "windows" {
+				noExtOpencode := filepath.Join(deployDir, "opencode")
+				if core.Exists(noExtOpencode) {
+					_ = os.Remove(noExtOpencode)
+				}
+			}
+
 			// Windows 创建 CMD 包装器
 			if runtime.GOOS == "windows" {
 				createCmdWrapper(deployDir, "opencode", opencodeExeName)
 			}
 
+			// 检查并自动清理 PATH 冲突 (V3: Global Scan & Destroy)
 			checkPathPriority("opencode", appTargetPath)
 		}
 	} else {
@@ -193,19 +247,19 @@ func addToPath(dir string) {
 		// 尝试自动添加 PATH (Windows)
 		fmt.Println("正在尝试自动添加到用户环境变量...")
 
-		// 使用 PowerShell 添加 PATH (追加模式)
-		// 注意: 获取 User Path -> 拼接 -> 设置 User Path
+		// 使用 PowerShell 添加 PATH (PREPEND - 插入到最前面)
+		// 这样可以确保我们的命令优先级高于 npm 全局安装的版本
 		psCommand := fmt.Sprintf(
-			`$currentPath = [Environment]::GetEnvironmentVariable("Path", "User"); if (-not $currentPath.ToLower().Contains("%s".ToLower())) { [Environment]::SetEnvironmentVariable("Path", $currentPath + ";%s", "User") }`,
+			`$currentPath = [Environment]::GetEnvironmentVariable("Path", "User"); if (-not $currentPath.ToLower().Contains("%s".ToLower())) { [Environment]::SetEnvironmentVariable("Path", "%s;" + $currentPath, "User") }`,
 			dir, dir,
 		)
 
 		cmd := exec.Command("powershell", "-NoProfile", "-Command", psCommand)
 		if err := cmd.Run(); err != nil {
 			fmt.Printf("✗ 自动添加失败: %v\n", err)
-			fmt.Println("请手动将该目录添加到系统 PATH 环境变量中")
+			fmt.Println("请手动将该目录添加到系统 PATH 环境变量的前部")
 		} else {
-			fmt.Println("✓ 已更新用户环境变量 PATH")
+			fmt.Println("✓ 已将部署目录添加到用户 PATH (最高优先级)")
 			fmt.Println("注意: 您需要重启终端才能生效")
 		}
 	} else {
@@ -389,63 +443,53 @@ func checkRunningProcess(name string) {
 	}
 }
 
-// checkPathPriority 检查 PATH 优先级
+// checkPathPriority 检查 PATH 优先级并执行全局清理
 func checkPathPriority(cmdName, deployedPath string) {
-	path, err := exec.LookPath(cmdName)
-	if err != nil {
-		return
-	}
+	fmt.Println("\n▶ 执行环境冲突扫描...")
 
-	// 解析符号链接
-	realDeployedPath, _ := filepath.EvalSymlinks(deployedPath)
-	realFoundPath, _ := filepath.EvalSymlinks(path)
+	pathVar := os.Getenv("PATH")
+	paths := filepath.SplitList(pathVar)
 
-	// 统一路径分隔符比较
-	realDeployedPath = filepath.Clean(realDeployedPath)
-	realFoundPath = filepath.Clean(realFoundPath)
+	// 我们要找的目标文件名
+	targets := []string{"opencode", "opencode.cmd", "opencode.ps1", "opencode.exe", "opencode-cli", "opencode-cli.cmd", "opencode-cli.exe"}
 
-	if !strings.EqualFold(realDeployedPath, realFoundPath) {
-		fmt.Printf("\n⚠️  警告: PATH 优先级覆盖未生效\n")
-		fmt.Printf("   系统优先使用: %s\n", realFoundPath)
-		fmt.Printf("   我们部署在:   %s\n", realDeployedPath)
-		fmt.Println("   建议: 请检查 PATH 环境变量顺序，将部署目录前移，或删除旧版本。")
+	cleanedCount := 0
 
-		// 尝试检测是否为旧版 npm 全局安装
-		if strings.Contains(strings.ToLower(realFoundPath), "npm") {
-			fmt.Printf("\n发现旧的 npm 安装版本，是否尝试自动删除？ [y/N]: ")
-			var input string
-			fmt.Scanln(&input)
-			if strings.ToLower(input) == "y" {
-				fmt.Println("正在删除旧版本...")
-				// 尝试删除 .exe, .cmd, .ps1 (Windows)
-				exts := []string{}
-				if runtime.GOOS == "windows" {
-					exts = []string{".exe", ".cmd", ".ps1"}
+	for _, dir := range paths {
+		// 跳过我们自己的部署目录
+		if strings.EqualFold(filepath.Clean(dir), filepath.Clean(filepath.Dir(deployedPath))) {
+			continue
+		}
+
+		for _, target := range targets {
+			fullPath := filepath.Join(dir, target)
+			if core.Exists(fullPath) {
+				fmt.Printf("🔍 发现冲突文件: %s\n", fullPath)
+
+				// 尝试删除
+				err := os.Remove(fullPath)
+				if err == nil {
+					fmt.Printf("   ✓ 已删除\n")
+					cleanedCount++
 				} else {
-					exts = []string{""}
-				}
-
-				// 清理 opencode 和 opencode-cli
-				targets := []string{"opencode", "opencode-cli"}
-
-				// 获取基础路径 (去除文件名)
-				baseDir := filepath.Dir(realFoundPath)
-
-				for _, name := range targets {
-					for _, ext := range exts {
-						target := filepath.Join(baseDir, name+ext)
-						if core.Exists(target) {
-							if err := os.Remove(target); err == nil {
-								fmt.Printf("✓ 已删除: %s\n", target)
-							} else {
-								fmt.Printf("✗ 删除失败: %s (%v)\n", target, err)
-							}
-						}
+					// 尝试重命名后删除
+					tempName := fullPath + ".old"
+					os.Rename(fullPath, tempName)
+					if err := os.Remove(tempName); err == nil {
+						fmt.Printf("   ✓ 已删除 (重命名方式)\n")
+						cleanedCount++
+					} else {
+						fmt.Printf("   ✗ 删除失败: %v\n", err)
+						fmt.Println("   👉 请手动删除此文件！")
 					}
 				}
-
-				fmt.Println("清理完成。请重启终端以生效。")
 			}
 		}
+	}
+
+	if cleanedCount > 0 {
+		fmt.Printf("\n✓ 已清理 %d 个冲突文件。环境现在应该是纯净的。\n", cleanedCount)
+	} else {
+		fmt.Println("✓ 未发现其他冲突文件。")
 	}
 }
