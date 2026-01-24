@@ -1,4 +1,7 @@
 # OpenCode 汉化工具一键安装脚本 (Go CLI 版)
+param(
+    [string]$Version = ""
+)
 
 $ErrorActionPreference = "Stop"
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
@@ -38,16 +41,24 @@ if (Test-Path $localFile) {
     Copy-Item -Path $localFile -Destination $exePath -Force
 } else {
     # 4. 在线下载
-    Write-Color "`n[2/4] 获取最新版本信息..." "Yellow"
+    Write-Color "`n[2/4] 获取版本信息..." "Yellow"
     $repo = "1186258278/OpenCodeChineseTranslation"
     $tagName = "v8.5.0" # 默认版本作为后备
 
-    try {
-        $latest = Invoke-RestMethod -Uri "https://api.github.com/repos/$repo/releases/latest" -ErrorAction Stop
-        if ($latest.tag_name) {
-            $tagName = $latest.tag_name
-            Write-Color "发现最新版本: $tagName" "Green"
+    if ($Version) {
+        $tagName = $Version
+        Write-Color "使用指定版本: $tagName" "Green"
+    } else {
+        try {
+            $latest = Invoke-RestMethod -Uri "https://api.github.com/repos/$repo/releases/latest" -ErrorAction Stop
+            if ($latest.tag_name) {
+                $tagName = $latest.tag_name
+                Write-Color "发现最新版本: $tagName" "Green"
+            }
+        } catch {
+            Write-Color "获取最新版本失败，将使用默认版本: $tagName" "Yellow"
         }
+    }
     } catch {
         Write-Color "获取最新版本失败，将尝试使用默认版本: $tagName" "Yellow"
     }

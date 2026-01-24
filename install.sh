@@ -32,7 +32,22 @@ esac
 
 echo -e "${GREEN}系统: $OS $ARCH${NC}"
 
-# 2. 准备安装目录
+# 2. 解析参数
+TARGET_VERSION=""
+for arg in "$@"; do
+    case $arg in
+        --version=*)
+            TARGET_VERSION="${arg#*=}"
+            shift
+            ;;
+        --version)
+            TARGET_VERSION="$2"
+            shift 2
+            ;;
+    esac
+done
+
+# 3. 准备安装目录
 INSTALL_DIR="$HOME/.opencode-i18n"
 BIN_DIR="$INSTALL_DIR/bin"
 mkdir -p "$BIN_DIR"
@@ -40,35 +55,40 @@ mkdir -p "$BIN_DIR"
 BINARY_NAME="opencode-cli-$OS-$ARCH"
 TARGET_PATH="$BIN_DIR/opencode-cli"
 
-# 3. 检查本地文件 (离线安装支持)
+# 4. 检查本地文件 (离线安装支持)
 LOCAL_FILE="./$BINARY_NAME"
-if [ -f "$LOCAL_FILE" ]; then
+if [ -f "$LOCAL_FILE" ] && [ -z "$TARGET_VERSION" ]; then
     echo -e "\n${YELLOW}[2/4] 检测到本地安装包...${NC}"
     echo -e "${GREEN}正在从本地安装: $LOCAL_FILE${NC}"
     cp "$LOCAL_FILE" "$TARGET_PATH"
 else
-    # 4. 在线下载
-    echo -e "\n${YELLOW}[2/4] 获取最新版本信息...${NC}"
+    # 5. 在线下载
+    echo -e "\n${YELLOW}[2/4] 获取版本信息...${NC}"
     REPO="1186258278/OpenCodeChineseTranslation"
-    VERSION="v8.5.0" # 默认版本
+    VERSION="v8.5.0" # 默认 fallback
 
-    # 尝试获取最新版本
-    if command -v curl >/dev/null 2>&1; then
-        LATEST_VERSION=$(curl -s "https://api.github.com/repos/$REPO/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
-        if [ ! -z "$LATEST_VERSION" ]; then
-            VERSION="$LATEST_VERSION"
-            echo -e "${GREEN}发现最新版本: $VERSION${NC}"
-        else
-            echo -e "${YELLOW}获取最新版本失败，将使用默认版本: $VERSION${NC}"
-        fi
-    elif command -v wget >/dev/null 2>&1; then
-        # wget 的 stdout 输出比较嘈杂，使用 -qO-
-        LATEST_VERSION=$(wget -qO- "https://api.github.com/repos/$REPO/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
-        if [ ! -z "$LATEST_VERSION" ]; then
-            VERSION="$LATEST_VERSION"
-            echo -e "${GREEN}发现最新版本: $VERSION${NC}"
-        else
-             echo -e "${YELLOW}获取最新版本失败，将使用默认版本: $VERSION${NC}"
+    if [ -n "$TARGET_VERSION" ]; then
+        VERSION="$TARGET_VERSION"
+        echo -e "${GREEN}使用指定版本: $VERSION${NC}"
+    else
+        # 尝试获取最新版本
+        if command -v curl >/dev/null 2>&1; then
+            LATEST_VERSION=$(curl -s "https://api.github.com/repos/$REPO/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+            if [ ! -z "$LATEST_VERSION" ]; then
+                VERSION="$LATEST_VERSION"
+                echo -e "${GREEN}发现最新版本: $VERSION${NC}"
+            else
+                echo -e "${YELLOW}获取最新版本失败，将使用默认版本: $VERSION${NC}"
+            fi
+        elif command -v wget >/dev/null 2>&1; then
+            # wget 的 stdout 输出比较嘈杂，使用 -qO-
+            LATEST_VERSION=$(wget -qO- "https://api.github.com/repos/$REPO/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+            if [ ! -z "$LATEST_VERSION" ]; then
+                VERSION="$LATEST_VERSION"
+                echo -e "${GREEN}发现最新版本: $VERSION${NC}"
+            else
+                 echo -e "${YELLOW}获取最新版本失败，将使用默认版本: $VERSION${NC}"
+            fi
         fi
     fi
 
