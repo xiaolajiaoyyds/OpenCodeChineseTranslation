@@ -202,7 +202,6 @@ jobs:
         run: |
           VERSION=${{ env.TAG_NAME }}
           zip -r dist/opencode-i18n-tool-${VERSION}.zip \
-            opencode-i18n/ \
             cli-go/ \
             install.ps1 \
             install.sh \
