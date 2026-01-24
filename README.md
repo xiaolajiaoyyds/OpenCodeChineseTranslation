@@ -98,13 +98,19 @@ opencode-cli download
 
 ### 4. 手动下载
 
-访问 [Releases 页面](https://github.com/1186258278/OpenCodeChineseTranslation/releases/latest) 下载：
+**稳定版 (Stable)** - 推荐普通用户使用：
+访问 [Releases 页面](https://github.com/1186258278/OpenCodeChineseTranslation/releases/latest) 下载最新 v8.x.x 版本。
+
+**每日构建 (Nightly)** - 推荐开发者/尝鲜用户：
+访问 [Nightly 页面](https://github.com/1186258278/OpenCodeChineseTranslation/releases/tag/nightly) 下载最新自动构建版本。
 
 | 平台 | 管理工具 (CLI) | 汉化版 OpenCode |
 |------|----------------|-----------------|
-| Windows x64 | `opencode-cli-windows-amd64.exe` | `opencode-zh-CN-*-windows-x64.zip` |
-| macOS Apple Silicon | `opencode-cli-darwin-arm64` | `opencode-zh-CN-*-darwin-arm64.zip` |
-| Linux x64 | `opencode-cli-linux-amd64` | `opencode-zh-CN-*-linux-x64.zip` |
+| Windows x64 | [opencode-cli-windows-amd64.exe](https://github.com/1186258278/OpenCodeChineseTranslation/releases/latest/download/opencode-cli-windows-amd64.exe) | [下载最新稳定版](https://github.com/1186258278/OpenCodeChineseTranslation/releases/latest) |
+| macOS Apple Silicon | [opencode-cli-darwin-arm64](https://github.com/1186258278/OpenCodeChineseTranslation/releases/latest/download/opencode-cli-darwin-arm64) | [下载最新稳定版](https://github.com/1186258278/OpenCodeChineseTranslation/releases/latest) |
+| Linux x64 | [opencode-cli-linux-amd64](https://github.com/1186258278/OpenCodeChineseTranslation/releases/latest/download/opencode-cli-linux-amd64) | [下载最新稳定版](https://github.com/1186258278/OpenCodeChineseTranslation/releases/latest) |
+
+> 💡 **提示**: Nightly 版本构建链接在 [Nightly Release 页面](https://github.com/1186258278/OpenCodeChineseTranslation/releases/tag/nightly) 的 Assets 中。
 
 ---
 

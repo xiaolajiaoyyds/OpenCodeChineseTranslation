@@ -165,9 +165,23 @@
             <!-- Header -->
             <div class="border-b border-white/5 p-6 flex flex-col md:flex-row justify-between items-center gap-4 bg-white/[0.02]">
                 <div class="flex items-center gap-4">
-                    <div class="bg-green-500/10 text-green-400 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider border border-green-500/20 flex items-center gap-2 shadow-[0_0_10px_rgba(34,197,94,0.2)]">
-                        <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                        LATEST BUILD
+                    <!-- Channel Switcher -->
+                    <div class="bg-black/40 p-1 rounded-lg flex text-xs font-bold border border-white/5">
+                        <button onclick="switchChannel('stable')" id="chan-stable" class="px-3 py-1 rounded-md bg-green-500/20 text-green-400 border border-green-500/20 transition shadow-sm">
+                            <i class="fa-solid fa-cube mr-1"></i> 正式版
+                        </button>
+                        <button onclick="switchChannel('nightly')" id="chan-nightly" class="px-3 py-1 rounded-md text-gray-400 hover:text-orange-300 transition border border-transparent">
+                            <i class="fa-solid fa-moon mr-1"></i> Nightly
+                        </button>
+                    </div>
+
+                    <div class="h-6 w-px bg-white/10 hidden md:block"></div>
+
+                    <div id="badge-container">
+                        <div class="bg-green-500/10 text-green-400 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider border border-green-500/20 flex items-center gap-2 shadow-[0_0_10px_rgba(34,197,94,0.2)]">
+                            <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                            STABLE BUILD
+                        </div>
                     </div>
                     <div>
                         <h3 class="text-xl font-bold text-white flex items-center gap-2">
@@ -490,20 +504,128 @@
 
         // State
         let currentSource = 'github';
+        let currentChannel = 'stable'; // stable | nightly
         const repo = '1186258278/OpenCodeChineseTranslation';
         let releaseData = null;
+        let releaseCache = { stable: null, nightly: null };
 
         // Command Templates
-        const cmds = {
-            github: {
-                win: `irm https://cdn.jsdelivr.net/gh/1186258278/OpenCodeChineseTranslation@main/install.ps1 | iex`,
-                unix: `curl -fsSL https://cdn.jsdelivr.net/gh/1186258278/OpenCodeChineseTranslation@main/install.sh | bash`
-            },
-            gitee: {
-                win: `irm https://gitee.com/QtCodeCreators/OpenCodeChineseTranslation/raw/main/install.ps1 | iex`,
-                unix: `curl -fsSL https://gitee.com/QtCodeCreators/OpenCodeChineseTranslation/raw/main/install.sh | bash`
-            }
+        const getCmds = (channel) => {
+            const versionFlag = channel === 'nightly' ? ' --version nightly' : '';
+            const psFlag = channel === 'nightly' ? ' -Version nightly' : '';
+            
+            return {
+                github: {
+                    win: `irm https://cdn.jsdelivr.net/gh/1186258278/OpenCodeChineseTranslation@main/install.ps1 | iex${psFlag ? " -Args '-Version nightly'" : ""}`, 
+                    unix: `curl -fsSL https://cdn.jsdelivr.net/gh/1186258278/OpenCodeChineseTranslation@main/install.sh | bash -s --${versionFlag}`
+                },
+                gitee: {
+                    win: `irm https://gitee.com/QtCodeCreators/OpenCodeChineseTranslation/raw/main/install.ps1 | iex${psFlag ? " -Args '-Version nightly'" : ""}`,
+                    unix: `curl -fsSL https://gitee.com/QtCodeCreators/OpenCodeChineseTranslation/raw/main/install.sh | bash -s --${versionFlag}`
+                }
+            };
         };
+
+        // Note regarding PowerShell arguments:
+        // `iex` (Invoke-Expression) doesn't easily pass args to the downloaded script.
+        // But `install.ps1` logic is: param($Version).
+        // `irm ... | iex` executes the script string directly. Arguments cannot be passed this way easily without wrapping.
+        // Correct way for PowerShell piping with args:
+        // $script = irm ...; Invoke-Command -ScriptBlock ([ScriptBlock]::Create($script)) -ArgumentList ...
+        // Or cleaner: irm ... -OutFile i.ps1; ./i.ps1 -Version ...
+        
+        // Let's use the cleaner downloading method for nightly to avoid complexity issues with pipe args
+        const getSafeCmds = (channel) => {
+             const vUnix = channel === 'nightly' ? 'nightly' : '';
+             const vWin = channel === 'nightly' ? 'nightly' : '';
+             
+             // Simple version for stable
+             if (channel !== 'nightly') {
+                 return {
+                    github: {
+                        win: `irm https://cdn.jsdelivr.net/gh/1186258278/OpenCodeChineseTranslation@main/install.ps1 | iex`,
+                        unix: `curl -fsSL https://cdn.jsdelivr.net/gh/1186258278/OpenCodeChineseTranslation@main/install.sh | bash`
+                    },
+                    gitee: {
+                        win: `irm https://gitee.com/QtCodeCreators/OpenCodeChineseTranslation/raw/main/install.ps1 | iex`,
+                        unix: `curl -fsSL https://gitee.com/QtCodeCreators/OpenCodeChineseTranslation/raw/main/install.sh | bash`
+                    }
+                 };
+             }
+
+             // Complex version for nightly (Download & Run)
+             return {
+                github: {
+                    win: `irm https://cdn.jsdelivr.net/gh/1186258278/OpenCodeChineseTranslation@main/install.ps1 -OutFile $env:TEMP\\opencode-inst.ps1; & $env:TEMP\\opencode-inst.ps1 -Version nightly`,
+                    unix: `curl -fsSL https://cdn.jsdelivr.net/gh/1186258278/OpenCodeChineseTranslation@main/install.sh | bash -s -- --version=nightly`
+                },
+                gitee: {
+                    win: `irm https://gitee.com/QtCodeCreators/OpenCodeChineseTranslation/raw/main/install.ps1 -OutFile $env:TEMP\\opencode-inst.ps1; & $env:TEMP\\opencode-inst.ps1 -Version nightly`,
+                    unix: `curl -fsSL https://gitee.com/QtCodeCreators/OpenCodeChineseTranslation/raw/main/install.sh | bash -s -- --version=nightly`
+                }
+             };
+        }
+
+        // Channel Switching
+        async function switchChannel(channel) {
+            currentChannel = channel;
+            
+            // UI Update
+            const btnStable = document.getElementById('chan-stable');
+            const btnNightly = document.getElementById('chan-nightly');
+            const badgeContainer = document.getElementById('badge-container');
+            
+            if (channel === 'stable') {
+                btnStable.className = 'px-3 py-1 rounded-md bg-green-500/20 text-green-400 border border-green-500/20 transition shadow-sm';
+                btnNightly.className = 'px-3 py-1 rounded-md text-gray-400 hover:text-orange-300 transition border border-transparent';
+                badgeContainer.innerHTML = `
+                    <div class="bg-green-500/10 text-green-400 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider border border-green-500/20 flex items-center gap-2 shadow-[0_0_10px_rgba(34,197,94,0.2)]">
+                        <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                        STABLE BUILD
+                    </div>`;
+            } else {
+                btnStable.className = 'px-3 py-1 rounded-md text-gray-400 hover:text-green-400 transition border border-transparent';
+                btnNightly.className = 'px-3 py-1 rounded-md bg-orange-500/20 text-orange-400 border border-orange-500/20 transition shadow-sm';
+                badgeContainer.innerHTML = `
+                    <div class="bg-orange-500/10 text-orange-400 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider border border-orange-500/20 flex items-center gap-2 shadow-[0_0_10px_rgba(249,115,22,0.2)]">
+                        <span class="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></span>
+                        NIGHTLY BUILD
+                    </div>`;
+            }
+            
+            // Update Commands
+            setSource(currentSource); // Refresh commands based on channel
+            
+            // Fetch/Render Data
+            if (releaseCache[channel]) {
+                applyReleaseData(releaseCache[channel]);
+            } else {
+                // Show loading
+                document.getElementById('dash-version').textContent = 'Loading...';
+                document.getElementById('dash-date').textContent = '...';
+                
+                await fetchReleaseData(channel);
+            }
+        }
+        
+        async function fetchReleaseData(channel) {
+            const endpoint = channel === 'stable' ? 'latest' : 'tags/nightly';
+            try {
+                const resp = await fetch(`https://api.github.com/repos/${repo}/releases/${endpoint}`);
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const data = await resp.json();
+                releaseCache[channel] = data;
+                applyReleaseData(data);
+            } catch (e) {
+                console.error(`Failed to fetch ${channel}:`, e);
+                // Fallback for stable only
+                if (channel === 'stable') applyReleaseData(fallbackRelease, true);
+                else {
+                    document.getElementById('dash-version').textContent = 'Error';
+                    document.getElementById('notes-content').innerHTML = '<p class="text-red-400">无法加载 Nightly 版本信息。</p>';
+                }
+            }
+        }
 
         // Tab Switching
         function switchInstallTab(tab) {
@@ -543,8 +665,9 @@
                 : 'px-4 py-1.5 rounded-md text-gray-400 hover:text-white transition';
 
             // Update commands
-            document.getElementById('cmd-win').textContent = cmds[source].win;
-            document.getElementById('cmd-unix').textContent = cmds[source].unix;
+            const templates = getSafeCmds(currentChannel);
+            document.getElementById('cmd-win').textContent = templates[source].win;
+            document.getElementById('cmd-unix').textContent = templates[source].unix;
         }
 
         // Clipboard
@@ -744,35 +867,7 @@
 
         // Init Data
         (async () => {
-            try {
-                const resp = await fetch(`https://api.github.com/repos/${repo}/releases/latest`);
-                
-                // 检查 API 限流
-                if (resp.status === 403) {
-                    console.warn('GitHub API rate limited, using fallback data');
-                    applyReleaseData(fallbackRelease, true);
-                    return;
-                }
-                
-                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-                
-                const data = await resp.json();
-                
-                // 检查是否返回了错误消息
-                if (data.message && data.message.includes('rate limit')) {
-                    console.warn('GitHub API rate limited, using fallback data');
-                    applyReleaseData(fallbackRelease, true);
-                    return;
-                }
-                
-                applyReleaseData(data);
-
-            } catch (e) {
-                console.error('Failed to fetch release data:', e);
-                // 使用备用数据
-                console.log('Using fallback release data');
-                applyReleaseData(fallbackRelease, true);
-            }
+            await switchChannel('stable');
         })();
     </script>
 </body>
