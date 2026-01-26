@@ -1,7 +1,0 @@
-{
-  "file": "src/cli/cmd/tui/component/dialog-theme-list.tsx",
-  "description": "主题对话框",
-  "replacements": {
-    "title=\"Themes\"": "title=\"主题\""
-  }
-}

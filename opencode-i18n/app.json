@@ -1,0 +1,9 @@
+{
+  "file": "src/cli/cmd/tui/app.tsx",
+  "description": "应用主入口",
+  "replacements": {
+    "title: \"Exit the app\"": "title: \"退出应用 (Exit the app)\"",
+    "title: \"New session\"": "title: \"新会话 (New session)\"",
+    "\"While openrouter is a convenient way to access LLMs your request will often be routed to subpar providers that do not work well in our testing.\\n\\nFor reliable access to models check out OpenCode Zen\\nhttps://opencode.ai/zen\"": "\"虽然 OpenRouter 是访问 LLM 的便捷方式，但您的请求经常会被路由到质量较差的提供商，在我们的测试中表现不佳。\\n\\n如需可靠的模型访问，请查看 OpenCode Zen\\nhttps://opencode.ai/zen\""
+  }
+}

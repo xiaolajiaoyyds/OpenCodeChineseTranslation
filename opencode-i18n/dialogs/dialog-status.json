@@ -1,0 +1,24 @@
+{
+  "file": "src/cli/cmd/tui/component/dialog-status.tsx",
+  "description": "状态对话框",
+  "note": "源文件为原版英文。注意：Plugins 相关翻译有冲突问题，已暂时移除",
+  "replacements": {
+    "Status": "状态 (Status)",
+    "No MCP Servers": "暂无 MCP 服务器 (No MCP Servers)",
+    "MCP Servers": "MCP 服务器 (MCP Servers)",
+    "Connected</Match>": "已连接 (Connected)</Match>",
+    "Disabled in configuration</Match>": "已在配置中禁用 (Disabled in configuration)</Match>",
+    "Needs authentication": "需要认证 (Needs authentication)",
+    "LSP Servers": "LSP 服务器 (LSP Servers)",
+    "No Formatters": "暂无格式化器 (No Formatters)",
+    "Formatters": "格式化器 (Formatters)",
+    "No Plugins": "暂无插件 (No Plugins)",
+    "Plugins": "插件 (Plugins)",
+    ">OpenCode v{Installation.VERSION}<": ">OpenCode v{Installation.VERSION}<",
+    ">No MCP Servers<": ">无 MCP 服务器 (No MCP Servers)<",
+    ">Connected<": ">已连接 (Connected)<",
+    ">Disabled in configuration<": ">已在配置中禁用 (Disabled in configuration)<",
+    ">No Formatters<": ">无格式化器 (No Formatters)<",
+    ">No Plugins<": ">无插件 (No Plugins)<"
+  }
+}

@@ -1,8 +1,0 @@
-{
-  "file": "src/cli/cmd/tui/component/dialog-agent.tsx",
-  "description": "智能体选择对话框",
-  "replacements": {
-    "title=\"Select agent\"": "title=\"选择智能体\"",
-    "native": "原生"
-  }
-}

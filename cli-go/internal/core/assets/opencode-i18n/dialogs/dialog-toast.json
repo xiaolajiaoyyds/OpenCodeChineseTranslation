@@ -1,7 +1,0 @@
-{
-  "file": "src/cli/cmd/tui/ui/dialog.tsx",
-  "description": "对话框通用复制提示",
-  "replacements": {
-    "message: \"Copied to clipboard\"": "message: \"已复制到剪贴板\""
-  }
-}

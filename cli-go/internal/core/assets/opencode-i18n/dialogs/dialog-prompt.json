@@ -1,8 +1,0 @@
-{
-  "file": "src/cli/cmd/tui/ui/dialog-prompt.tsx",
-  "description": "输入对话框",
-  "replacements": {
-    "placeholder={props.placeholder ?? \"Enter text\"}": "placeholder={props.placeholder ?? \"输入文本\"}",
-    "enter <span style={{ fg: theme.textMuted }}>submit</span>": "按 <span style={{ fg: theme.textMuted }}>回车</span> 确认"
-  }
-}

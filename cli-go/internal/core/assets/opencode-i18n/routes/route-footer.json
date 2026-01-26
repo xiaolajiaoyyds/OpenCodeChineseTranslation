@@ -1,9 +1,0 @@
-{
-  "file": "src/cli/cmd/tui/routes/session/footer.tsx",
-  "description": "会话页底部状态栏",
-  "replacements": {
-    "Get started": "开始使用",
-    "Permission": "权限",
-    "Permissions": "权限"
-  }
-}

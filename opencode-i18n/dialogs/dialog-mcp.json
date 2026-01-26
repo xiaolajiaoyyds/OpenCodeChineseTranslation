@@ -1,0 +1,16 @@
+{
+  "file": "src/cli/cmd/tui/component/dialog-mcp.tsx",
+  "description": "MCP服务器对话框",
+  "replacements": {
+    "title=\"MCPs\"": "title=\"MCP服务器 (MCPs)\"",
+    ">⋯ Loading</span>": ">⋯ 加载中 (Loading)</span>",
+    ">✓ Enabled</span>": ">✓ 已启用 (Enabled)</span>",
+    ">○ Disabled</span>": ">○ 已禁用 (Disabled)</span>",
+    "console.error(\"Failed to refresh MCP status: no data returned\")": "console.error(\"刷新 MCP 状态失败：未返回数据 (Failed to refresh MCP status: no data returned)\")",
+    "console.error(\"Failed to toggle MCP:\", error)": "console.error(\"切换 MCP 失败 (Failed to toggle MCP):\", error)",
+    "title: \"toggle\"": "title: \"切换 (toggle)\"",
+    "\"Failed to refresh MCP status: no data returned\"": "\"刷新 MCP 状态失败：未返回数据 (Failed to refresh MCP status: no data returned)\"",
+    "\"Failed to toggle MCP:\"": "\"切换 MCP 失败： (Failed to toggle MCP:)\""
+  },
+  "note": "不翻译 status.status 值（API返回的英文状态字符串）"
+}

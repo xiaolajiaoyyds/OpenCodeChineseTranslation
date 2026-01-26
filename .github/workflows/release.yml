@@ -1,263 +1,208 @@
-name: Release
+name: Build and Release
 
 on:
   push:
     tags:
-      - "v*"
-  workflow_dispatch:
-    inputs:
-      tag_name:
-        description: 'Tag name for release (e.g., v8.1.0)'
-        required: true
-        type: string
-
-permissions:
-  contents: write
-
-env:
-  # 使用手动输入或 git tag
-  TAG_NAME: ${{ github.event.inputs.tag_name || github.ref_name }}
+      - 'v*'
 
 jobs:
-  build-cli:
-    name: Build CLI Tool
-    runs-on: ubuntu-latest
+  build:
     strategy:
+      fail-fast: false
       matrix:
         include:
-          # Windows
-          - os: windows
-            arch: amd64
-            ext: .exe
-          - os: windows
-            arch: arm64
-            ext: .exe
-          # Linux
-          - os: linux
-            arch: amd64
-            ext: ""
-          - os: linux
-            arch: arm64
-            ext: ""
-          # macOS
-          - os: darwin
-            arch: amd64
-            ext: ""
-          - os: darwin
-            arch: arm64
-            ext: ""
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.21'
-          cache-dependency-path: cli-go/go.sum
-
-      - name: Build CLI
-        env:
-          GOOS: ${{ matrix.os }}
-          GOARCH: ${{ matrix.arch }}
-          CGO_ENABLED: 0  # 禁用 CGO 以实现静态链接，解决 GLIBC 兼容性问题
-        run: |
-          cd cli-go
-          go build -ldflags="-s -w" -o ../dist/opencode-cli-${{ matrix.os }}-${{ matrix.arch }}${{ matrix.ext }} .
-
-      - name: Upload CLI Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: cli-${{ matrix.os }}-${{ matrix.arch }}
-          path: dist/*
-
-  build-opencode:
-    name: Build OpenCode Chinese
-    runs-on: ubuntu-latest
-    needs: build-cli  # 需要先编译 CLI
-    strategy:
-      matrix:
-        include:
-          - platform: windows-x64
-            bun_target: bun-windows-x64
-          - platform: linux-x64
-            bun_target: bun-linux-x64
-          - platform: linux-arm64
-            bun_target: bun-linux-aarch64
-          - platform: darwin-x64
-            bun_target: bun-darwin-x64
-          - platform: darwin-arm64
+          - os: macos-latest
+            platform: darwin-arm64
             bun_target: bun-darwin-arm64
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+          - os: macos-14
+            platform: darwin-x64
+            bun_target: bun-darwin-x64
+          - os: ubuntu-latest
+            platform: linux-x64
+            bun_target: bun-linux-x64
+          - os: windows-latest
+            platform: windows-x64
+            bun_target: bun-windows-x64
 
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.21'
-          cache-dependency-path: cli-go/go.sum
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: '1.3.5'
+          bun-version: 1.3.5
 
-      - name: Build CLI for current platform
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies (scripts)
         run: |
-          cd cli-go
-          go build -o ../opencode-cli .
+          cd scripts
+          npm install
+
+      - name: Verify release version
+        run: node -e "const cfg=require('./opencode-i18n/config.json'); const tag=process.env.GITHUB_REF_NAME; const expected='v'+cfg.version; if(tag!==expected){console.error('Tag mismatch:',tag,'!=',expected); process.exit(1);} console.log('✓ Version check passed:',tag);"
 
       - name: Clone OpenCode source
         run: |
-          git clone --depth 1 --branch dev https://github.com/anomalyco/opencode.git opencode-zh-CN
+          git clone https://github.com/anomalyco/opencode.git opencode-zh-CN
+          cd opencode-zh-CN
+          bun install
 
-      - name: Apply Chinese translation
+      - name: Apply translations
         run: |
-          ./opencode-cli apply
+          cd scripts
+          node bin/opencodenpm apply --skip-translate --skip-verify --skip-quality-check
 
       - name: Build OpenCode
         run: |
-          ./opencode-cli build --platform ${{ matrix.platform }} --deploy=false
+          cd opencode-zh-CN/packages/opencode
+          export OPENCODE_CHANNEL=latest
+          export OPENCODE_VERSION="${GITHUB_REF_NAME#v}"
+          bun run build --single
+        shell: bash
 
-      - name: Package
+      - name: Package artifact (Unix)
+        if: runner.os != 'Windows'
         run: |
-          VERSION=${{ env.TAG_NAME }}
-          PLATFORM=${{ matrix.platform }}
-          PACKAGE_NAME="opencode-zh-CN-${VERSION}-${PLATFORM}"
-          
-          echo "=== Packaging ${PACKAGE_NAME} ==="
-          
-          # 构建产物的实际路径
-          # opencode-zh-CN/packages/opencode/dist/opencode-{platform}/bin/
-          BUILD_DIR="opencode-zh-CN/packages/opencode/dist/opencode-${PLATFORM}/bin"
-          
-          echo "Looking for build artifacts in: ${BUILD_DIR}"
-          ls -la ${BUILD_DIR}/ || echo "Build dir not found"
-          
-          # 确保输出目录存在
-          mkdir -p dist
-          
-          # 检查构建产物并打包
-          if [[ "$PLATFORM" == "windows-x64" || "$PLATFORM" == "windows-arm64" ]]; then
-            BINARY="${BUILD_DIR}/opencode.exe"
-          else
-            BINARY="${BUILD_DIR}/opencode"
-          fi
-          
-          if [ -f "$BINARY" ]; then
-            zip -j dist/${PACKAGE_NAME}.zip "$BINARY"
-            echo "✓ Created dist/${PACKAGE_NAME}.zip"
-            ls -la dist/
-          else
-            echo "❌ Binary not found: $BINARY"
-            echo "=== Searching for opencode binaries ==="
-            find opencode-zh-CN -name "opencode*" -type f 2>/dev/null | head -20
+          cd opencode-zh-CN/packages/opencode/dist
+          # 查找实际的编译产物目录
+          ACTUAL_DIR=$(ls -d opencode-* 2>/dev/null | head -1)
+          if [ -z "$ACTUAL_DIR" ]; then
+            echo "Error: No build artifact found in dist/"
+            ls -la
             exit 1
           fi
+          echo "Found build artifact: $ACTUAL_DIR"
+          tar -czvf opencode-${{ matrix.platform }}.tar.gz "$ACTUAL_DIR"
+          mv opencode-${{ matrix.platform }}.tar.gz ${{ github.workspace }}/
 
-      - name: Upload OpenCode Artifact
+      - name: Package artifact (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          cd opencode-zh-CN/packages/opencode/dist
+          # 查找实际的编译产物目录
+          $ActualDir = Get-ChildItem -Directory -Filter "opencode-*" | Select-Object -First 1 -ExpandProperty Name
+          if (-not $ActualDir) {
+            Write-Error "Error: No build artifact found in dist/"
+            Get-ChildItem
+            exit 1
+          }
+          Write-Host "Found build artifact: $ActualDir"
+          Compress-Archive -Path $ActualDir -DestinationPath opencode-${{ matrix.platform }}.zip
+          Move-Item opencode-${{ matrix.platform }}.zip ${{ github.workspace }}/
+        shell: pwsh
+
+      - name: Upload artifact (Unix)
+        if: runner.os != 'Windows'
         uses: actions/upload-artifact@v4
         with:
           name: opencode-${{ matrix.platform }}
-          path: dist/*.zip
+          path: opencode-${{ matrix.platform }}.tar.gz
+
+      - name: Upload artifact (Windows)
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: opencode-${{ matrix.platform }}
+          path: opencode-${{ matrix.platform }}.zip
 
   release:
-    name: Create GitHub Release
-    needs: [build-cli, build-opencode]
+    needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Get Build Timestamp
-        id: date
-        env:
-          TZ: 'Asia/Shanghai'
-        run: echo "timestamp=$(date +'%Y-%m-%d %H:%M CST')" >> $GITHUB_OUTPUT
-
-      - name: Download CLI Artifacts
+      - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          pattern: cli-*
-          path: dist
-          merge-multiple: true
+          path: artifacts
 
-      - name: Download OpenCode Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          pattern: opencode-*
-          path: dist
-          merge-multiple: true
-
-      - name: List artifacts
-        run: |
-          echo "=== Downloaded artifacts ==="
-          find dist -type f -name "*.zip" -o -name "*.exe" -o -name "opencode-cli-*" | head -50
-          ls -la dist/ || true
-
-      - name: Package i18n tool
-        run: |
-          VERSION=${{ env.TAG_NAME }}
-          zip -r dist/opencode-i18n-tool-${VERSION}.zip \
-            cli-go/ \
-            install.ps1 \
-            install.sh \
-            README.md \
-            CHANGELOG.md \
-            -x "cli-go/.git/*" \
-            -x "*.exe"
-
-      - name: Generate Release Notes
-        run: |
-          VERSION=${{ env.TAG_NAME }}
-          TIMESTAMP="${{ steps.date.outputs.timestamp }}"
-          
-          cat > release_notes.md << EOF
-          ## OpenCode 中文汉化版 ${{ env.TAG_NAME }}
-          
-          > 🕒 **更新时间**: ${TIMESTAMP}
-          
-          ### 📦 下载说明
-          
-          | 平台 | 管理工具 (CLI) | 汉化版 OpenCode |
-          |------|----------------|-----------------|
-          | Windows x64 | \`opencode-cli-windows-amd64.exe\` | \`opencode-zh-CN-${VERSION}-windows-x64.zip\` |
-          | macOS Apple Silicon | \`opencode-cli-darwin-arm64\` | \`opencode-zh-CN-${VERSION}-darwin-arm64.zip\` |
-          | macOS Intel | \`opencode-cli-darwin-amd64\` | \`opencode-zh-CN-${VERSION}-darwin-x64.zip\` |
-          | Linux x64 | \`opencode-cli-linux-amd64\` | \`opencode-zh-CN-${VERSION}-linux-x64.zip\` |
-          | Linux ARM64 | \`opencode-cli-linux-arm64\` | \`opencode-zh-CN-${VERSION}-linux-arm64.zip\` |
-          
-          > ⚠️ **注意**: Windows ARM64 暂不支持（Bun 尚未提供官方 Windows ARM64 构建）
-          
-          ### 🚀 快速安装
-          
-          **Windows (PowerShell)**
-          \`\`\`powershell
-          powershell -c "irm https://cdn.jsdelivr.net/gh/1186258278/OpenCodeChineseTranslation@main/install.ps1 | iex"
-          \`\`\`
-          
-          **Linux / macOS**
-          \`\`\`bash
-          curl -fsSL https://cdn.jsdelivr.net/gh/1186258278/OpenCodeChineseTranslation@main/install.sh | bash
-          \`\`\`
-          
-          ### 📝 更新日志
-          
-          详见 [CHANGELOG.md](https://github.com/1186258278/OpenCodeChineseTranslation/blob/main/CHANGELOG.md)
-          EOF
+      - name: Display artifacts
+        run: ls -R artifacts
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ env.TAG_NAME }}
-          name: "OpenCode 中文汉化版 ${{ env.TAG_NAME }} (${{ steps.date.outputs.timestamp }})"
-          body_path: release_notes.md
+          name: OpenCode 汉化版 ${{ github.ref_name }}
+          body: |
+            ## OpenCode 中文汉化版 ${{ github.ref_name }}
+
+            > 基于 OpenCode 官方版本的完整中文本地化
+
+            ### 📦 下载说明
+
+            | 平台 | 文件 | 适用系统 |
+            |------|------|----------|
+            | macOS (Apple Silicon) | `opencode-darwin-arm64.tar.gz` | M1/M2/M3/M4 芯片 Mac |
+            | macOS (Intel) | `opencode-darwin-x64.tar.gz` | Intel 芯片 Mac |
+            | Linux (x64) | `opencode-linux-x64.tar.gz` | Ubuntu/Debian/CentOS 等 |
+            | Windows (x64) | `opencode-windows-x64.zip` | Windows 10/11 64位 |
+
+            ---
+
+            ### 🍎 macOS 安装
+
+            ```bash
+            # 1. 解压（以 Apple Silicon 为例）
+            tar -xzf opencode-darwin-arm64.tar.gz
+
+            # 2. 安装到系统
+            sudo mv opencode-darwin-arm64/bin/opencode /usr/local/bin/
+
+            # 3. 验证安装
+            opencode --version
+            ```
+
+            > Intel Mac 请下载 `opencode-darwin-x64.tar.gz`
+
+            ---
+
+            ### 🐧 Linux 安装
+
+            ```bash
+            # 1. 解压
+            tar -xzf opencode-linux-x64.tar.gz
+
+            # 2. 安装到系统
+            sudo mv opencode-linux-x64/bin/opencode /usr/local/bin/
+
+            # 3. 验证安装
+            opencode --version
+            ```
+
+            ---
+
+            ### 🪟 Windows 安装
+
+            1. 下载 `opencode-windows-x64.zip`
+            2. 解压到任意目录（如 `C:\Program Files\OpenCode`）
+            3. 将 `bin` 目录添加到系统 PATH 环境变量
+            4. 打开新的命令提示符，运行 `opencode --version` 验证
+
+            ---
+
+            ### 🚀 使用方法
+
+            ```bash
+            # 在任意项目目录运行
+            opencode
+
+            # 或指定目录
+            opencode /path/to/project
+            ```
+
+            ---
+
+            📖 详细更新日志请查看 [README](https://github.com/xiaolajiaoyyds/OpenCodeChineseTranslation#-更新日志)
           files: |
-            dist/*
+            artifacts/**/*.tar.gz
+            artifacts/**/*.zip
           draft: false
           prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,122 @@
+name: Auto Sync with Upstream
+
+on:
+  schedule:
+    - cron: '0 0 * * *'   # 8:00 AM 北京时间
+    - cron: '0 7 * * *'   # 15:00 北京时间
+  workflow_dispatch:
+    inputs:
+      force_update:
+        description: '强制更新（忽略版本检查）'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  check-and-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Get current version
+        id: current
+        run: |
+          echo "opencode_version=$(node -p 'require(\"./opencode-i18n/config.json\").opencodeVersion')" >> $GITHUB_OUTPUT
+          echo "zh_version=$(node -p 'require(\"./opencode-i18n/config.json\").version')" >> $GITHUB_OUTPUT
+
+      - name: Get upstream version
+        id: upstream
+        run: |
+          LATEST_TAG=$(curl -s https://api.github.com/repos/anomalyco/opencode/tags | jq -r '.[0].name')
+          LATEST_VERSION="${LATEST_TAG#v}"
+          echo "version=$LATEST_VERSION" >> $GITHUB_OUTPUT
+          echo "tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+
+      - name: Compare versions
+        id: compare
+        run: |
+          CURRENT="${{ steps.current.outputs.opencode_version }}"
+          LATEST="${{ steps.upstream.outputs.version }}"
+          if [ "${{ inputs.force_update }}" = "true" ] || [ "$CURRENT" != "$LATEST" ]; then
+            echo "needs_update=true" >> $GITHUB_OUTPUT
+          else
+            echo "needs_update=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Calculate new version
+        if: steps.compare.outputs.needs_update == 'true'
+        id: newver
+        run: |
+          LATEST="${{ steps.upstream.outputs.version }}"
+          CURRENT_ZH="${{ steps.current.outputs.zh_version }}"
+          BASE=$(echo "$CURRENT_ZH" | sed 's/-zh-v.*//')
+          PATCH=$(echo "$CURRENT_ZH" | grep -oP '(?<=-zh-v)[0-9.]+' || echo "0")
+          if [ "$BASE" = "$LATEST" ]; then
+            NEW_PATCH=$(echo "$PATCH + 0.1" | bc)
+          else
+            NEW_PATCH="0.1"
+          fi
+          echo "version=${LATEST}-zh-v${NEW_PATCH}" >> $GITHUB_OUTPUT
+
+      - name: Setup Bun
+        if: steps.compare.outputs.needs_update == 'true'
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.5
+
+      - name: Clone upstream
+        if: steps.compare.outputs.needs_update == 'true'
+        run: |
+          git clone https://github.com/anomalyco/opencode.git opencode-zh-CN
+          cd opencode-zh-CN
+          git checkout "${{ steps.upstream.outputs.tag }}"
+          bun install
+
+      - name: Install scripts deps
+        if: steps.compare.outputs.needs_update == 'true'
+        run: cd scripts && npm ci
+
+      - name: Update versions
+        if: steps.compare.outputs.needs_update == 'true'
+        env:
+          NEW_VERSION: ${{ steps.newver.outputs.version }}
+          UPSTREAM_VERSION: ${{ steps.upstream.outputs.version }}
+        run: |
+          node -e "const fs=require('fs');const path='opencode-i18n/config.json';const cfg=JSON.parse(fs.readFileSync(path));cfg.version=process.env.NEW_VERSION;cfg.opencodeVersion=process.env.UPSTREAM_VERSION;fs.writeFileSync(path,JSON.stringify(cfg,null,2)+'\n')"
+          node scripts/bin/opencodenpm version --sync
+          sed -i "s/v[0-9]*\.[0-9]*\.[0-9]*-zh-v[0-9.]*/v${NEW_VERSION}/g" README.md
+          node -e "const fs=require('fs');const path='CHANGELOG.md';const version=process.env.NEW_VERSION;const upstream=process.env.UPSTREAM_VERSION;const today=new Date().toISOString().slice(0,10);const entry=`## [${version}] - ${today}\n\n### 🔄 同步更新\n\n- 同步官方 OpenCode v${upstream}\n\n`;const content=fs.readFileSync(path,'utf8');if(content.includes(`## [${version}]`)){process.exit(0);}const marker='---\n\n';const idx=content.indexOf(marker);if(idx===-1){fs.writeFileSync(path,entry+content);process.exit(0);}const insertPos=idx+marker.length;const updated=content.slice(0,insertPos)+entry+content.slice(insertPos);fs.writeFileSync(path,updated);"
+
+      - name: Apply translations
+        if: steps.compare.outputs.needs_update == 'true'
+        run: cd scripts && node bin/opencodenpm apply --skip-translate --skip-verify --skip-quality-check
+
+      - name: Commit and tag
+        if: steps.compare.outputs.needs_update == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add package.json scripts/package.json opencode-i18n/config.json README.md CHANGELOG.md
+          git commit -m "chore: sync upstream v${{ steps.upstream.outputs.version }} -> ${{ steps.newver.outputs.version }}"
+          git push origin main
+          git tag "v${{ steps.newver.outputs.version }}"
+          git push origin "v${{ steps.newver.outputs.version }}"
+
+      - name: Summary
+        run: |
+          if [ "${{ steps.compare.outputs.needs_update }}" = "true" ]; then
+            echo "## ✅ 同步完成: v${{ steps.newver.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## ℹ️ 无需更新" >> $GITHUB_STEP_SUMMARY
+          fi

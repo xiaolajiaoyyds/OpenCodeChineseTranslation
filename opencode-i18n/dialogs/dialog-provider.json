@@ -1,0 +1,26 @@
+{
+  "file": "src/cli/cmd/tui/component/dialog-provider.tsx",
+  "description": "提供商连接对话框",
+  "replacements": {
+    "title=\"Select auth method\"": "title=\"选择认证方式 (Select auth method)\"",
+    "<DialogSelect title=\"Connect a provider\"": "<DialogSelect title=\"连接提供商 (Connect a provider)\"",
+    "placeholder=\"Authorization code\"": "placeholder=\"授权码 (Authorization code)\"",
+    "? \"Popular\" : \"Other\"": "? \"热门 (Popular)\" : \"其他 (Other)\"",
+    "placeholder=\"API key\"": "placeholder=\"API密钥 (API key)\"",
+    "(Recommended)": "(推荐 Recommended)",
+    "(Claude Max or API key)": "(Claude Max 或 API密钥)",
+    "(ChatGPT Plus/Pro or API key)": "(ChatGPT Plus/Pro 或 API密钥)",
+    "<text fg={theme.textMuted}>Waiting for authorization...</text>": "<text fg={theme.textMuted}>等待授权... (Waiting for authorization...)</text>",
+    "<text fg={theme.error}>Invalid code</text>": "<text fg={theme.error}>无效的授权码 (Invalid code)</text>",
+    "c <span style={{ fg: theme.textMuted }}>copy</span>": "c <span style={{ fg: theme.textMuted }}>复制 (copy)</span>",
+    "OpenCode Zen gives you access to all the best coding models at the cheapest prices with a single API key.": "OpenCode Zen 以最低的价格为您提供所有最佳编码模型的访问权限，只需一个 API 密钥。(OpenCode Zen gives you access to all the best coding models at the cheapest prices with a single API key.)",
+    "Go to ": "前往 (Go to) ",
+    "to get a key": "获取密钥 (to get a key)",
+    "Copied to clipboard": "已复制到剪贴板 (Copied to clipboard)",
+    "label: \"API key\"": "label: \"API 密钥 (API key)\"",
+    "title=\"Connect a provider\"": "title=\"连接提供商 (Connect a provider)\"",
+    ">Waiting for authorization...<": ">等待授权中... (Waiting for authorization...)<",
+    ">Invalid code<": ">验证码无效 (Invalid code)<",
+    "message: \"Copied to clipboard\"": "message: \"已复制到剪贴板 (Copied to clipboard)\""
+  }
+}

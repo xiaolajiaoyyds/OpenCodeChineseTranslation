@@ -1,0 +1,14 @@
+{
+  "file": "src/cli/cmd/tui/component/dialog-mcp.tsx",
+  "description": "选择MCP对话框",
+  "replacements": {
+    "title=\"MCPs\"": "title=\"MCP 服务 (MCPs)\"",
+    "description={`${enabledCount()} of ${totalCount()} enabled`}": "description={`已启用 (enabled) ${enabledCount()} / ${totalCount()}`}",
+    "placeholder: \"Search\"": "placeholder: \"搜索 (Search)\"",
+    "emptyMessage=\"No MCPs configured\"": "emptyMessage=\"未配置 MCP (No MCPs configured)\"",
+    ">connected<": ">已连接 (connected)<",
+    ">failed<": ">失败 (failed)<",
+    ">needs auth<": ">需要认证 (needs auth)<",
+    ">disabled<": ">已禁用 (disabled)<"
+  }
+}

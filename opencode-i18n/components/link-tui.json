@@ -1,0 +1,6 @@
+{
+  "file": "src/cli/cmd/tui/ui/link.tsx",
+  "description": "TUI 链接组件",
+  "replacements": {},
+  "note": "此组件无需汉化的用户可见文本"
+}

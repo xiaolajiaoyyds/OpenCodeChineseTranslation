@@ -1,0 +1,11 @@
+{
+  "file": "src/cli/cmd/tui/component/dialog-provider.tsx",
+  "description": "选择提供商对话框",
+  "replacements": {
+    "title=\"Connect provider\"": "title=\"连接提供商 (Connect provider)\"",
+    "placeholder: \"Search providers\"": "placeholder: \"搜索提供商 (Search providers)\"",
+    "? \"Popular\" : \"Other\"": "? \"热门 (Popular)\" : \"其他 (Other)\"",
+    ">Recommended<": ">推荐 (Recommended)<",
+    "Connect with Claude Pro/Max or API key": "使用 Claude Pro/Max 或 API 密钥连接 (Connect with Claude Pro/Max or API key)"
+  }
+}

@@ -1,181 +1,386 @@
-# OpenCode 中文汉化发行版
+# OpenCode 中文汉化版 v1.1.34-zh-v0.3
 
-[![Release](https://img.shields.io/github/v/release/1186258278/OpenCodeChineseTranslation?label=最新正式版&style=flat-square&color=blue)](https://github.com/1186258278/OpenCodeChineseTranslation/releases/latest)
-[![Nightly](https://img.shields.io/badge/Nightly-自动构建-orange?style=flat-square)](https://github.com/1186258278/OpenCodeChineseTranslation/releases/tag/nightly)
-[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg?style=flat-square)](#)
-[![Build Status](https://img.shields.io/github/actions/workflow/status/1186258278/OpenCodeChineseTranslation/release.yml?label=构建状态&style=flat-square)](https://github.com/1186258278/OpenCodeChineseTranslation/actions)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![OpenCode](https://img.shields.io/badge/OpenCode-v1.1.31-brightgreen)](https://github.com/anomalyco/opencode)
+[![汉化版](https://img.shields.io/badge/汉化版-1.1.31--zh-v0.2-orange)](https://github.com/xiaolajiaoyyds/OpenCodeChineseTranslation)
 
-> 🚀 **OpenCode 汉化发行版** | ⚡️ **每小时自动同步官方更新** | 全自动构建三端安装包 (Win/Mac/Linux)
-> 
-> 🔥 **每日构建 (Nightly)**：[点击下载最新开发版](https://github.com/1186258278/OpenCodeChineseTranslation/releases/tag/nightly) (每小时更新 · 推荐开发者)
-> 
-> 🎉 **访问官方网站**：[https://1186258278.github.io/OpenCodeChineseTranslation/](https://1186258278.github.io/OpenCodeChineseTranslation/)
+> **OpenCode** 是由 [Anomaly Company](https://anomaly.company/) 开发的开源 AI 编程代理。
+> 本项目提供完整的中文本地化，通过 AI 辅助翻译和质量检查实现高质量汉化。
 
 ---
 
-## 项目简介
+## 📌 项目说明
 
-**OpenCode 汉化发行版** 是一个全自动化的 OpenCode 本地化项目。我们基于 GitHub Actions 构建了一套完整的自动化流水线：
+基于 [@QinTian 的汉化项目](https://linux.do/t/topic/1469651) 进行改进。
 
-- **🕐 每小时检测** 官方仓库更新
-- **📊 智能触发** 累计 ≥5 个新 commit 时自动构建
-- **📝 完整日志** Release Notes 自动包含官方更新日志
+### 为什么做这个项目？
 
-**主要特性：**
-*   ⚡️ **实时跟进**：每小时检测上游更新，第一时间体验新特性
-*   📦 **全平台支持**：提供 Windows、macOS (Apple Silicon)、Linux 二进制包
-*   🚀 **一键安装**：Go 语言编写的管理工具，无需任何运行时依赖
-*   🔧 **完整汉化**：覆盖 TUI、对话框及核心交互流程
+**由于 OpenCode 官方更新频繁，每次都会新增文件，手动翻译太累了！**
+
+于是花了半天时间搞了个自动化方案：
+
+- ✅ AI 自动检测新文本并翻译
+- ✅ AI 审查防止翻译错误导致源文件报错
+- ✅ 支持增量翻译，只翻译 git 变更文件
+- ✅ 质量检查 + 自动修复
+- ✅ 覆盖率报告 + AI 智能总结
+- ✅ GitHub Actions 自动构建多平台版本
+
+**现在不怕官方更新了，AI 会自动搞定翻译！**
 
 ---
 
-## 界面预览
+## 🎯 核心功能
 
-### CLI 管理工具
+| 功能 | 说明 |
+|------|------|
+| **一键汉化** | `opencodenpm full` 自动完成同步→翻译→编译→部署全流程 |
+| **同步工具** | 菜单选项"🔄 同步工具"，一键更新汉化工具到最新版本 |
+| **AI 自动翻译** | 官方更新后自动检测新文本，调用 AI 翻译 |
+| **增量翻译** | `opencodenpm apply --incremental`，仅翻译 git 变更文件 |
+| **质量检查** | `opencodenpm check --quality`，语法检查 + AI 语义审查 |
+| **自动修复** | 发现语法问题时 AI 自动修复 |
+| **多平台构建** | GitHub Actions 自动构建 macOS/Linux/Windows 版本 |
 
-<p align="center">
-  <img src="docs/01.png" alt="OpenCode 汉化管理工具" width="800">
-</p>
+---
 
-**全功能 TUI 界面** - 一键完成更新、汉化、编译、部署
+## ✨ v1.1.34-zh-v0.3 新特性
+
+### 🔄 同步工具
+
+- **一键更新**：菜单新增"🔄 同步工具"选项
+- 自动检测汉化工具有更新版本
+- 一键执行 `git pull` 和 `npm install`，更新完成后提示重新运行工具
+
+### 🎨 界面优化
+
+- **AI 总结合并**：AI 总结不再单独开框，合并到执行总结框内最后，界面更简洁
+- **输出顺序优化**：覆盖率报告 → 执行总结（含 AI 总结）→ 完成提示，流程更自然
+- **模型信息对齐**：AI 总结中"指定模型"使用 L3 格式，与其他信息对齐
+
+### 🔧 技术改进
+
+- printPipelineSummary 改为 async 函数，支持 AI 总结的异步调用
+- generateCoverageSummaryInline 新增内联版本，不创建独立框
+- 修复 AI 总结最后一行与结束符混在一起的问题
+
+---
+- **智能换行**：只在标点符号后断行，避免中文断字
+- **用户体验**：AI 语义质量检查添加可选确认（Yes/No），节省 API 消耗
+
+### 🔧 工具改进
+
+- **静默模式支持**：deployer.js 添加 silent 参数，支持后台静默部署
+- **交互式菜单**：系统环境、运行状态、项目信息一目了然
+- **输出风格统一**：全面匹配 @clack/prompts 视觉风格
+- **跨平台支持**：Node.js CLI 替代 PowerShell，macOS/Linux/Windows 通用
+
+---
+
+## 🖼️ 效果展示
 
 ### 汉化后的 OpenCode
 
-<p align="center">
-  <img src="docs/02.png" alt="OpenCode 主编辑器" width="800">
-</p>
+|              主界面              |              命令菜单               |
+| :------------------------------: | :---------------------------------: |
+| ![主界面](docs/images/opencode-main.png) | ![命令](docs/images/opencode-commands.png) |
 
-**沉浸式中文编程体验** - 命令面板、侧边栏、对话框完整汉化
+### 汉化工具界面
 
-### MCP 服务器配置
+|          交互式菜单           |           覆盖率 + AI 总结           |
+| :---------------------------: | :----------------------------------: |
+| ![菜单](docs/images/menu.png) | ![覆盖率](docs/images/coverage.png) |
 
-<p align="center">
-  <img src="docs/05.png" alt="MCP 配置界面" width="800">
-</p>
+### 一键汉化全流程
 
-**MCP 服务器管理** - 状态监控、工具配置、资源管理
+|             步骤 1-4             |             步骤 4-5             |             步骤 5-7             |
+| :------------------------------: | :------------------------------: | :------------------------------: |
+| ![流程1](docs/images/full-1.png) | ![流程2](docs/images/full-2.png) | ![流程3](docs/images/full-3.png) |
 
-> 📸 更多截图请查看 [功能演示文档](docs/SCREENSHOTS.md)
-
----
-
-## 快速开始
-
-### 1. 一键安装 (推荐)
-
-全新的安装脚本会自动下载 **Go 版本 CLI 工具**，无需安装 Node.js 或 Bun。
-
-**Windows (PowerShell)**
-```powershell
-powershell -c "irm https://cdn.jsdelivr.net/gh/1186258278/OpenCodeChineseTranslation@main/install.ps1 | iex"
-```
-
-**Linux / macOS**
-```bash
-curl -fsSL https://cdn.jsdelivr.net/gh/1186258278/OpenCodeChineseTranslation@main/install.sh | bash
-```
-
-> 💡 使用 jsDelivr CDN 加速，解决国内网络问题
-
-### 2. 使用方法
-
-安装完成后，直接在终端运行：
-
-```bash
-opencode-cli
-```
-
-启动交互式菜单，通过方向键选择功能。
-
-### 3. 下载预编译版 (推荐新手)
-
-如果您已安装 `opencode-cli`，可以直接使用内置的下载功能：
-
-```bash
-opencode-cli download
-```
-
-此命令会自动从 GitHub Releases 下载最新的预编译汉化版 OpenCode，无需本地编译环境。
-
-### 4. 手动下载
-
-**稳定版 (Stable)** - 推荐普通用户使用：
-访问 [Releases 页面](https://github.com/1186258278/OpenCodeChineseTranslation/releases/latest) 下载最新 v8.x.x 版本。
-
-**每日构建 (Nightly)** - 推荐开发者/尝鲜用户：
-访问 [Nightly 页面](https://github.com/1186258278/OpenCodeChineseTranslation/releases/tag/nightly) 下载最新自动构建版本。
-
-| 平台 | 管理工具 (CLI) | 汉化版 OpenCode |
-|------|----------------|-----------------|
-| Windows x64 | [opencode-cli-windows-amd64.exe](https://github.com/1186258278/OpenCodeChineseTranslation/releases/latest/download/opencode-cli-windows-amd64.exe) | [下载最新稳定版](https://github.com/1186258278/OpenCodeChineseTranslation/releases/latest) |
-| macOS Apple Silicon | [opencode-cli-darwin-arm64](https://github.com/1186258278/OpenCodeChineseTranslation/releases/latest/download/opencode-cli-darwin-arm64) | [下载最新稳定版](https://github.com/1186258278/OpenCodeChineseTranslation/releases/latest) |
-| Linux x64 | [opencode-cli-linux-amd64](https://github.com/1186258278/OpenCodeChineseTranslation/releases/latest/download/opencode-cli-linux-amd64) | [下载最新稳定版](https://github.com/1186258278/OpenCodeChineseTranslation/releases/latest) |
-
-> 💡 **提示**: Nightly 版本构建链接在 [Nightly Release 页面](https://github.com/1186258278/OpenCodeChineseTranslation/releases/tag/nightly) 的 Assets 中。
+|              部署完成              |
+| :--------------------------------: |
+| ![部署](docs/images/deploy.png) |
 
 ---
 
-## 版本说明
+## 🚀 快速开始
 
-本项目提供两种版本：
+### 方式一：下载预编译版本（推荐）
 
-| 版本 | Tag | 说明 | 推荐用户 |
-|------|-----|------|----------|
-| **正式版** | `v8.x.x` | 经过测试的稳定版本 | 普通用户 |
-| **Nightly** | `nightly` | 每小时自动跟进上游更新 | 开发者/测试者 |
+## 如果你这台电脑什么都没有安装，环境也不会，那么我建议你直接下载安装把。一键启动。
+## 启动后，可以用内置免费的ai,然后让 ai 进行环境安装，还是做什么。
 
-**Nightly 版本特点：**
-- 每小时检测上游更新，累计 ≥5 个 commit 时自动构建
-- Release Notes 包含 OpenCode 官方更新日志
-- 固定 `nightly` tag，下载链接始终指向最新构建
+前往 [Releases](https://github.com/xiaolajiaoyyds/OpenCodeChineseTranslation/releases) 下载对应平台的预编译版本：
+
+| 平台 | 文件 |
+|------|------|
+| macOS (Apple Silicon) | `opencode-darwin-arm64.tar.gz` |
+| macOS (Intel) | `opencode-darwin-x64.tar.gz` |
+| Linux (x64) | `opencode-linux-x64.tar.gz` |
+| Windows (x64) | `opencode-windows-x64.zip` |
+
+```bash
+# macOS/Linux 安装
+tar -xzf opencode-<platform>.tar.gz
+sudo mv opencode-<platform>/bin/opencode /usr/local/bin/
+```
+
+### 方式二：从源码编译
+
+```bash
+# 1. 克隆项目
+git clone https://github.com/xiaolajiaoyyds/OpenCodeChineseTranslation.git
+cd OpenCodeChineseTranslation
+
+# 2. 安装依赖
+cd scripts && npm install && npm link
+
+# 3. 运行汉化（交互式菜单）
+opencodenpm
+
+# 4. 或一键汉化
+opencodenpm full
+```
 
 ---
 
-## CLI 工具功能
+## 📊 翻译统计
+
+- **452 条翻译**，覆盖率 **100%**
+- 对话框：32 文件 / 177 条
+- 组件：12 文件 / 158 条
+- 路由：6 文件 / 70 条
+- 通用：3 文件 / 42 条
+- 上下文：1 文件 / 1 条
+
+---
+
+## 🔧 AI 翻译配置
+
+创建 `.env` 文件（支持任何 OpenAI 兼容 API）：
+
+```env
+OPENAI_API_KEY=your-api-key
+OPENAI_API_BASE=http://127.0.0.1:8045/v1
+OPENAI_MODEL=claude-sonnet-4-20250514
+```
+
+### 推荐：Antigravity Tools
+
+使用 [Antigravity Tools](https://agtools.cc) 本地反代，支持 Claude、GPT、Gemini 等多种模型。
+
+![Antigravity Tools 配置](docs/images/antigravity.jpeg)
+
+---
+
+## 📝 命令参考
 
 | 命令 | 说明 |
 |------|------|
-| `opencode-cli` | 启动交互式管理菜单 |
-| `opencode-cli download` | 📦 下载预编译汉化版 |
-| `opencode-cli update` | 更新 OpenCode 源码 |
-| `opencode-cli apply` | 应用汉化补丁 |
-| `opencode-cli verify` | 验证汉化配置完整性 |
-| `opencode-cli build` | 编译构建 OpenCode |
-| `opencode-cli deploy --shortcut` | 部署并创建桌面快捷方式 |
-| `opencode-cli antigravity` | 配置 Antigravity 本地 AI 代理 |
+| `opencodenpm` | 交互式菜单（推荐） |
+| `opencodenpm full` | 一键汉化（同步→翻译→编译→部署） |
+| `opencodenpm sync` | 同步官方源码 |
+| `opencodenpm apply` | 应用汉化 |
+| `opencodenpm apply --incremental` | 增量翻译（只翻译 git 变更） |
+| `opencodenpm check --quality` | 质量检查（语法 + AI 审查） |
+| `opencodenpm build` | 编译构建 |
+| `opencodenpm deploy` | 部署到系统 |
 
 ---
 
-## 相关文档
+## ⚙️ OpenCode 配置文件
 
-| 文档 | 说明 |
-|------|------|
-| [📅 更新日志](CHANGELOG.md) | 版本更新记录 |
-| [📸 功能截图](docs/SCREENSHOTS.md) | 界面预览与演示 |
-| [🔧 贡献指南](CONTRIBUTING.md) | 开发者参与指南 |
-| [🚀 Antigravity 集成](docs/ANTIGRAVITY_INTEGRATION.md) | 本地 AI 网关配置 |
-| [🤖 AI 维护指南](docs/AI_MAINTENANCE.md) | AI 助手维护手册 |
+> **配置文件位置**：`~/.config/opencode/`
+> 所有配置文件保存在用户根目录，**更新项目不会丢失配置**。
 
----
-
-## 常见问题 (FAQ)
-
-### Q: 为什么安装/部署后运行 OpenCode 还是英文版？
-A: 这通常是因为您的系统中存在多个 OpenCode 版本（例如通过 npm、Scoop 或 Chocolatey 安装的官方版），且系统环境变量 (PATH) 优先加载了旧版本。
-
-**解决方法**：
-1. 运行 `npm uninstall -g opencode` 卸载官方版。
-2. 或者在终端运行 `Get-Command opencode -All` (Windows) 或 `which -a opencode` (Mac/Linux) 查看所有版本路径，手动删除非汉化版。
-3. 重启终端以刷新环境变量缓存。
-
-### Q: 为什么每次 OpenCode 更新后汉化就失效了？
-A: OpenCode 更新频繁，源码变动会导致汉化补丁无法匹配。请使用 `opencode-cli` 更新源码并重新应用汉化，或者下载最新的 Nightly 版本。
+| 文件 | 作用 | 示例 |
+|------|------|------|
+| `AGENTS.md` | AI 助手身份定义 | [`docs/AGENTS.example.md`](docs/AGENTS.example.md) |
+| `global-rules.md` | 开发规范与工具指南 | [`docs/global-rules.example.md`](docs/global-rules.example.md) |
+| `oh-my-opencode.json` | 插件配置 | [`docs/oh-my-opencode.example.json`](docs/oh-my-opencode.example.json) |
+| `opencode.json` | OpenCode 主配置 | [`docs/opencode.example.json`](docs/opencode.example.json) |
 
 ---
 
-## 许可证
+## ❓ 常见问题
 
-本项目基于 [MIT License](LICENSE) 开源。
+<details>
+<summary><b>Q: 配置文件会不会丢失？</b></summary>
 
-OpenCode 原项目版权归 [Anomaly Company](https://anomaly.company/) 所有。
+不会！所有配置文件保存在用户根目录 `~/.config/` 下，更新项目不会影响配置。
+
+```bash
+# 建议定期备份
+cp -r ~/.config/opencode ~/backup-opencode-config
+```
+
+</details>
+
+<details>
+<summary><b>Q: 官方更新后如何同步？</b></summary>
+
+```bash
+opencodenpm sync                    # 同步官方源码
+opencodenpm apply --incremental     # 增量翻译
+opencodenpm build && opencodenpm deploy
+```
+
+</details>
+
+<details>
+<summary><b>Q: 发现翻译错误怎么办？</b></summary>
+
+1. 手动修改 `opencode-i18n/` 下的语言包文件
+2. 运行 `opencodenpm check --quality` 检查质量
+3. 提交 PR 到项目仓库
+
+</details>
+
+---
+
+## 📦 项目结构
+
+```
+OpenCodeChineseTranslation/
+├── .github/workflows/    # GitHub Actions 自动构建
+├── scripts/              # 管理工具
+│   ├── core/             # 核心模块（translator.js, i18n.js, menu.js）
+│   └── commands/         # CLI 命令
+├── opencode-i18n/        # 语言包（452 条翻译）
+│   ├── dialogs/          # 对话框（32 文件 / 177 条）
+│   ├── components/       # 组件（12 文件 / 158 条）
+│   ├── routes/           # 路由（6 文件 / 70 条）
+│   ├── common/           # 通用（3 文件 / 42 条）
+│   └── contexts/         # 上下文（1 文件 / 1 条）
+└── opencode-zh-CN/       # OpenCode 源码（自动克隆）
+```
+
+---
+
+## 📋 更新日志
+
+### v1.1.34-zh-v0.3 (2026-01-22)
+
+**同步工具 + 自动修复**
+
+- 🔄 菜单新增"🔄 同步工具"选项，一键更新汉化工具到最新版本
+- 🩹 编译失败时自动检测汉化配置版本问题并尝试自动修复
+- 📝 添加常见问题解答文档，覆盖编译错误排查指南
+- 🎨 AI 总结合并到执行总结框内，界面更简洁
+
+### v1.1.28-zh (2026-01-21)
+
+**TUI 视觉体验全面升级**
+
+- ✨ 统一 TUI 输出系统（连接线青色、徽章 `●`、日志整洁）
+- 🌠 Knight Rider 流星动画（14 格粉色渐变尾巴）
+- 🎨 AI 总结格式化（`▸` 青色、`【】` 黄色高亮）
+- 📝 智能换行（只在标点后断行）
+- 🔧 GitHub Actions 自动构建多平台版本
+
+### v1.1.25-zh (2025-01-18)
+
+- 🚀 初始版本发布
+- AI 自动翻译 + 增量翻译
+- 质量检查 + 自动修复
+- 覆盖率报告 + AI 智能总结
+- 跨平台支持（macOS/Linux/Windows）
+
+---
+
+## ❓ 常见问题
+
+### 编译错误：找不到模块或语法错误
+
+**问题现象：**
+```
+error: Could not resolve: "./dialog-session - 重命名"
+error: Unexpected token, expected ","
+```
+
+**原因：** 使用了旧版本或有问题的汉化配置文件。
+
+**✨ 自动修复（v1.1.31+）：**
+
+从 v1.1.31-zh 开始，工具会自动检测这类错误并尝试修复：
+
+```
+◇ 编译构建
+● 进程退出，代码: 1
+error: Could not resolve: "./dialog-session - 重命名"
+⚠️ 检测到汉化配置版本问题，尝试自动修复...
+├─ 恢复官方源码
+├─ 更新汉化配置
+├─ 重新应用汉化
+✓ 自动更新完成
+✓ 已更新到最新版本，重新编译...
+✓ 编译成功
+```
+
+**手动修复方案：**
+```bash
+# 1. 更新到最新版本
+cd OpenCodeChineseTranslation
+git pull origin main
+
+# 2. 恢复官方源码纯净状态
+cd opencode-zh-CN/packages/opencode
+git checkout -- .
+
+# 3. 重新执行汉化
+cd ../../../
+node scripts/bin/opencodenpm sync
+node scripts/bin/opencodenpm full
+```
+
+**预防措施：**
+- 定期执行 `git pull origin main` 更新汉化工具
+- 不要手动修改 `opencode-i18n/` 目录中的配置文件
+- 使用 `sync` 命令确保源码和汉化同步
+
+---
+
+### 汉化工具版本检查
+
+```bash
+# 查看当前版本
+opencodenpm --version
+
+# 检查是否有更新
+cd OpenCodeChineseTranslation
+git log --oneline -1
+```
+
+如果本地版本低于 `v1.1.31-zh`，请立即更新。
+
+---
+
+## 🔗 相关链接
+
+- **项目地址**: https://github.com/xiaolajiaoyyds/OpenCodeChineseTranslation
+- **OpenCode 官方**: https://github.com/anomalyco/opencode
+- **Antigravity Tools**: https://agtools.cc
+- **原汉化项目**: [QinTian 的帖子](https://linux.do/t/topic/1469651)
+- **Oh-My-OpenCode**: https://github.com/code-yeongyu/oh-my-opencode
+
+---
+
+## 📜 许可证
+
+MIT License | OpenCode 原项目版权归 [Anomaly Company](https://anomaly.company/) 所有
+
+---
+
+## 🙏 致谢
+
+本汉化项目基于 [1186258278](https://github.com/1186258278) 和 [@QinTian](https://linux.do/t/topic/1469651) 的工作进行维护和改进。
+
+感谢所有贡献者和使用者的支持！
+
+---
+
+## 📮 问题反馈
+
+有问题欢迎在 [Issues](https://github.com/xiaolajiaoyyds/OpenCodeChineseTranslation/issues) 留言~
+
+**在报告问题前，建议先备份配置文件！**

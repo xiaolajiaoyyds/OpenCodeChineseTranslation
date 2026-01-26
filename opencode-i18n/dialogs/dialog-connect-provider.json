@@ -1,0 +1,25 @@
+{
+  "file": "src/cli/cmd/tui/component/dialog-provider.tsx",
+  "description": "连接提供商对话框（新版）",
+  "replacements": {
+    "label: \"API key\"": "label: \"API 密钥 (API key)\"",
+    "placeholder=\"API key\"": "placeholder=\"API 密钥 (API key)\"",
+    "placeholder=\"Authorization code\"": "placeholder=\"授权码 (Authorization code)\"",
+    "label=\"Confirmation code\"": "label=\"确认码 (Confirmation code)\"",
+    "Login with Claude Pro/Max": "使用 Claude Pro/Max 登录 (Login with Claude Pro/Max)",
+    ">Connect {provider().name}<": ">连接 (Connect) {provider().name}<",
+    "Select login method for {provider().name}.": "选择登录方式 (Select login method) - {provider().name}",
+    "Authorization in progress...": "授权进行中... (Authorization in progress...)",
+    "Authorization failed:": "授权失败 (Authorization failed):",
+    "API key is required": "API 密钥为必填项 (API key is required)",
+    "Authorization code is required": "授权码为必填项 (Authorization code is required)",
+    "Invalid authorization code": "无效的授权码 (Invalid authorization code)",
+    "OpenCode Zen gives you access to a curated set of reliable optimized models for coding agents.": "OpenCode Zen 为编码智能体提供精选的可靠优化模型集。(OpenCode Zen gives you access to a curated set of reliable optimized models for coding agents.)",
+    "With a single API key you'll get access to models such as Claude, GPT, Gemini, GLM and more.": "通过单个 API 密钥，您可以访问 Claude、GPT、Gemini、GLM 等模型。(With a single API key you'll get access to models such as Claude, GPT, Gemini, GLM and more.)",
+    "to collect your API key.": "获取您的 API 密钥。(to collect your API key.)",
+    ">Submit<": ">提交 (Submit)<",
+    "Waiting for authorization...": "等待授权中... (Waiting for authorization...)",
+    "title: `${provider().name} connected`": "title: `${provider().name} 已连接 (connected)`",
+    "description: `${provider().name} models are now available to use.`": "description: `${provider().name} 模型现已可用。(models are now available to use.)`"
+  }
+}

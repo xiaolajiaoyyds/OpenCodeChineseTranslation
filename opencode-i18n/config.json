@@ -1,0 +1,88 @@
+{
+  "version": "1.1.34-zh-v0.3",
+  "opencodeVersion": "1.1.34",
+  "description": "OpenCode 中文汉化配置文件（模块化结构）",
+  "lastUpdate": "2026-01-22",
+  "testPassRate": "100%",
+  "supportedCommit": "65938baf00f58ef9d5e275b85cb4641d40f8ceae",
+  "maintainer": {
+    "name": "CodeCreator",
+    "wechat": "CodeCreator",
+    "github": "https://github.com/1186258278/OpenCodeChineseTranslation"
+  },
+  "modules": {
+    "dialogs": [
+      "dialogs/dialog-agent.json",
+      "dialogs/dialog-alert.json",
+      "dialogs/dialog-base.json",
+      "dialogs/dialog-command.json",
+      "dialogs/dialog-confirm.json",
+      "dialogs/dialog-connect-provider.json",
+      "dialogs/dialog-edit-project.json",
+      "dialogs/dialog-export.json",
+      "dialogs/dialog-fork.json",
+      "dialogs/dialog-help.json",
+      "dialogs/dialog-manage-models.json",
+      "dialogs/dialog-message.json",
+      "dialogs/dialog-mcp.json",
+      "dialogs/dialog-model.json",
+      "dialogs/dialog-prompt.json",
+      "dialogs/dialog-provider.json",
+      "dialogs/dialog-rename.json",
+      "dialogs/dialog-select.json",
+      "dialogs/dialog-select-directory.json",
+      "dialogs/dialog-select-file.json",
+      "dialogs/dialog-select-mcp.json",
+      "dialogs/dialog-select-model.json",
+      "dialogs/dialog-select-model-unpaid.json",
+      "dialogs/dialog-select-provider.json",
+      "dialogs/dialog-select-server.json",
+      "dialogs/dialog-session.json",
+      "dialogs/dialog-stash.json",
+      "dialogs/dialog-status.json",
+      "dialogs/dialog-subagent.json",
+      "dialogs/dialog-tag.json",
+      "dialogs/dialog-theme.json",
+      "dialogs/dialog-timeline.json",
+      "dialogs/dialog-toast.json"
+    ],
+    "routes": [
+      "routes/route-footer.json",
+      "routes/route-header.json",
+      "routes/route-home.json",
+      "routes/route-permission.json",
+      "routes/route-session.json",
+      "routes/route-sidebar.json"
+    ],
+    "components": [
+      "components/autocomplete.json",
+      "components/command-panel.json",
+      "components/component-prompt.json",
+      "components/component-question.json",
+      "components/component-sidebar.json",
+      "components/file-tree.json",
+      "components/inline-tools.json",
+      "components/link.json",
+      "components/link-tui.json",
+      "components/prompt-input.json",
+      "components/session-context-usage.json",
+      "components/session-lsp-indicator.json",
+      "components/session-mcp-indicator.json",
+      "components/terminal.json",
+      "components/tips.json",
+      "components/titlebar.json"
+    ],
+    "common": [
+      "common/app-messages.json",
+      "common/common-toast.json",
+      "common/error-messages.json",
+      "common/fatal-error.json",
+      "common/local-context.json",
+      "common/share-error.json",
+      "common/tui-app.json"
+    ],
+    "root": [
+      "app.json"
+    ]
+  }
+}

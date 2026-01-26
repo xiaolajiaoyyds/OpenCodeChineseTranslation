@@ -1,0 +1,26 @@
+{
+  "file": "src/cli/cmd/tui/component/prompt/index.tsx",
+  "description": "输入提示组件",
+  "replacements": {
+    "message: \"Connect a provider to send prompts\"": "message: \"连接提供商以发送提示 (Connect a provider to send prompts)\"",
+    "title: \"Clear prompt\"": "title: \"清除提示 (Clear prompt)\"",
+    "title: \"Submit prompt\"": "title: \"提交提示 (Submit prompt)\"",
+    "title: \"Paste\"": "title: \"粘贴 (Paste)\"",
+    "title: \"Interrupt session\"": "title: \"中断会话 (Interrupt session)\"",
+    "title: \"Open editor\"": "title: \"打开编辑器 (Open editor)\"",
+    "title: \"Stash prompt\"": "title: \"存储提示 (Stash prompt)\"",
+    "title: \"Stash pop\"": "title: \"弹出存储 (Stash pop)\"",
+    "title: \"Stash list\"": "title: \"存储列表 (Stash list)\"",
+    "category: \"Prompt\"": "category: \"提示 (Prompt)\"",
+    "placeholder={props.sessionID ? undefined : `Ask anything... \"${PLACEHOLDERS[store.placeholder]}\"`}": "placeholder={props.sessionID ? undefined : `问点什么 (Ask anything)... \"${PLACEHOLDERS[store.placeholder]}\"`}",
+    "Fix a TODO in the codebase": "修复代码中的 TODO (Fix a TODO in the codebase)",
+    "What is the tech stack of this project?": "这个项目的技术栈是什么？(What is the tech stack of this project?)",
+    "Fix broken tests": "修复失败的测试 (Fix broken tests)",
+    ">variants</span>": ">变体 (variants)</span>",
+    ">agents</span>": ">智能体 (agents)</span>",
+    ">commands</span>": ">命令 (commands)</span>",
+    "? \"Shell\" :": "? \"Shell 命令\" :",
+    "\"Retry Error\"": "\"重试错误 (Retry Error)\"",
+    "category: \"Session\"": "category: \"会话 (Session)\""
+  }
+}

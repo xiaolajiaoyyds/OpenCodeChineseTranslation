@@ -1,0 +1,9 @@
+{
+  "file": "src/cli/cmd/tui/ui/dialog-select.tsx",
+  "description": "选择对话框",
+  "replacements": {
+    "<text fg={theme.textMuted}>No results found</text>": "<text fg={theme.textMuted}>未找到结果 (No results found)</text>",
+    "placeholder={props.placeholder ?? \"Search\"}": "placeholder={props.placeholder ?? \"搜索 (Search)\"}",
+    ">No results found<": ">未找到结果 (No results found)<"
+  }
+}

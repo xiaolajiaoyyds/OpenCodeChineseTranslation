@@ -1,0 +1,11 @@
+{
+  "file": "src/cli/cmd/tui/component/dialog-session-list.tsx",
+  "description": "会话列表对话框",
+  "replacements": {
+    "title=\"Sessions\"": "title=\"会话列表 (Sessions)\"",
+    "title: \"delete\"": "title: \"删除 (delete)\"",
+    "title: \"rename\"": "title: \"重命名 (rename)\"",
+    "category = \"Today\"": "category = \"今天 (Today)\"",
+    "Press ${deleteKeybind} again to confirm": "再次按 ${deleteKeybind} 确认删除"
+  }
+}

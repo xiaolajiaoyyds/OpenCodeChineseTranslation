@@ -1,0 +1,8 @@
+{
+  "file": "src/cli/cmd/tui/routes/session/footer.tsx",
+  "category": "路由",
+  "replacements": {
+    "Get started": "开始",
+    "Permission": "权限"
+  }
+}

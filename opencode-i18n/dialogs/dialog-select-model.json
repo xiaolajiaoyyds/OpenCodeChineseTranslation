@@ -1,0 +1,13 @@
+{
+  "file": "src/cli/cmd/tui/component/dialog-model.tsx",
+  "description": "选择模型对话框",
+  "replacements": {
+    "placeholder: \"Search models\"": "placeholder: \"搜索模型 (Search models)\"",
+    "emptyMessage=\"No model results\"": "emptyMessage=\"无模型结果 (No model results)\"",
+    ">Free<": ">免费 (Free)<",
+    ">Latest<": ">最新 (Latest)<",
+    ">Select model<": ">选择模型 (Select model)<",
+    "category === \"Recent\"": "category === \"最近 (Recent)\"",
+    "\"Recent\"": "\"最近 (Recent)\""
+  }
+}

@@ -1,6 +1,0 @@
-{
-  "file": "src/cli/cmd/tui/routes/session/sidebar.tsx",
-  "description": "侧边栏 (已废弃 - 内容已移至 routes/route-sidebar.json)",
-  "note": "此文件的翻译已全部移至 routes/route-sidebar.json，此文件保留仅为兼容旧版本",
-  "replacements": {}
-}

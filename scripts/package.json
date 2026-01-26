@@ -1,0 +1,43 @@
+{
+  "name": "opencodenpm",
+  "version": "1.1.34-zh-v0.3",
+  "description": "OpenCode 中文汉化管理工具 - 跨平台统一版本",
+  "main": "core/cli.js",
+  "bin": {
+    "opencodenpm": "./bin/opencodenpm"
+  },
+  "scripts": {
+    "update": "node bin/opencodenpm update",
+    "apply": "node bin/opencodenpm apply",
+    "build": "node bin/opencodenpm build",
+    "verify": "node bin/opencodenpm verify",
+    "full": "node bin/opencodenpm full",
+    "deploy": "node bin/opencodenpm deploy",
+    "check": "node bin/opencodenpm check",
+    "sync": "node bin/opencodenpm sync",
+    "env": "node bin/opencodenpm env",
+    "ai": "node bin/opencodenpm ai",
+    "version": "node bin/opencodenpm version",
+    "fix": "node bin/opencodenpm fix"
+  },
+  "keywords": [
+    "opencode",
+    "i18n",
+    "chinese",
+    "translation",
+    "汉化"
+  ],
+  "author": "OpenCode Chinese Translation Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@clack/prompts": "^0.11.0",
+    "blessed": "^0.1.81",
+    "commander": "^12.0.0",
+    "dotenv": "^16.6.1",
+    "glob": "^11.0.0",
+    "inquirer": "^8.2.7"
+  }
+}

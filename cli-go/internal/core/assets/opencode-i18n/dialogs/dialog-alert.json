@@ -1,7 +1,0 @@
-{
-  "file": "src/cli/cmd/tui/ui/dialog-alert.tsx",
-  "description": "警告对话框",
-  "replacements": {
-    "<text fg={theme.selectedListItemText}>ok</text>": "<text fg={theme.selectedListItemText}>确定</text>"
-  }
-}

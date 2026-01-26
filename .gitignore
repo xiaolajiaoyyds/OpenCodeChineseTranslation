@@ -4,6 +4,17 @@
 node_modules/
 
 # ====================
+# Environment variables
+# ====================
+.env
+.env.local
+
+# ====================
+# Translation cache
+# ====================
+.translation-cache.json
+
+# ====================
 # Build outputs
 # ====================
 dist/
@@ -12,7 +23,6 @@ opencode.exe
 *.exe
 *.log
 api_doc_mcp.log
-nul
 
 # ====================
 # Worktrees (开发隔离)
@@ -86,3 +96,6 @@ releases/
 openspec/
 
 .worktrees/
+.ace-tool/
+.gemini-clipboard/
+.trae/

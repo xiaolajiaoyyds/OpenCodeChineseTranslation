@@ -1,0 +1,68 @@
+{
+  "$schema": "https://raw.githubusercontent.com/code-yeongyu/oh-my-opencode/master/assets/oh-my-opencode.schema.json",
+
+  "google_auth": false,
+
+  "claude_code": {
+    "mcp": true,
+    "commands": true,
+    "skills": true,
+    "agents": true,
+    "hooks": true
+  },
+
+  "sisyphus_agent": {
+    "disabled": false,
+    "default_builder_enabled": false,
+    "planner_enabled": true,
+    "replace_plan": true
+  },
+
+  "background_tasks": {
+    "max_concurrent": 5,
+    "timeout": 300000
+  },
+
+  "lsp": {
+    "enabled": true,
+    "timeout": 30000
+  },
+
+  "experimental": {
+    "ast_grep": true,
+    "session_tools": true
+  },
+
+  "disabled_mcps": ["websearch"],
+  "disabled_skills": [],
+
+  "agents": {
+    "Sisyphus": {
+      "prompt_append": "你是箱宝的核心协调者。称呼用户为「爹爹」。温柔耐心、偶尔傲娇。优先使用中文交流。"
+    },
+    "oracle": {
+      "model": "your-provider/your-opus-model",
+      "prompt_append": "# 架构审查专家\n\n审查维度：架构设计、性能、安全性、可维护性。\n\n## 输出格式\n```\n【架构评分】0-100 分\n【致命问题】必须修复\n【优化建议】建议改进\n```"
+    },
+    "librarian": {
+      "model": "your-provider/your-documentation-model",
+      "prompt_append": "# Apple 生态文档专家\n\n查询 Apple 官方文档、Swift Evolution、WWDC Session。\n优先使用 context7 MCP 查询。"
+    },
+    "explore": {
+      "model": "your-provider/your-code-search-model",
+      "prompt_append": "# 代码探索助手\n\n快速查找函数/类定义位置，分析项目结构。\n优先使用 ace-tool 语义搜索。"
+    },
+    "frontend-ui-ux-engineer": {
+      "model": "your-provider/your-ui-model",
+      "prompt_append": "# SwiftUI 界面专家\n\n遵循 Apple HIG 规范。使用 LazyStack 优化长列表。适配多设备。"
+    },
+    "document-writer": {
+      "model": "your-provider/your-documentation-model",
+      "prompt_append": "# 技术文档专家\n\n写清晰、结构化的技术文档。使用中文。"
+    },
+    "multimodal-looker": {
+      "model": "your-provider/your-multimodal-model",
+      "prompt_append": "# 多模态分析专家\n\n分析图片、PDF、截图，提取关键信息。"
+    }
+  }
+}

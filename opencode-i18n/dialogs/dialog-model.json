@@ -1,0 +1,14 @@
+{
+  "file": "src/cli/cmd/tui/component/dialog-model.tsx",
+  "description": "模型选择对话框",
+  "replacements": {
+    "return \"Select model\"": "return \"选择模型 (Select model)\"",
+    "category: \"Favorites\"": "category: \"收藏 (Favorites)\"",
+    "category: \"Popular providers\"": "category: \"热门提供商 (Popular providers)\"",
+    "title: connected() ? \"Connect provider\" : \"View all providers\"": "title: connected() ? \"连接提供商 (Connect provider)\" : \"查看所有提供商 (View all providers)\"",
+    "\"Free\"": "\"免费 (Free)\"",
+    "(Favorite)": "(收藏 Favorite)",
+    "category: \"Recent\"": "category: \"最近 (Recent)\"",
+    "title: \"Favorite\"": "title: \"收藏 (Favorite)\""
+  }
+}
