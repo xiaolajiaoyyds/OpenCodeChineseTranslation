@@ -1,6 +1,6 @@
 {
   "name": "opencode-chinese-translation",
-  "version": "1.1.51-zh-v0.3",
+  "version": "1.1.51-zh-v.4",
   "description": "OpenCode 中文汉化项目",
   "scripts": {
     "postinstall": "cd scripts && npm install",
