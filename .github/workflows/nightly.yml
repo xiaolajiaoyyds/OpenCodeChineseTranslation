@@ -153,7 +153,7 @@ jobs:
       - name: 安装脚本依赖
         run: |
           cd scripts
-          npm ci
+          npm ci --ignore-scripts
 
       - name: 克隆 OpenCode 源码
         run: |
