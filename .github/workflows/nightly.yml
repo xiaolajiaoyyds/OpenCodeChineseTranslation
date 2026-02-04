@@ -124,18 +124,10 @@ jobs:
           echo "是否构建: $SHOULD_BUILD"
 
   build-opencode:
-    name: 构建 OpenCode 中文版
+    name: 构建 OpenCode 中文版（所有平台）
     runs-on: ubuntu-latest
     needs: check-upstream
     if: needs.check-upstream.outputs.should_build == 'true'
-    strategy:
-      matrix:
-        include:
-          - platform: windows-x64
-          - platform: linux-x64
-          - platform: linux-arm64
-          - platform: darwin-x64
-          - platform: darwin-arm64
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -166,7 +158,7 @@ jobs:
           cd scripts
           node bin/opencodenpm apply --skip-translate --skip-verify --skip-quality-check
 
-      - name: 构建 OpenCode
+      - name: 构建 OpenCode（所有平台）
         env:
           OPENCODE_CHANNEL: nightly
           OPENCODE_VERSION: nightly-${{ needs.check-upstream.outputs.upstream_date }}
@@ -174,17 +166,42 @@ jobs:
           cd opencode-zh-CN/packages/opencode
           bun run build
 
-      - name: 打包产物
+      - name: 上传构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: opencode-all-platforms
+          path: opencode-zh-CN/packages/opencode/dist/
+
+  package-artifacts:
+    name: 打包 ${{ matrix.platform }}
+    runs-on: ubuntu-latest
+    needs: [check-upstream, build-opencode]
+    if: needs.check-upstream.outputs.should_build == 'true'
+    strategy:
+      matrix:
+        include:
+          - platform: windows-x64
+          - platform: linux-x64
+          - platform: linux-arm64
+          - platform: darwin-x64
+          - platform: darwin-arm64
+    steps:
+      - name: 下载构建产物
+        uses: actions/download-artifact@v4
+        with:
+          name: opencode-all-platforms
+          path: dist-all
+
+      - name: 打包 ${{ matrix.platform }}
         env:
-          NIGHTLY_DATE: ${{ needs.check-upstream.outputs.upstream_date }}
+          PLATFORM: ${{ matrix.platform }}
         run: |
           VERSION="nightly"
-          PLATFORM=${{ matrix.platform }}
           PACKAGE_NAME="opencode-zh-CN-${VERSION}-${PLATFORM}"
 
           echo "=== 打包 ${PACKAGE_NAME} ==="
 
-          BUILD_DIR="opencode-zh-CN/packages/opencode/dist/opencode-${PLATFORM}/bin"
+          BUILD_DIR="dist-all/opencode-${PLATFORM}/bin"
 
           echo "查找构建产物: ${BUILD_DIR}"
           ls -la ${BUILD_DIR}/ || echo "构建目录未找到"
@@ -203,19 +220,19 @@ jobs:
             ls -la dist/
           else
             echo "❌ 二进制未找到: $BINARY"
-            find opencode-zh-CN -name "opencode*" -type f 2>/dev/null | head -20
+            find dist-all -name "opencode*" -type f 2>/dev/null | head -20
             exit 1
           fi
 
-      - name: 上传构建产物
+      - name: 上传打包产物
         uses: actions/upload-artifact@v4
         with:
-          name: opencode-${{ matrix.platform }}
+          name: package-${{ matrix.platform }}
           path: dist/*.zip
 
   release:
     name: 创建/更新 Nightly Release
-    needs: [check-upstream, build-opencode]
+    needs: [check-upstream, package-artifacts]
     if: needs.check-upstream.outputs.should_build == 'true'
     runs-on: ubuntu-latest
     steps:
@@ -241,7 +258,7 @@ jobs:
           PATCH=$(echo "$CURRENT_ZH" | grep -oP '(?<=-zh-v)[0-9.]+' || echo "0")
 
           # 计算新的补丁版本 (每次 nightly 构建递增 0.1)
-          NEW_PATCH=$(echo "$PATCH + 0.1" | bc)
+          NEW_PATCH=$(awk "BEGIN {print $PATCH + 0.1}")
           NEW_VERSION="${BASE}-zh-v${NEW_PATCH}"
 
           echo "新汉化版本: $NEW_VERSION"
@@ -347,7 +364,7 @@ jobs:
           node -e "const fs=require('fs');const path='opencode-i18n/config.json';const cfg=JSON.parse(fs.readFileSync(path));cfg.version=process.env.NEW_VERSION;fs.writeFileSync(path,JSON.stringify(cfg,null,2)+'\n')"
 
           # 安装 scripts 依赖并同步版本
-          cd scripts && npm ci && cd ..
+          cd scripts && npm ci --ignore-scripts && cd ..
           node scripts/bin/opencodenpm version --sync
 
           # 更新 README.md 中的版本号
@@ -418,7 +435,7 @@ jobs:
       - name: 下载所有构建产物
         uses: actions/download-artifact@v4
         with:
-          pattern: opencode-*
+          pattern: package-*
           path: dist
           merge-multiple: true
 
