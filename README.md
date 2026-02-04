@@ -1,8 +1,9 @@
-# OpenCode 中文汉化版 v1.1.34-zh-v0.3
+# OpenCode 中文汉化版 v1.1.51-zh-v0.3
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![OpenCode](https://img.shields.io/badge/OpenCode-v1.1.31-brightgreen)](https://github.com/anomalyco/opencode)
-[![汉化版](https://img.shields.io/badge/汉化版-1.1.31--zh-v0.2-orange)](https://github.com/xiaolajiaoyyds/OpenCodeChineseTranslation)
+[![OpenCode](https://img.shields.io/badge/OpenCode-v1.1.51-brightgreen)](https://github.com/anomalyco/opencode)
+[![汉化版](https://img.shields.io/badge/汉化版-1.1.51--zh--v0.3-orange)](https://github.com/xiaolajiaoyyds/OpenCodeChineseTranslation)
+[![Nightly Build](https://img.shields.io/badge/Nightly-自动构建-blueviolet)](https://github.com/xiaolajiaoyyds/OpenCodeChineseTranslation/releases/tag/nightly)
 
 > **OpenCode** 是由 [Anomaly Company](https://anomaly.company/) 开发的开源 AI 编程代理。
 > 本项目提供完整的中文本地化，通过 AI 辅助翻译和质量检查实现高质量汉化。
@@ -46,7 +47,17 @@
 
 ---
 
-## ✨ v1.1.34-zh-v0.3 新特性
+## ✨ 最新特性
+
+### 🌙 Nightly 自动构建系统（NEW！）
+
+- **⏰ 每小时检测**：自动检测官方 dev 分支更新
+- **🎯 智能触发**：累计 ≥5 个新 commit 时自动构建
+- **📦 多平台支持**：自动构建 5 个平台版本（Windows/macOS/Linux）
+- **🔢 版本自动化**：汉化版本号自动递增（+0.1）
+- **📊 变更追踪**：自动检测和记录汉化文件变更
+- **📝 文档同步**：自动更新 CHANGELOG 和 README
+- **🚀 一键下载**：[Nightly Release](https://github.com/xiaolajiaoyyds/OpenCodeChineseTranslation/releases/tag/nightly) 持续更新
 
 ### 🔄 同步工具
 
@@ -58,13 +69,7 @@
 
 - **AI 总结合并**：AI 总结不再单独开框，合并到执行总结框内最后，界面更简洁
 - **输出顺序优化**：覆盖率报告 → 执行总结（含 AI 总结）→ 完成提示，流程更自然
-- **模型信息对齐**：AI 总结中"指定模型"使用 L3 格式，与其他信息对齐
-
-### 🔧 技术改进
-
-- printPipelineSummary 改为 async 函数，支持 AI 总结的异步调用
-- generateCoverageSummaryInline 新增内联版本，不创建独立框
-- 修复 AI 总结最后一行与结束符混在一起的问题
+- **模型信息对齐**：AI 总结中"指定模型"使用统一格式，信息对齐
 
 ---
 - **智能换行**：只在标点符号后断行，避免中文断字
@@ -278,6 +283,17 @@ OpenCodeChineseTranslation/
 ---
 
 ## 📋 更新日志
+
+### v1.1.51-zh-v0.3 (2026-02-04)
+
+**🌙 Nightly 自动构建系统**
+
+- 🚀 新增每小时自动检测官方更新的 Nightly 工作流
+- 📦 自动构建 5 个平台版本（Windows/macOS/Linux）
+- 🔢 汉化版本号自动递增管理
+- 📊 自动检测和记录汉化文件变更
+- 📝 自动更新 CHANGELOG 和 README 文档
+- 🌙 [Nightly Release](https://github.com/xiaolajiaoyyds/OpenCodeChineseTranslation/releases/tag/nightly) 持续更新
 
 ### v1.1.34-zh-v0.3 (2026-01-22)
 
