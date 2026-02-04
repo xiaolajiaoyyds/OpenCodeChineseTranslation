@@ -1,0 +1,7 @@
+{
+  "file": "src/cli/cmd/tui/component/prompt/index.tsx",
+  "description": "index.tsx 汉化配置",
+  "replacements": {
+    "title: \"Skills\"": "title: \"技能 (Skills)\""
+  }
+}

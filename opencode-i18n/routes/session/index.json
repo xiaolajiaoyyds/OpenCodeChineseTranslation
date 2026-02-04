@@ -1,0 +1,8 @@
+{
+  "file": "src/cli/cmd/tui/routes/session/index.tsx",
+  "description": "index.tsx 汉化配置",
+  "replacements": {
+    "\"Disable code concealment\"": "\"禁用代码隐藏 (Disable code concealment)\"",
+    "\"Enable code concealment\"": "\"启用代码隐藏 (Enable code concealment)\""
+  }
+}

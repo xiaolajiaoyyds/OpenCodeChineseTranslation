@@ -448,9 +448,20 @@ ${content}
       const isSimpleWord = /^[a-zA-Z0-9]+$/.test(normalizedFind);
 
       if (isSimpleWord) {
-        const wordBoundaryPattern = new RegExp(`\\b${normalizedFind}\\b`, "g");
-        if (wordBoundaryPattern.test(content)) {
-          content = content.replace(wordBoundaryPattern, normalizedReplace);
+        // 使用更严格的替换逻辑，避免翻译变量名和路径
+        // 排除以下情况：
+        // 1. ./word 或 ../word (路径)
+        // 2. .word[ 或 .word. 或 .word) (属性访问)
+        // 3. from "./word" 或 from './word' (import 路径)
+        // 4. /word" 或 /word' (路径结尾)
+        const safeReplacePattern = new RegExp(
+          `(?<![./])\\b${normalizedFind}\\b(?![\\[./"'])`,
+          "g"
+        );
+        if (safeReplacePattern.test(content)) {
+          // 重置 lastIndex，因为 test() 会改变它
+          safeReplacePattern.lastIndex = 0;
+          content = content.replace(safeReplacePattern, normalizedReplace);
           replaceCount++;
         }
       } else {

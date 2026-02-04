@@ -1,0 +1,8 @@
+{
+  "file": "src/cli/cmd/tui/component/dialog-skill.tsx",
+  "category": "组件",
+  "replacements": {
+    "Skills": "技能",
+    "Search skills...": "搜索技能..."
+  }
+}
