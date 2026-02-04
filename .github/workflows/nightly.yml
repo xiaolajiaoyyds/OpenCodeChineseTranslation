@@ -5,7 +5,7 @@ on:
     paths:
       - '.github/workflows/nightly.yml'
   schedule:
-    # 每小时检测一次上游更新 (避开整点高峰期)
+    # 每小时检测一次上游更新（避开整点高峰期）
     - cron: '16 * * * *'
   workflow_dispatch:
     inputs:
