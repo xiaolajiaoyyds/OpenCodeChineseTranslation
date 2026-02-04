@@ -154,9 +154,20 @@ jobs:
           bun install
 
       - name: 应用中文翻译
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_API_BASE: ${{ secrets.OPENAI_API_BASE }}
+          OPENAI_MODEL: ${{ secrets.OPENAI_MODEL }}
         run: |
           cd scripts
-          node bin/opencodenpm apply --skip-translate --skip-verify --skip-quality-check
+          # 如果配置了 API Key，启用 AI 翻译；否则只应用已有汉化
+          if [ -n "$OPENAI_API_KEY" ]; then
+            echo "检测到 API Key，启用 AI 自动翻译"
+            node bin/opencodenpm apply --skip-verify --skip-quality-check
+          else
+            echo "未配置 API Key，仅应用已有汉化"
+            node bin/opencodenpm apply --skip-translate --skip-verify --skip-quality-check
+          fi
 
       - name: 构建 OpenCode（所有平台）
         env:
