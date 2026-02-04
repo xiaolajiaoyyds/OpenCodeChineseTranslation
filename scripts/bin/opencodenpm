@@ -1,0 +1,19 @@
+#!/usr/bin/env node
+/**
+ * OpenCode 中文汉化工具 - 统一入口
+ *
+ * 用法:
+ *   opencodenpm update   - 更新源码
+ *   opencodenpm apply    - 应用汉化
+ *   opencodenpm build    - 编译构建
+ *   opencodenpm verify   - 验证配置
+ *   opencodenpm full     - 完整工作流
+ *   opencodenpm env      - 检查环境
+ *   opencodenpm check    - 检查翻译
+ *   opencodenpm sync     - 同步官方版本
+ *   opencodenpm fix      - 一键修复并编译
+ *   opencodenpm ai       - 配置 AI Key/Base/Model
+ *   opencodenpm version  - 版本一致性
+ */
+
+require('../core/cli.js').run();
