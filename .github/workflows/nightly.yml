@@ -172,7 +172,7 @@ jobs:
           OPENCODE_VERSION: nightly-${{ needs.check-upstream.outputs.upstream_date }}
         run: |
           cd opencode-zh-CN/packages/opencode
-          bun run build --single
+          bun run build
 
       - name: 打包产物
         env:
