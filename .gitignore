@@ -19,6 +19,8 @@ node_modules/
 # ====================
 dist/
 bin/
+# 但保留 scripts/bin/ 目录（汉化工具入口）
+!scripts/bin/
 opencode.exe
 *.exe
 *.log
