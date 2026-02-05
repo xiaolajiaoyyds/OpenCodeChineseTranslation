@@ -2,6 +2,6 @@
   "file": "src/cli/cmd/tui/component/tips.tsx",
   "description": "tips.tsx 汉化配置",
   "replacements": {
-    "\"Create {highlight}.ts{/highlight} files in {highlight}.opencode/tools/{/highlight} to define new LLM tools\"": "\"在 {highlight}.opencode/tools/{/highlight} 中创建 {highlight}.ts{/highlight} 文件来定义新的 LLM 工具 (Create {highlight}.ts{/highlight} files in {highlight}.opencode/tools/{/highlight} to define new LLM tools)\""
+    "\"Create {highlight}.ts{/highlight} files in {highlight}.opencode/tools/{/highlight} to define new LLM tools\"": "\"在 {highlight}.opencode/tools/{/highlight} 中创建 {highlight}.ts{/highlight} 文件来定义新的 LLM 工具\""
   }
 }

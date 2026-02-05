@@ -39,6 +39,72 @@ const {
   out,
 } = require("./colors.js");
 
+/**
+ * AI 自动修复翻译问题（花括号/JSX标签不匹配）
+ */
+async function autoFixTranslationIssues(issues) {
+  const fs = require("fs");
+  const translator = new Translator();
+
+  if (!translator.checkConfig()) {
+    return { fixed: 0, failed: issues.length };
+  }
+
+  await translator.ensureModel();
+
+  const byConfigPath = new Map();
+  for (const issue of issues) {
+    if (!issue.configPath) continue;
+    if (!byConfigPath.has(issue.configPath)) {
+      byConfigPath.set(issue.configPath, []);
+    }
+    byConfigPath.get(issue.configPath).push(issue);
+  }
+
+  let fixed = 0;
+  let failed = 0;
+
+  for (const [configPath, fileIssues] of byConfigPath) {
+    try {
+      const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+
+      for (const issue of fileIssues) {
+        const prompt = `修复翻译中的格式问题。
+
+原文: ${issue.original}
+当前译文: ${issue.translated}
+问题类型: ${issue.type === "brace" ? "花括号数量不匹配" : "JSX标签数量不匹配"}
+
+要求：
+1. 保持原文中的所有 {变量} 和 <标签> 不变
+2. 只修正译文，使其格式与原文一致
+3. 保留中文翻译内容
+4. 直接输出修正后的译文，不要任何解释
+
+修正后的译文:`;
+
+        const fixedTranslation = await translator.simpleCallAI(prompt);
+
+        if (fixedTranslation && fixedTranslation.trim()) {
+          const cleaned = fixedTranslation.trim().replace(/^["']|["']$/g, "");
+          config.replacements[issue.original] = cleaned;
+          fixed++;
+        } else {
+          failed++;
+        }
+
+        await new Promise((r) => setTimeout(r, 500));
+      }
+
+      fs.writeFileSync(configPath, JSON.stringify(config, null, 2), "utf-8");
+    } catch (e) {
+      failed += fileIssues.length;
+    }
+  }
+
+  return { fixed, failed };
+}
+
 function presetToSteps(preset) {
   switch (preset) {
     case "oneclick":
@@ -166,15 +232,23 @@ async function runQualitySourceCheck(i18n, outputIndent = indent) {
       const translatedTags = (translated.match(/<[^>]+>/g) || []).length;
       if (originalTags !== translatedTags) {
         unclosedCount++;
-        if (unclosedCount <= 3)
-          issues.push({ type: "jsx", original, translated });
+        issues.push({
+          type: "jsx",
+          original,
+          translated,
+          configPath: config.configPath,
+        });
       }
       const originalBraces = (original.match(/[{}]/g) || []).length;
       const translatedBraces = (translated.match(/[{}]/g) || []).length;
       if (originalBraces !== translatedBraces) {
         unclosedCount++;
-        if (unclosedCount <= 3)
-          issues.push({ type: "brace", original, translated });
+        issues.push({
+          type: "brace",
+          original,
+          translated,
+          configPath: config.configPath,
+        });
       }
     }
   }
@@ -223,6 +297,43 @@ async function runQualitySourceCheck(i18n, outputIndent = indent) {
     success("质量检查通过");
   } else if (issues.length > 0 && allPassed) {
     warn(`发现 ${issues.length} 个潜在问题，但不影响编译`);
+    for (const issue of issues.slice(0, 3)) {
+      if (issue.file) {
+        indent(
+          `  ${c.dim}${issue.file}:${issue.line}${c.reset} ${issue.message}`,
+        );
+      } else if (issue.type === "jsx") {
+        indent(`  ${c.dim}JSX 标签数量不匹配:${c.reset}`);
+        indent(
+          `    原文: ${c.yellow}${issue.original.slice(0, 60)}${issue.original.length > 60 ? "..." : ""}${c.reset}`,
+        );
+        indent(
+          `    译文: ${c.yellow}${issue.translated.slice(0, 60)}${issue.translated.length > 60 ? "..." : ""}${c.reset}`,
+        );
+      } else if (issue.type === "brace") {
+        indent(`  ${c.dim}花括号数量不匹配:${c.reset}`);
+        indent(
+          `    原文: ${c.yellow}${issue.original.slice(0, 60)}${issue.original.length > 60 ? "..." : ""}${c.reset}`,
+        );
+        indent(
+          `    译文: ${c.yellow}${issue.translated.slice(0, 60)}${issue.translated.length > 60 ? "..." : ""}${c.reset}`,
+        );
+      }
+    }
+    if (issues.length > 3) {
+      indent(`  ${c.dim}... 还有 ${issues.length - 3} 个问题${c.reset}`);
+    }
+
+    blank();
+    const shouldFix = await confirmAction("是否使用 AI 自动修复这些问题？");
+    if (shouldFix) {
+      const fixResult = await autoFixTranslationIssues(issues);
+      if (fixResult.fixed > 0) {
+        success(`AI 已修复 ${fixResult.fixed}/${issues.length} 个问题`);
+      } else {
+        warn("AI 修复失败，请手动检查");
+      }
+    }
   } else {
     error("质量检查失败");
     indent(`建议: 运行 'opencodenpm build' 查看详细错误`, 2);
@@ -359,17 +470,18 @@ async function printPipelineSummary(preset, result, options = {}) {
   }
 
   // AI 总结合并到执行总结框内最后（仅当有 AI 数据时）
-  const hasAIData = options.newTranslations ||
+  const hasAIData =
+    options.newTranslations ||
     (options.uncoveredAnalysis &&
-     (options.uncoveredAnalysis.needTranslate?.length > 0 ||
-      options.uncoveredAnalysis.noNeedTranslate?.length > 0));
+      (options.uncoveredAnalysis.needTranslate?.length > 0 ||
+        options.uncoveredAnalysis.noNeedTranslate?.length > 0));
 
   if (hasAIData) {
     blank();
     l1(`${c.cyan}AI 总结${c.reset}`);
     blank();
     await generateAISummaryInSummary(options);
-    blank();  // AI 总结后换行，避免与 └ 混在一起
+    blank(); // AI 总结后换行，避免与 └ 混在一起
   }
 
   groupEnd();
@@ -677,7 +789,10 @@ function buildSteps(options = {}) {
       let deployToLocalResult = null;
       if (buildDeployToLocal) {
         // 静默执行，稍后在总结中显示
-        const success = await builder.deployToLocal({ silent: true, nested: true });
+        const success = await builder.deployToLocal({
+          silent: true,
+          nested: true,
+        });
         if (success) {
           const path = require("path");
           const fs = require("fs");
@@ -701,7 +816,9 @@ function buildSteps(options = {}) {
         ok: true,
         changed: true,
         summary: "编译完成",
-        details: deployToLocalResult ? { deployToLocal: deployToLocalResult } : null
+        details: deployToLocalResult
+          ? { deployToLocal: deployToLocalResult }
+          : null,
       };
     },
     deploy: async () => {
@@ -782,7 +899,9 @@ function buildSteps(options = {}) {
         ok: true,
         changed: true,
         summary: "编译完成",
-        details: deployToLocalResult ? { deployToLocal: deployToLocalResult } : null
+        details: deployToLocalResult
+          ? { deployToLocal: deployToLocalResult }
+          : null,
       };
     },
     deploy: async () => {
