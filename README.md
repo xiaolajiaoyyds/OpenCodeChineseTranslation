@@ -1,4 +1,4 @@
-# OpenCode 中文汉化版 v1.1.51-zh-v2
+# OpenCode 中文汉化版 v1.1.51-zh-v2.1
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![OpenCode](https://img.shields.io/badge/OpenCode-v1.1.51-brightgreen)](https://github.com/anomalyco/opencode)
@@ -284,7 +284,7 @@ OpenCodeChineseTranslation/
 
 ## 📋 更新日志
 
-### v1.1.51-zh-v2 (2026-02-04)
+### v1.1.51-zh-v2.1 (2026-02-04)
 
 **🌙 Nightly 自动构建系统**
 
@@ -295,7 +295,7 @@ OpenCodeChineseTranslation/
 - 📝 自动更新 CHANGELOG 和 README 文档
 - 🌙 [Nightly Release](https://github.com/xiaolajiaoyyds/OpenCodeChineseTranslation/releases/tag/nightly) 持续更新
 
-### v1.1.51-zh-v2 (2026-01-22)
+### v1.1.51-zh-v2.1 (2026-01-22)
 
 **同步工具 + 自动修复**
 
