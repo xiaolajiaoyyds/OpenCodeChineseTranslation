@@ -1,4 +1,4 @@
-# OpenCode 中文汉化版 v1.1.51-zh-v2.6
+# OpenCode 中文汉化版 v1.1.56-zh-v1.5
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![OpenCode](https://img.shields.io/badge/OpenCode-v1.1.51-brightgreen)](https://github.com/anomalyco/opencode)
