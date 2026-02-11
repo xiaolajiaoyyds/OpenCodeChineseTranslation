@@ -13,7 +13,7 @@ const {
   getBinDir,
   getPlatform,
 } = require("./utils.js");
-const { ensureBun, addBunToPath, REQUIRED_BUN_VERSION } = require("./env.js");
+const { ensureBun, addBunToPath, getRequiredBunVersion } = require("./env.js");
 const { loadUserConfig } = require("./user-config.js");
 const {
   step,
@@ -79,9 +79,10 @@ class Builder {
 
     const result = await ensureBun();
     if (!result.ok) {
+      const requiredVersion = getRequiredBunVersion();
       throw new Error(
-        `无法获取 Bun，请手动安装 v${REQUIRED_BUN_VERSION} 后重试\n` +
-          `  安装命令: curl -fsSL https://bun.sh/install | bash -s "bun-v${REQUIRED_BUN_VERSION}"`,
+        `无法获取 Bun，请手动安装 v${requiredVersion} 后重试\n` +
+          `  安装命令: curl -fsSL https://bun.sh/install | bash -s "bun-v${requiredVersion}"`,
       );
     }
 
@@ -254,7 +255,7 @@ class Builder {
       return true;
     } catch (e) {
       const output = e.output || e.stdout || "";
-      const errorOutput = typeof output === 'string' ? output : String(output);
+      const errorOutput = typeof output === "string" ? output : String(output);
 
       // 检测是否是版本问题导致的编译错误
       const isVersionIssue = this.detectVersionIssue(errorOutput);
@@ -302,7 +303,7 @@ class Builder {
       /show\s+[\u4e00-\u9fa5]+.*\(\)/, // 函数名被翻译
     ];
 
-    return versionErrorPatterns.some(pattern => pattern.test(errorOutput));
+    return versionErrorPatterns.some((pattern) => pattern.test(errorOutput));
   }
 
   /**

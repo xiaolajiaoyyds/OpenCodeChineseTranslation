@@ -15,10 +15,24 @@ const {
   getBinDir,
   execLive,
 } = require("./utils.js");
-const { step, success, error, warn, indent, createSpinner } = require("./colors.js");
+const {
+  step,
+  success,
+  error,
+  warn,
+  indent,
+  createSpinner,
+} = require("./colors.js");
 
-// 要求的 Bun 版本（不超过此版本）
-const REQUIRED_BUN_VERSION = "1.3.5";
+function getRequiredBunVersion() {
+  const pkgPath = path.join(__dirname, "../../opencode-zh-CN/package.json");
+  if (fs.existsSync(pkgPath)) {
+    const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
+    const match = pkg.packageManager?.match(/bun@(\d+\.\d+\.\d+)/);
+    if (match) return match[1];
+  }
+  return "1.3.8";
+}
 
 /**
  * 检查 Node.js 版本
@@ -39,20 +53,30 @@ function checkNode() {
   }
 }
 
-/**
- * 检查 Bun
- */
+function compareVersions(v1, v2) {
+  const parts1 = v1.split(".").map(Number);
+  const parts2 = v2.split(".").map(Number);
+  for (let i = 0; i < 3; i++) {
+    const a = parts1[i] || 0;
+    const b = parts2[i] || 0;
+    if (a > b) return 1;
+    if (a < b) return -1;
+  }
+  return 0;
+}
+
 function checkBun() {
   try {
     const version = getCommandVersion("bun", "--version");
     if (!version) return { ok: false, version: null };
 
-    const isCorrectVersion = version === REQUIRED_BUN_VERSION;
+    const requiredVersion = getRequiredBunVersion();
+    const isCorrectVersion = compareVersions(version, requiredVersion) >= 0;
     return {
       ok: true,
       version,
       isCorrectVersion,
-      required: REQUIRED_BUN_VERSION,
+      required: `>=${requiredVersion}`,
     };
   } catch (e) {
     return { ok: false, version: null };
@@ -101,10 +125,13 @@ function isOpencodeRunning() {
   const { isWindows } = getPlatform();
   try {
     if (isWindows) {
-      const result = execSync('tasklist /FI "IMAGENAME eq opencode.exe" /FO CSV 2>nul', {
-        encoding: "utf8",
-        stdio: ["pipe", "pipe", "pipe"],
-      });
+      const result = execSync(
+        'tasklist /FI "IMAGENAME eq opencode.exe" /FO CSV 2>nul',
+        {
+          encoding: "utf8",
+          stdio: ["pipe", "pipe", "pipe"],
+        },
+      );
       const lines = result.trim().split("\n").slice(1);
       const processes = lines
         .filter((line) => line.includes("opencode.exe"))
@@ -114,18 +141,23 @@ function isOpencodeRunning() {
         });
       return { running: processes.length > 0, processes };
     } else {
-      const result = execSync("ps -eo pid,command | grep -E '^\\s*[0-9]+\\s+opencode' | grep -v grep", {
-        encoding: "utf8",
-        stdio: ["pipe", "pipe", "pipe"],
-      });
+      const result = execSync(
+        "ps -eo pid,command | grep -E '^\\s*[0-9]+\\s+opencode' | grep -v grep",
+        {
+          encoding: "utf8",
+          stdio: ["pipe", "pipe", "pipe"],
+        },
+      );
       const lines = result.trim().split("\n").filter(Boolean);
-      const processes = lines.map((line) => {
-        const match = line.trim().match(/^(\d+)\s+(.+)$/);
-        if (match) {
-          return { pid: match[1], command: match[2] };
-        }
-        return null;
-      }).filter(Boolean);
+      const processes = lines
+        .map((line) => {
+          const match = line.trim().match(/^(\d+)\s+(.+)$/);
+          if (match) {
+            return { pid: match[1], command: match[2] };
+          }
+          return null;
+        })
+        .filter(Boolean);
       return { running: processes.length > 0, processes };
     }
   } catch (e) {
@@ -140,14 +172,22 @@ function getHardwareModel() {
   const { isMac, isLinux, isWindows } = getPlatform();
   try {
     if (isMac) {
-      const model = execSync("sysctl -n hw.model", { encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] }).trim();
-      const chip = execSync("sysctl -n machdep.cpu.brand_string", { encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] }).trim();
+      const model = execSync("sysctl -n hw.model", {
+        encoding: "utf8",
+        stdio: ["pipe", "pipe", "pipe"],
+      }).trim();
+      const chip = execSync("sysctl -n machdep.cpu.brand_string", {
+        encoding: "utf8",
+        stdio: ["pipe", "pipe", "pipe"],
+      }).trim();
       return { model, chip };
     }
     if (isLinux) {
       let model = "Linux";
       try {
-        model = fs.readFileSync("/sys/devices/virtual/dmi/id/product_name", "utf8").trim();
+        model = fs
+          .readFileSync("/sys/devices/virtual/dmi/id/product_name", "utf8")
+          .trim();
       } catch (e) {
         try {
           const osRelease = fs.readFileSync("/etc/os-release", "utf8");
@@ -158,8 +198,13 @@ function getHardwareModel() {
       return { model, chip: os.cpus()[0]?.model || "" };
     }
     if (isWindows) {
-      const model = execSync("wmic computersystem get model", { encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] })
-        .split("\n")[1]?.trim() || "Windows PC";
+      const model =
+        execSync("wmic computersystem get model", {
+          encoding: "utf8",
+          stdio: ["pipe", "pipe", "pipe"],
+        })
+          .split("\n")[1]
+          ?.trim() || "Windows PC";
       return { model, chip: os.cpus()[0]?.model || "" };
     }
   } catch (e) {}
@@ -199,27 +244,25 @@ function addBunToPath() {
 async function installBun(options = {}) {
   const { silent = false } = options;
   const { isWindows, isGitBash } = getPlatform();
+  const requiredVersion = getRequiredBunVersion();
 
-  const spinner = createSpinner(`正在安装 Bun v${REQUIRED_BUN_VERSION}`);
+  const spinner = createSpinner(`正在安装 Bun v${requiredVersion}`);
   if (!silent) spinner.start();
 
   try {
-    // 先将 bun 目录加入 PATH
     addBunToPath();
 
     if (isWindows && !isGitBash) {
-      // Windows CMD/PowerShell
       await execLive(
         `powershell -Command "$env:BUN_INSTALL = [Environment]::GetFolderPath('UserProfile') + '\\.bun'; ` +
-        `$env:BUN_VERSION = '${REQUIRED_BUN_VERSION}'; ` +
-        `iwr bun.sh/install.ps1 -useb | iex"`,
-        { silent: true, shell: true }
+          `$env:BUN_VERSION = '${requiredVersion}'; ` +
+          `iwr bun.sh/install.ps1 -useb | iex"`,
+        { silent: true, shell: true },
       );
     } else {
-      // macOS / Linux / Git Bash
       await execLive(
-        `curl -fsSL https://bun.sh/install | bash -s "bun-v${REQUIRED_BUN_VERSION}"`,
-        { silent: true, shell: true }
+        `curl -fsSL https://bun.sh/install | bash -s "bun-v${requiredVersion}"`,
+        { silent: true, shell: true },
       );
     }
 
@@ -261,31 +304,29 @@ async function ensureBun(options = {}) {
   // 3. 处理检测结果
   if (bunCheck.ok) {
     if (bunCheck.isCorrectVersion) {
-      // 版本正确
       return { ok: true, version: bunCheck.version, path: "bun" };
     } else {
-      // 版本不匹配
+      const requiredVersion = getRequiredBunVersion();
       if (!silent) {
-        warn(`Bun 版本 ${bunCheck.version}，需要 ${REQUIRED_BUN_VERSION}`);
+        warn(`Bun 版本 ${bunCheck.version}，需要 >=${requiredVersion}`);
       }
       if (autoInstall) {
         if (!silent) warn("正在安装指定版本...");
         const installed = await installBun({ silent });
         if (installed) {
-          return { ok: true, version: REQUIRED_BUN_VERSION, path: "bun" };
+          return { ok: true, version: requiredVersion, path: "bun" };
         }
       }
-      // 版本不对但可尝试使用
       if (!silent) warn("将使用当前版本，可能导致构建失败");
       return { ok: true, version: bunCheck.version, path: "bun" };
     }
   } else {
-    // 没有 bun
     if (autoInstall) {
+      const requiredVersion = getRequiredBunVersion();
       if (!silent) warn("未检测到 Bun，正在自动安装...");
       const installed = await installBun({ silent });
       if (installed) {
-        return { ok: true, version: REQUIRED_BUN_VERSION, path: "bun" };
+        return { ok: true, version: requiredVersion, path: "bun" };
       }
     }
     return { ok: false, version: null, path: null };
@@ -331,7 +372,11 @@ async function checkEnvironment(options = {}) {
     if (autoInstall) {
       const bunResult = await ensureBun({ silent });
       if (bunResult.ok) {
-        results.bun = { ok: true, version: bunResult.version, isCorrectVersion: true };
+        results.bun = {
+          ok: true,
+          version: bunResult.version,
+          isCorrectVersion: true,
+        };
         if (!silent) success(`Bun ${bunResult.version} (已自动安装)`);
       } else {
         missing.push("Bun");
@@ -343,12 +388,16 @@ async function checkEnvironment(options = {}) {
     if (results.bun.isCorrectVersion) {
       success(`Bun ${results.bun.version}`);
     } else {
-      warn(`Bun ${results.bun.version} (需要 ${REQUIRED_BUN_VERSION})`);
+      const requiredVersion = getRequiredBunVersion();
+      warn(`Bun ${results.bun.version} (需要 >=${requiredVersion})`);
       if (autoInstall) {
         const bunResult = await ensureBun({ silent });
-        if (bunResult.ok && bunResult.version === REQUIRED_BUN_VERSION) {
-          success(`Bun ${REQUIRED_BUN_VERSION} (已自动安装)`);
-          results.bun.version = REQUIRED_BUN_VERSION;
+        if (
+          bunResult.ok &&
+          compareVersions(bunResult.version, requiredVersion) >= 0
+        ) {
+          success(`Bun ${bunResult.version} (已自动安装)`);
+          results.bun.version = bunResult.version;
           results.bun.isCorrectVersion = true;
         }
       }
@@ -402,5 +451,5 @@ module.exports = {
   isOpencodeRunning,
   findInstalledOpencode,
   addBunToPath,
-  REQUIRED_BUN_VERSION,
+  getRequiredBunVersion,
 };
