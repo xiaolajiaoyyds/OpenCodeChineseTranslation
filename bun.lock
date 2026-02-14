@@ -1,0 +1,15 @@
+{
+  "lockfileVersion": 1,
+  "configVersion": 0,
+  "workspaces": {
+    "": {
+      "name": "opencode-chinese-translation",
+      "dependencies": {
+        "blessed": "^0.1.81",
+      },
+    },
+  },
+  "packages": {
+    "blessed": ["blessed@0.1.81", "", { "bin": "bin/tput.js" }, "sha512-LoF5gae+hlmfORcG1M5+5XZi4LBmvlXTzwJWzUlPryN/SJdSflZvROM2TwkT0GMpq7oqT48NRd4GS7BiVBc5OQ=="],
+  }
+}

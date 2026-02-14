@@ -41,6 +41,8 @@
     "\"Favorite cycle reverse\"": "\"反向切换收藏 (Favorite cycle reverse)\"",
     "\"Disable terminal title\"": "\"禁用终端标题 (Disable terminal title)\"",
     "\"Enable terminal title\"": "\"启用终端标题 (Enable terminal title)\"",
-    "\"Disable diff wrapping\"": "\"禁用差异换行 (Disable diff wrapping)\""
+    "\"Disable diff wrapping\"": "\"禁用差异换行 (Disable diff wrapping)\"",
+    "message: \"Failed to fork session\"": "message: \"分叉会话失败 (Failed to fork session)\"",
+    "\"Failed to fork session\"": "\"分叉会话失败 (Failed to fork session)\""
   }
 }
