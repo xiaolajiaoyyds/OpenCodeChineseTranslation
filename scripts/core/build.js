@@ -114,9 +114,19 @@ class Builder {
     const config = loadUserConfig();
     const registry = config.npmRegistry;
 
-    const nodeModulesPath = path.join(this.buildDir, "node_modules");
+    // 检查关键依赖是否存在（workspace 项目依赖可能在包级或根级 node_modules）
+    const criticalDeps = ["mime-types", "google-auth-library"];
+    const pkgNodeModules = path.join(this.buildDir, "node_modules");
+    const rootNodeModules = path.join(this.opencodeDir, "node_modules");
+    const hasCriticalDeps = criticalDeps.every(
+      (dep) =>
+        exists(path.join(pkgNodeModules, dep)) ||
+        exists(path.join(rootNodeModules, dep)),
+    );
     const hasDeps =
-      exists(nodeModulesPath) && fs.readdirSync(nodeModulesPath).length > 5;
+      exists(pkgNodeModules) &&
+      fs.readdirSync(pkgNodeModules).length > 5 &&
+      hasCriticalDeps;
 
     if (hasDeps && !force) {
       if (!silent) {
@@ -133,9 +143,12 @@ class Builder {
       const args = ["install", "--frozen-lockfile"];
       if (registry) args.push("--registry", registry);
 
+      // workspace 项目需要在根目录安装依赖
+      const installCwd = this.opencodeDir;
+
       if (silent) {
         await execLive("bun", args, {
-          cwd: this.buildDir,
+          cwd: installCwd,
           silent: true,
           timeoutMs: 15 * 60 * 1000,
         });
@@ -154,7 +167,7 @@ class Builder {
       }, 1000);
       try {
         await execLive("bun", args, {
-          cwd: this.buildDir,
+          cwd: installCwd,
           silent: true,
           timeoutMs: 15 * 60 * 1000,
         });

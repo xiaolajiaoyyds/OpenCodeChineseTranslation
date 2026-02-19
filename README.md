@@ -284,6 +284,15 @@ OpenCodeChineseTranslation/
 
 ## 📋 更新日志
 
+### v1.1.51-zh-v2.7 (2026-02-19)
+
+**构建修复 + 翻译修正**
+
+- 🔧 修复 workspace 依赖安装路径，解决 mime-types/google-auth-library 等包缺失导致编译失败的问题
+- 🔍 依赖完整性检查增强，不再仅靠 node_modules 条目数判断，会验证关键包是否存在
+- 🌐 修复 tips.tsx 翻译配置格式（补齐缺失的包围引号）
+- ➕ 新增 permission.tsx 汉化配置
+
 ### v1.1.51-zh-v2.6 (2026-02-04)
 
 **🌙 Nightly 自动构建系统**

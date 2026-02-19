@@ -1,0 +1,9 @@
+{
+  "file": "src/cli/cmd/tui/routes/session/permission.tsx",
+  "description": "permission.tsx 汉化配置",
+  "replacements": {
+    ">No diff provided<": ">未提供差异内容 (No diff provided)<",
+    ">Patterns<": ">模式 (Patterns)<",
+    ">This keeps the session running despite repeated failures.<": ">即使多次失败仍保持会话运行 (This keeps the session running despite repeated failures.)<"
+  }
+}
