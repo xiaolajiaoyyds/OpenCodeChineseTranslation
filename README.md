@@ -1,8 +1,8 @@
-# OpenCode 中文汉化版 v1.1.51-zh-v2.7
+# OpenCode 中文汉化版 v1.1.51-zh-v2.8
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![OpenCode](https://img.shields.io/badge/OpenCode-v1.1.51-brightgreen)](https://github.com/anomalyco/opencode)
-[![汉化版](https://img.shields.io/badge/汉化版-1.1.51--zh--v2.7-orange)](https://github.com/xiaolajiaoyyds/OpenCodeChineseTranslation)
+[![汉化版](https://img.shields.io/badge/汉化版-1.1.51--zh--v2.8-orange)](https://github.com/xiaolajiaoyyds/OpenCodeChineseTranslation)
 [![Nightly Build](https://img.shields.io/badge/Nightly-自动构建-blueviolet)](https://github.com/xiaolajiaoyyds/OpenCodeChineseTranslation/releases/tag/nightly)
 
 > **OpenCode** 是由 [Anomaly Company](https://anomaly.company/) 开发的开源 AI 编程代理。
