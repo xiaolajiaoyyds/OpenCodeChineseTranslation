@@ -114,88 +114,129 @@ class Builder {
     const config = loadUserConfig();
     const registry = config.npmRegistry;
 
-    // 检查关键依赖是否存在（workspace 项目依赖可能在包级或根级 node_modules）
-    const criticalDeps = ["mime-types", "google-auth-library"];
+    // 从 package.json 动态读取所有 dependencies，自动检测缺失
     const pkgNodeModules = path.join(this.buildDir, "node_modules");
     const rootNodeModules = path.join(this.opencodeDir, "node_modules");
-    const hasCriticalDeps = criticalDeps.every(
-      (dep) =>
-        exists(path.join(pkgNodeModules, dep)) ||
-        exists(path.join(rootNodeModules, dep)),
-    );
-    const hasDeps =
-      exists(pkgNodeModules) &&
-      fs.readdirSync(pkgNodeModules).length > 5 &&
-      hasCriticalDeps;
+    let hasDeps = false;
+    let missingDeps = [];
+    try {
+      const pkgJsonPath = path.join(this.buildDir, "package.json");
+      if (exists(pkgJsonPath)) {
+        const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, "utf8"));
+        const deps = pkgJson.dependencies || {};
+        // workspace: 是内部包不检查；catalog: 和普通版本号都是外部包需要检查
+        const externalDeps = Object.keys(deps).filter(
+          (dep) =>
+            typeof deps[dep] === "string" &&
+            !deps[dep].startsWith("workspace:"),
+        );
+        missingDeps = externalDeps.filter(
+          (dep) =>
+            !exists(path.join(pkgNodeModules, dep)) &&
+            !exists(path.join(rootNodeModules, dep)),
+        );
+        hasDeps =
+          exists(pkgNodeModules) &&
+          externalDeps.length > 0 &&
+          missingDeps.length === 0;
+      }
+    } catch (e) {
+      // 读取 package.json 失败，视为依赖不完整
+      hasDeps = false;
+    }
 
     if (hasDeps && !force) {
       if (!silent) {
         if (nested) {
-          outputContent("依赖已存在，跳过安装");
+          outputContent("依赖完整，跳过安装");
         } else {
-          outputWarn("依赖已存在，跳过安装（使用 --force 强制重装）");
+          outputWarn("依赖完整，跳过安装（使用 --force 强制重装）");
         }
       }
       return true;
     }
 
-    try {
-      const args = ["install", "--frozen-lockfile"];
+    // 有缺失依赖时提示具体包名
+    if (missingDeps.length > 0 && !silent) {
+      const preview = missingDeps.slice(0, 5).join(", ");
+      const suffix = missingDeps.length > 5 ? ` 等 ${missingDeps.length} 个` : "";
+      outputWarn(`检测到依赖缺失: ${preview}${suffix}，将自动安装`);
+    }
+
+    // workspace 项目需要在根目录安装依赖
+    const installCwd = this.opencodeDir;
+
+    // 安装策略：先尝试 --frozen-lockfile，失败后降级为普通 install（应对上游更新 lockfile 不同步）
+    const installAttempts = [
+      { args: ["install", "--frozen-lockfile"], label: "frozen-lockfile" },
+      { args: ["install"], label: "常规安装" },
+    ];
+
+    for (let i = 0; i < installAttempts.length; i++) {
+      const attempt = installAttempts[i];
+      const args = [...attempt.args];
       if (registry) args.push("--registry", registry);
 
-      // workspace 项目需要在根目录安装依赖
-      const installCwd = this.opencodeDir;
-
-      if (silent) {
-        await execLive("bun", args, {
-          cwd: installCwd,
-          silent: true,
-          timeoutMs: 15 * 60 * 1000,
-        });
-        return true;
-      }
-
-      const spinner = createSpinner("正在安装依赖...");
-      spinner.start();
-      let seconds = 0;
-      const tick = setInterval(() => {
-        seconds += 1;
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        const time = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
-        spinner.update(`正在安装依赖... ${time}`);
-      }, 1000);
       try {
-        await execLive("bun", args, {
-          cwd: installCwd,
-          silent: true,
-          timeoutMs: 15 * 60 * 1000,
-        });
-        clearInterval(tick);
-        const finalTime =
-          seconds > 60
-            ? `${Math.floor(seconds / 60)}m ${seconds % 60}s`
-            : `${seconds}s`;
-        spinner.stop(`依赖安装完成 (${finalTime})`);
-      } catch (err) {
-        clearInterval(tick);
-        throw err;
-      }
-
-      if (!nested) outputSuccess("依赖安装完成");
-      return true;
-    } catch (e) {
-      outputError(`${e.message}`);
-      if (!nested) {
-        outputContent("可能的解决方案:");
-        outputContent("1. 检查网络连接");
-        if (!registry) {
-          outputContent("2. 尝试配置国内镜像源 (运行 opencodenpm ai)");
+        if (silent) {
+          await execLive("bun", args, {
+            cwd: installCwd,
+            silent: true,
+            timeoutMs: 15 * 60 * 1000,
+          });
+          return true;
         }
-        outputContent("3. 删除 node_modules 后重试");
+
+        const spinner = createSpinner("正在安装依赖...");
+        spinner.start();
+        let seconds = 0;
+        const tick = setInterval(() => {
+          seconds += 1;
+          const mins = Math.floor(seconds / 60);
+          const secs = seconds % 60;
+          const time = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+          spinner.update(`正在安装依赖... ${time}`);
+        }, 1000);
+        try {
+          await execLive("bun", args, {
+            cwd: installCwd,
+            silent: true,
+            timeoutMs: 15 * 60 * 1000,
+          });
+          clearInterval(tick);
+          const finalTime =
+            seconds > 60
+              ? `${Math.floor(seconds / 60)}m ${seconds % 60}s`
+              : `${seconds}s`;
+          spinner.stop(`依赖安装完成 (${finalTime})`);
+        } catch (err) {
+          clearInterval(tick);
+          throw err;
+        }
+
+        if (!nested) outputSuccess("依赖安装完成");
+        return true;
+      } catch (e) {
+        // 最后一次尝试也失败了，报错
+        if (i === installAttempts.length - 1) {
+          outputError(`${e.message}`);
+          if (!nested) {
+            outputContent("可能的解决方案:");
+            outputContent("1. 检查网络连接");
+            if (!registry) {
+              outputContent("2. 尝试配置国内镜像源 (运行 opencodenpm ai)");
+            }
+            outputContent("3. 删除 node_modules 后重试");
+          }
+          return false;
+        }
+        // frozen-lockfile 失败，降级重试
+        if (!silent) {
+          outputWarn("lockfile 与 package.json 不同步，尝试常规安装...");
+        }
       }
-      return false;
     }
+    return false;
   }
 
   async build(options = {}) {
